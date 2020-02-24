@@ -20,28 +20,31 @@ class STParser extends StandardTokenParsers {
     globalVar
   }
 
-  def sessionType: Parser[SessionType] = (ident ~> "=") ~ repsep(statement, ".") ^^ {
-    case i ~ s =>
-      new SessionType(i, s)
+  def sessionTypeVar: Parser[SessionType] = (ident ~> "=") ~ sessionType ^^ {
+    case i ~ t =>
+      new SessionType(i, t)
   }
 
-  def statement: Parser[Statement] = positioned( receive | send | receiveChoice | sendChoice | recursive | recursiveVar ) ^^ { a => a }
+  def sessionType: Parser[Statement] = positioned (choice | receive | send | recursive | recursiveVar | end) ^^ {a=>a}
 
-  def receive: Parser[ReceiveStatement] = ("?" ~> ident) ~ ("(" ~> types <~ ")") ~ opt("[" ~> stringLit <~ "]") ~ opt(("." ~ ">" ~> ident <~ "(") ~ repsep(statement, ".") ~ "," ~ repsep(statement, ".") <~ ")") ^^ {
+  def choice: Parser[Statement] = positioned( receiveChoice | sendChoice ) ^^ {a=>a}
+
+  def receive: Parser[ReceiveStatement] = ("?" ~> ident) ~ ("(" ~> types <~ ")") ~ opt("[" ~> stringLit <~ "]") ~ opt("." ~> sessionType) ^^ {
     case l ~ t ~ None ~ None =>
-      ReceiveStatement(l, t, null, null)
+      ReceiveStatement(l, t, null, EndOfSessionType())
+    case l ~ t ~ None ~ cT =>
+      ReceiveStatement(l, t, null, cT.get)
     case l ~ t ~ c ~ None =>
-      ReceiveStatement(l, t, c.get, null)
-    case l ~ t ~ c ~ b =>
-      ReceiveStatement(l, t, c.get, Branch(b.get._1._1._1, b.get._1._1._2, b.get._2))
-    case _ ~ _ ~ None ~ _ =>
-      throw new Exception("Branching without condition")
+      ReceiveStatement(l, t, c.get, EndOfSessionType())
+    case l ~ t ~ c ~ cT =>
+      ReceiveStatement(l, t, c.get, cT.get)
+
   }
 
-  def receiveChoice: Parser[ReceiveChoiceStatement] = "&" ~ "{" ~> (repsep(repsep(statement, "."), ",") <~ "}") ^^ {
+  def receiveChoice: Parser[ReceiveChoiceStatement] = "&" ~ "{" ~> (repsep(sessionType, ",") <~ "}") ^^ {
     cN =>
       for (s <- cN) {
-        s.head match {
+        s match {
           case _: ReceiveStatement =>
           case _ =>
             throw new Exception("& must be followed with ?")
@@ -50,22 +53,21 @@ class STParser extends StandardTokenParsers {
       ReceiveChoiceStatement(f"ExternalChoice${receiveChoiceCounter+=1;receiveChoiceCounter.toString}", cN)
   }
 
-  def send: Parser[SendStatement] = ("!" ~> ident) ~ ("(" ~> types <~ ")") ~ opt("[" ~> stringLit <~ "]") ~ opt(("." ~ ">" ~> ident <~ "(") ~ repsep(statement, ".") ~ "," ~ repsep(statement, ".") <~ ")") ^^ {
+  def send: Parser[SendStatement] = ("!" ~> ident) ~ ("(" ~> types <~ ")") ~ opt("[" ~> stringLit <~ "]") ~ opt("." ~> sessionType) ^^ {
     case l ~ t ~ None ~ None =>
-      SendStatement(l, t, null, null)
+      SendStatement(l, t, null, EndOfSessionType())
+    case l ~ t ~ None ~ cT =>
+      SendStatement(l, t, null, cT.get)
     case l ~ t ~ c ~ None =>
-      SendStatement(l, t, c.get, null)
-    case l ~ t ~ c ~ b =>
-      println(b.get._1._1._1, b.get._1._1._2, b.get._2)
-      SendStatement(l, t, c.get, Branch(b.get._1._1._1, b.get._1._1._2, b.get._2))
-    case _ ~ _ ~ None ~ _ =>
-      throw new Exception("Branching without condition")
+      SendStatement(l, t, c.get, EndOfSessionType())
+    case l ~ t ~ c ~ cT =>
+      SendStatement(l, t, c.get, cT.get)
   }
 
-  def sendChoice: Parser[SendChoiceStatement] = "+" ~ "{" ~> (repsep(repsep(statement, "."), ",") <~ "}") ^^ {
+  def sendChoice: Parser[SendChoiceStatement] = "+" ~ "{" ~> (repsep(sessionType, ",") <~ "}") ^^ {
     cN =>
       for (s <- cN) {
-        s.head match {
+        s match {
           case _: SendStatement =>
           case _ =>
             throw new Exception("+ must be followed with !")
@@ -74,12 +76,15 @@ class STParser extends StandardTokenParsers {
       SendChoiceStatement(f"InternalChoice${sendChoiceCounter+=1;sendChoiceCounter.toString}", cN)
   }
 
-  def recursive: Parser[RecursiveStatement] = ("rec" ~> recursiveVar <~ ".") ~ ("(" ~> repsep(statement, ".") <~ ")") ^^ {
-    case i ~ sN =>
-      RecursiveStatement(i, sN)
+  def recursive: Parser[RecursiveStatement] = ("rec" ~> ident <~ ".") ~ ("(" ~> sessionType <~ ")") ^^ {
+    case i ~ cT =>
+      RecursiveStatement(i, cT)
   }
 
-  def recursiveVar: Parser[RecursiveVar] = ident ^^ (i => RecursiveVar(i))
+  def recursiveVar: Parser[RecursiveVar] = (ident ~> ".") ~ sessionType ^^ {
+    case i ~ cT =>
+      RecursiveVar(i, cT)
+  }
 
   def types: Parser[Map[String, String]] = repsep(typDef, ",") ^^ {
     _ toMap
@@ -89,6 +94,8 @@ class STParser extends StandardTokenParsers {
     case a ~ b =>
       (a, b)
   }
+
+  def end: Parser[EndOfSessionType] = ("" | "end") ^^ (_ => EndOfSessionType())
 
   def typ: Parser[String] = "String" | "Int" | "Bool" ^^ (t => t)
 
