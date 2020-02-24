@@ -31,11 +31,11 @@ class STParser extends StandardTokenParsers {
 
   def receive: Parser[ReceiveStatement] = ("?" ~> ident) ~ ("(" ~> types <~ ")") ~ opt("[" ~> stringLit <~ "]") ~ opt("." ~> sessionType) ^^ {
     case l ~ t ~ None ~ None =>
-      ReceiveStatement(l, t, null, EndOfSessionType())
+      ReceiveStatement(l, t, null, End())
     case l ~ t ~ None ~ cT =>
       ReceiveStatement(l, t, null, cT.get)
     case l ~ t ~ c ~ None =>
-      ReceiveStatement(l, t, c.get, EndOfSessionType())
+      ReceiveStatement(l, t, c.get, End())
     case l ~ t ~ c ~ cT =>
       ReceiveStatement(l, t, c.get, cT.get)
 
@@ -55,11 +55,11 @@ class STParser extends StandardTokenParsers {
 
   def send: Parser[SendStatement] = ("!" ~> ident) ~ ("(" ~> types <~ ")") ~ opt("[" ~> stringLit <~ "]") ~ opt("." ~> sessionType) ^^ {
     case l ~ t ~ None ~ None =>
-      SendStatement(l, t, null, EndOfSessionType())
+      SendStatement(l, t, null, End())
     case l ~ t ~ None ~ cT =>
       SendStatement(l, t, null, cT.get)
     case l ~ t ~ c ~ None =>
-      SendStatement(l, t, c.get, EndOfSessionType())
+      SendStatement(l, t, c.get, End())
     case l ~ t ~ c ~ cT =>
       SendStatement(l, t, c.get, cT.get)
   }
@@ -81,9 +81,11 @@ class STParser extends StandardTokenParsers {
       RecursiveStatement(i, cT)
   }
 
-  def recursiveVar: Parser[RecursiveVar] = (ident ~> ".") ~ sessionType ^^ {
+  def recursiveVar: Parser[RecursiveVar] = ident ~ opt("." ~> sessionType) ^^ {
+    case i ~ None =>
+      RecursiveVar(i, End())
     case i ~ cT =>
-      RecursiveVar(i, cT)
+      RecursiveVar(i, cT.get)
   }
 
   def types: Parser[Map[String, String]] = repsep(typDef, ",") ^^ {
@@ -95,7 +97,7 @@ class STParser extends StandardTokenParsers {
       (a, b)
   }
 
-  def end: Parser[EndOfSessionType] = ("" | "end") ^^ (_ => EndOfSessionType())
+  def end: Parser[End] = ("" | "end") ^^ (_ => End())
 
   def typ: Parser[String] = "String" | "Int" | "Bool" ^^ (t => t)
 

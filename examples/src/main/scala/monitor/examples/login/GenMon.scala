@@ -26,9 +26,9 @@ object GenMon {
           case e: RuntimeException => println(e.getMessage)
         }
 
-      case parser.Error(msg, n) => println("Error: " + msg)
+      case parser.Error(msg, n) => println("Error: " + msg + " n: "+n.offset )
 
-      case parser.Failure(msg, n) => println("Error: " + msg)
+      case parser.Failure(msg, n) => println("Error: " + msg + " n: "+n.offset )
 
       case _ =>
 

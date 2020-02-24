@@ -26,7 +26,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
     mon.write("(implicit ec: ExecutionContext, timeout: Duration) extends Actor {\n")
     mon.write("  private var value = new mutable.HashMap[(String, String), Any]\n")
-    mon.write("  def receive: Receive = {\n    case start =>\n      println(\"[Mon] Monitor started\")\n      println(\"[Mon] Setting up connection manager\")\n")
+    mon.write("  def receive: Receive = {\n    case MonStart =>\n      println(\"[Mon] Monitor started\")\n      println(\"[Mon] Setting up connection manager\")\n")
     mon.write("      val cm = new ConnectionManager()\n      cm.setup()\n")
   }
 
@@ -181,7 +181,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
       case receiveStatement: ReceiveStatement =>
         handleReceiveCases(currentStatement)
-//        appendToGlobalVar(currentStatement.label)
         storeValue(currentStatement.types, currentStatement.condition==null)
         if(currentStatement.condition==null) {
           mon.write("\t\t\t\treceive" + receiveStatement.label + "(cont, External)\n")
@@ -191,7 +190,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
       case receiveChoiceStatement: ReceiveChoiceStatement =>
         handleReceiveCases(currentStatement)
-//        appendToGlobalVar(currentStatement.label)
         storeValue(currentStatement.types, currentStatement.condition==null)
         if(currentStatement.condition==null) {
           mon.write("\t\t\t\treceive" + receiveChoiceStatement.label + "(cont, External)\n")
@@ -201,13 +199,16 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
       case recursiveVar: RecursiveVar =>
         handleReceiveNextCase(currentStatement, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name))
-      //        handleReceiveNextCase(currentStatement, sessionTypeInterpreter.getCurrentScope.recVariables(recursiveVar.name).head)
 
       case recursiveStatement: RecursiveStatement =>
         handleReceiveNextCase(currentStatement, recursiveStatement.body)
 
       case _ =>
-        mon.write("\t\t\t\tinternal ! msg\n")
+        if(currentStatement.condition==null) {
+          mon.write("internal ! msg\n")
+        } else {
+          mon.write("\tinternal ! msg\n")
+        }
     }
   }
 
@@ -227,7 +228,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.write(")_\n")
   }
 
-  def handleSendChoice(statement: SendChoiceStatement, nextStatement: Statement): Unit ={
+  def handleSendChoice(statement: SendChoiceStatement): Unit ={
     if (first) {
       mon.write("      send" + statement.label + "(Internal, cm)\n  }\n")
       first = false
@@ -241,10 +242,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       addParameters(choice.asInstanceOf[SendStatement].types)
       mon.write(") =>\n")
       if(choice.asInstanceOf[SendStatement].condition != null){
-//        mon.write("        if("+choice.head.asInstanceOf[SendStatement].condition+"){\n")
         handleCondition(choice.asInstanceOf[SendStatement].condition, choice.asInstanceOf[SendStatement].label)
-//        handleAssertion(choice.head.asInstanceOf[SendStatement].condition)
-
           mon.write("External.send(msg)\n")
           handleSendNextCase(choice.asInstanceOf[SendStatement], choice.asInstanceOf[SendStatement].continuation)
           mon.write("        } else {\n")
@@ -260,7 +258,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.write("    }\n  }\n")
   }
 
-  def handleReceiveChoice(statement: ReceiveChoiceStatement, nextStatement: Statement): Unit = {
+  def handleReceiveChoice(statement: ReceiveChoiceStatement): Unit = {
     if (first) {
       mon.write("      receive" + statement.label + "(Internal, cm)\n  }\n")
       first = false
