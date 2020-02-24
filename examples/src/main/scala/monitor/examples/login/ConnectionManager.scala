@@ -1,0 +1,31 @@
+package monitor.examples.login
+
+import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
+import java.net.ServerSocket
+
+class ConnectionManager(){
+  var outB: BufferedWriter = _
+  var inB: BufferedReader = _
+
+  val server = new ServerSocket(1337)
+
+  private val loginR = """LOGIN (.+) (.+) (.+)""".r
+
+  def setup(): Unit = {
+    val client = server.accept()
+    println("[CM] Waiting for requests on 127.0.0.1:1337")
+    outB = new BufferedWriter(new OutputStreamWriter(client.getOutputStream))
+    inB = new BufferedReader(new InputStreamReader(client.getInputStream))
+  }
+
+  def receive(): Any = inB.readLine() match {
+    case loginR(uname, pwd, token) => Login(uname, pwd, token)(null);
+    case e => e
+  }
+
+  def send(x: Any): Unit = x match {
+    case Success(id) => outB.write(f"SUCCESS ${id}"); outB.flush();
+    case Retry() => outB.write(f"RETRY"); outB.flush();
+    case _ => outB.flush(); inB.close(); outB.close();
+  }
+}
