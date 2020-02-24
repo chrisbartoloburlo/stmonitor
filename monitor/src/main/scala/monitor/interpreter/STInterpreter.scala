@@ -43,177 +43,173 @@ class STInterpreter(sessionType: SessionType, globalVar: mutable.HashMap[String,
   }
 
   def run() {
-    initialWalk(sessionType.statements)
+    initialWalk(sessionType.statement)
     curScope = "global"
-    sessionType.statements.head match {
+    sessionType.statement match {
       case recursiveStatement: RecursiveStatement =>
-        synthMon.init(recursiveStatement.body.head)
+        var tmpStatement: Statement = null
+        while(tmpStatement.isInstanceOf[RecursiveStatement]){
+          tmpStatement = recursiveStatement.body
+        }
+        synthMon.init(recursiveStatement.body)
       case _ =>
-        synthMon.init(sessionType.statements.head)
+        synthMon.init(sessionType.statement)
     }
     synthProtocol.init()
-    walk(sessionType.statements)
+//    walk(sessionType.statement)
   }
 
-  def initialWalk(tree: List[Statement]): Unit = {
-    if(tree.nonEmpty){
-      tree.head match {
-        case ReceiveStatement(label, types, condition, branch) =>
+  def initialWalk(root: Statement): Unit = {
+      root match {
+        case ReceiveStatement(label, types, condition, continuation) =>
           createAndUpdateScope(label)
           checkAndInitVariables(label, types, condition)
-//          curScope = scopes(label).parentScope.name
-          initialWalk(tree.tail)
+          initialWalk(continuation)
 
-        case SendStatement(label, types, condition, branch) =>
+        case SendStatement(label, types, condition, continuation) =>
           createAndUpdateScope(label)
           checkAndInitVariables(label, types, condition)
-//          curScope = scopes(label).parentScope.name
-          initialWalk(tree.tail)
+          initialWalk(continuation)
 
         case ReceiveChoiceStatement(label, choices) =>
           createAndUpdateScope(label)
           for(choice <- choices) {
-            createAndUpdateScope(choice.head.asInstanceOf[ReceiveStatement].label)
-            checkAndInitVariables(choice.head.asInstanceOf[ReceiveStatement].label, choice.head.asInstanceOf[ReceiveStatement].types, choice.head.asInstanceOf[ReceiveStatement].condition)
-            curScope = scopes(choice.head.asInstanceOf[ReceiveStatement].label).parentScope.name
-            initialWalk(choice.tail)
+            createAndUpdateScope(choice.asInstanceOf[ReceiveStatement].label)
+            checkAndInitVariables(choice.asInstanceOf[ReceiveStatement].label, choice.asInstanceOf[ReceiveStatement].types, choice.asInstanceOf[ReceiveStatement].condition)
+            curScope = scopes(choice.asInstanceOf[ReceiveStatement].label).parentScope.name
+            initialWalk(choice.asInstanceOf[ReceiveStatement].continuation)
           }
-          initialWalk(tree.tail)
 
         case SendChoiceStatement(label, choices) =>
           createAndUpdateScope(label)
           for(choice <- choices) {
-            createAndUpdateScope(choice.head.asInstanceOf[SendStatement].label)
-            checkAndInitVariables(choice.head.asInstanceOf[SendStatement].label, choice.head.asInstanceOf[SendStatement].types, choice.head.asInstanceOf[SendStatement].condition)
-            curScope = scopes(choice.head.asInstanceOf[SendStatement].label).parentScope.name
-            initialWalk(choice.tail)
+            createAndUpdateScope(choice.asInstanceOf[SendStatement].label)
+            checkAndInitVariables(choice.asInstanceOf[SendStatement].label, choice.asInstanceOf[SendStatement].types, choice.asInstanceOf[SendStatement].condition)
+            curScope = scopes(choice.asInstanceOf[SendStatement].label).parentScope.name
+            initialWalk(choice.asInstanceOf[SendStatement].continuation)
           }
-          initialWalk(tree.tail)
 
         case RecursiveStatement(label, body) =>
-          scopes("global").recVariables(label.name) = body
+          scopes("global").recVariables(label) = body
           initialWalk(body)
 
-        case RecursiveVar(name) =>
-          initialWalk(tree.tail)
-
-        case _ =>
-          initialWalk(tree.tail)
-      }
-    }
-
-  }
-
-  def walk(tree: List[Statement]): Unit = {
-    if(tree.nonEmpty){
-      tree.head match {
-        case statement @ ReceiveStatement(label, types, condition, _) =>
-          println("Receive "+label+"("+types+")")
-//          createAndUpdateScope(label)
-          curScope = label
-          checkCondition(label, types, condition)
-//          curScope = scopes(label).parentScope.name
-          synthMon.handleReceive(statement, if(tree.tail.nonEmpty) tree.tail.head else new EndOfSessionType)
-          synthProtocol.handleReceive(statement, if(tree.tail.nonEmpty) tree.tail.head else new EndOfSessionType, null)
-          if(statement.branch != null){
-            branches(statement.branch.left.head) = statement.branch.label
-            walk(statement.branch.left :+ new EndOfSessionType)
-
-            branches(statement.branch.right.head) = statement.branch.label
-            walk(statement.branch.right :+ new EndOfSessionType)
-          }
-          walk(tree.tail)
-
-        case statement @ SendStatement(label, types, condition, _) =>
-          println("Send "+label+"("+types+")")
-//          createAndUpdateScope(label)
-          curScope = label
-          checkCondition(label, types, condition)
-//          curScope = scopes(label).parentScope.name
-          synthMon.handleSend(statement, if(tree.tail.nonEmpty) tree.tail.head else new EndOfSessionType)
-          synthProtocol.handleSend(statement, if(tree.tail.nonEmpty) tree.tail.head else new EndOfSessionType, null)
-          if(statement.branch != null){
-            branches(statement.branch.left.head) = statement.branch.label
-            walk(statement.branch.left :+ new EndOfSessionType)
-
-            branches(statement.branch.right.head) = statement.branch.label
-            walk(statement.branch.right :+ new EndOfSessionType)
-          }
-          walk(tree.tail)
-
-        case statement @ ReceiveChoiceStatement(label, choices) =>
-          curScope = label
-          println("Receive Choice Statement "+label+"{"+choices+"}")
-          synthMon.handleReceiveChoice(statement, if(tree.tail.nonEmpty) tree.tail.head else new EndOfSessionType)
-          synthProtocol.handleReceiveChoice(statement.label)
-
-          for(choice <- choices) {
-            createAndUpdateScope(choice.head.asInstanceOf[ReceiveStatement].label)
-            curScope = choice.head.asInstanceOf[ReceiveStatement].label
-            checkCondition(choice.head.asInstanceOf[ReceiveStatement].label, choice.head.asInstanceOf[ReceiveStatement].types, choice.head.asInstanceOf[ReceiveStatement].condition)
-
-            if(choice.head.asInstanceOf[ReceiveStatement].branch != null){
-              branches(choice.head.asInstanceOf[ReceiveStatement].branch.left.head) = choice.head.asInstanceOf[ReceiveStatement].branch.label
-              walk(choice.head.asInstanceOf[ReceiveStatement].branch.left :+ new EndOfSessionType)
-
-              branches(choice.head.asInstanceOf[ReceiveStatement].branch.right.head) = choice.head.asInstanceOf[ReceiveStatement].branch.label
-              walk(choice.head.asInstanceOf[ReceiveStatement].branch.right :+ new EndOfSessionType)
-            }
-            synthProtocol.handleReceive(choice.head.asInstanceOf[ReceiveStatement], if (choice.tail.nonEmpty) choice.tail.head else new EndOfSessionType, statement.label)
-            curScope = scopes(choice.head.asInstanceOf[ReceiveStatement].label).parentScope.name
-          }
-
-          for(choice <- statement.choices){
-            if(choice.tail.nonEmpty) walk(choice.tail)
-          }
-
-          walk(tree.tail)
-
-        case statement @ SendChoiceStatement(label, choices) =>
-          println("Send Choice Statement "+label+"{"+choices+"}")
-          curScope = label
-          synthMon.handleSendChoice(statement, if(tree.tail.nonEmpty) tree.tail.head else new EndOfSessionType)
-          synthProtocol.handleSendChoice(statement.label)
-
-          for(choice <- choices) {
-//            createAndUpdateScope(choice.head.asInstanceOf[SendStatement].label)
-            curScope = choice.head.asInstanceOf[SendStatement].label
-            checkCondition(choice.head.asInstanceOf[SendStatement].label, choice.head.asInstanceOf[SendStatement].types, choice.head.asInstanceOf[SendStatement].condition)
-
-            if(choice.head.asInstanceOf[SendStatement].branch != null){
-              branches(choice.head.asInstanceOf[SendStatement].branch.left.head) = choice.head.asInstanceOf[SendStatement].branch.label
-              walk(choice.head.asInstanceOf[SendStatement].branch.left :+ new EndOfSessionType)
-
-              branches(choice.head.asInstanceOf[SendStatement].branch.right.head) = choice.head.asInstanceOf[SendStatement].branch.label
-              walk(choice.head.asInstanceOf[SendStatement].branch.right :+ new EndOfSessionType)
-            }
-            synthProtocol.handleSend(choice.head.asInstanceOf[SendStatement], if(choice.tail.nonEmpty) choice.tail.head else new EndOfSessionType, statement.label)
-            curScope = scopes(choice.head.asInstanceOf[SendStatement].label).parentScope.name
-          }
-
-          for(choice <- statement.choices){
-            if(choice.tail.nonEmpty) walk(choice.tail)
-          }
-          walk(tree.tail)
-
-        case statement @ RecursiveStatement(label, body) =>
-          println("Recursive statement with variable "+label+" and body: " +body)
-          walk(statement.body)
-          walk(tree.tail)
-
-        case statement @ RecursiveVar(name) =>
-          println("Recursive variable "+name)
-          checkRecVariable(scopes(curScope), statement)
-          walk(tree.tail)
+        case RecursiveVar(name, continuation) =>
+          initialWalk(continuation)
 
         case EndOfSessionType() =>
-
       }
-    } else {
-      synthMon.end()
-      synthProtocol.end()
-    }
   }
+
+//  def walk(tree: Statement): Unit = {
+//    if(tree.nonEmpty){
+//      tree.head match {
+//        case statement @ ReceiveStatement(label, types, condition, _) =>
+//          println("Receive "+label+"("+types+")")
+////          createAndUpdateScope(label)
+//          curScope = label
+//          checkCondition(label, types, condition)
+////          curScope = scopes(label).parentScope.name
+//          synthMon.handleReceive(statement, if(tree.tail.nonEmpty) tree.tail.head else new EndOfSessionType)
+//          synthProtocol.handleReceive(statement, if(tree.tail.nonEmpty) tree.tail.head else new EndOfSessionType, null)
+//          if(statement.branch != null){
+//            branches(statement.branch.left.head) = statement.branch.label
+//            walk(statement.branch.left :+ new EndOfSessionType)
+//
+//            branches(statement.branch.right.head) = statement.branch.label
+//            walk(statement.branch.right :+ new EndOfSessionType)
+//          }
+//          walk(tree.tail)
+//
+//        case statement @ SendStatement(label, types, condition, _) =>
+//          println("Send "+label+"("+types+")")
+////          createAndUpdateScope(label)
+//          curScope = label
+//          checkCondition(label, types, condition)
+////          curScope = scopes(label).parentScope.name
+//          synthMon.handleSend(statement, if(tree.tail.nonEmpty) tree.tail.head else new EndOfSessionType)
+//          synthProtocol.handleSend(statement, if(tree.tail.nonEmpty) tree.tail.head else new EndOfSessionType, null)
+//          if(statement.branch != null){
+//            branches(statement.branch.left.head) = statement.branch.label
+//            walk(statement.branch.left :+ new EndOfSessionType)
+//
+//            branches(statement.branch.right.head) = statement.branch.label
+//            walk(statement.branch.right :+ new EndOfSessionType)
+//          }
+//          walk(tree.tail)
+//
+//        case statement @ ReceiveChoiceStatement(label, choices) =>
+//          curScope = label
+//          println("Receive Choice Statement "+label+"{"+choices+"}")
+//          synthMon.handleReceiveChoice(statement, if(tree.tail.nonEmpty) tree.tail.head else new EndOfSessionType)
+//          synthProtocol.handleReceiveChoice(statement.label)
+//
+//          for(choice <- choices) {
+//            createAndUpdateScope(choice.head.asInstanceOf[ReceiveStatement].label)
+//            curScope = choice.head.asInstanceOf[ReceiveStatement].label
+//            checkCondition(choice.head.asInstanceOf[ReceiveStatement].label, choice.head.asInstanceOf[ReceiveStatement].types, choice.head.asInstanceOf[ReceiveStatement].condition)
+//
+//            if(choice.head.asInstanceOf[ReceiveStatement].branch != null){
+//              branches(choice.head.asInstanceOf[ReceiveStatement].branch.left.head) = choice.head.asInstanceOf[ReceiveStatement].branch.label
+//              walk(choice.head.asInstanceOf[ReceiveStatement].branch.left :+ new EndOfSessionType)
+//
+//              branches(choice.head.asInstanceOf[ReceiveStatement].branch.right.head) = choice.head.asInstanceOf[ReceiveStatement].branch.label
+//              walk(choice.head.asInstanceOf[ReceiveStatement].branch.right :+ new EndOfSessionType)
+//            }
+//            synthProtocol.handleReceive(choice.head.asInstanceOf[ReceiveStatement], if (choice.tail.nonEmpty) choice.tail.head else new EndOfSessionType, statement.label)
+//            curScope = scopes(choice.head.asInstanceOf[ReceiveStatement].label).parentScope.name
+//          }
+//
+//          for(choice <- statement.choices){
+//            if(choice.tail.nonEmpty) walk(choice.tail)
+//          }
+//
+//          walk(tree.tail)
+//
+//        case statement @ SendChoiceStatement(label, choices) =>
+//          println("Send Choice Statement "+label+"{"+choices+"}")
+//          curScope = label
+//          synthMon.handleSendChoice(statement, if(tree.tail.nonEmpty) tree.tail.head else new EndOfSessionType)
+//          synthProtocol.handleSendChoice(statement.label)
+//
+//          for(choice <- choices) {
+////            createAndUpdateScope(choice.head.asInstanceOf[SendStatement].label)
+//            curScope = choice.head.asInstanceOf[SendStatement].label
+//            checkCondition(choice.head.asInstanceOf[SendStatement].label, choice.head.asInstanceOf[SendStatement].types, choice.head.asInstanceOf[SendStatement].condition)
+//
+//            if(choice.head.asInstanceOf[SendStatement].branch != null){
+//              branches(choice.head.asInstanceOf[SendStatement].branch.left.head) = choice.head.asInstanceOf[SendStatement].branch.label
+//              walk(choice.head.asInstanceOf[SendStatement].branch.left :+ new EndOfSessionType)
+//
+//              branches(choice.head.asInstanceOf[SendStatement].branch.right.head) = choice.head.asInstanceOf[SendStatement].branch.label
+//              walk(choice.head.asInstanceOf[SendStatement].branch.right :+ new EndOfSessionType)
+//            }
+//            synthProtocol.handleSend(choice.head.asInstanceOf[SendStatement], if(choice.tail.nonEmpty) choice.tail.head else new EndOfSessionType, statement.label)
+//            curScope = scopes(choice.head.asInstanceOf[SendStatement].label).parentScope.name
+//          }
+//
+//          for(choice <- statement.choices){
+//            if(choice.tail.nonEmpty) walk(choice.tail)
+//          }
+//          walk(tree.tail)
+//
+//        case statement @ RecursiveStatement(label, body) =>
+//          println("Recursive statement with variable "+label+" and body: " +body)
+//          walk(statement.body)
+//          walk(tree.tail)
+//
+//        case statement @ RecursiveVar(name) =>
+//          println("Recursive variable "+name)
+//          checkRecVariable(scopes(curScope), statement)
+//          walk(tree.tail)
+//
+//        case EndOfSessionType() =>
+//
+//      }
+//    } else {
+//      synthMon.end()
+//      synthProtocol.end()
+//    }
+//  }
 
   private def createAndUpdateScope(label: String): Unit ={
     scopes(label) = new Scope(label, scopes(curScope))

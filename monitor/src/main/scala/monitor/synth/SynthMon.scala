@@ -52,16 +52,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     if(statement.condition != null){
 //      mon.write("        if("+statement.condition+"){\n")
       handleCondition(statement.condition, statement.label)
-//      handleAssertion(statement.condition)
-      if(statement.branch != null){
-        handleSendNextCase(statement, statement.branch.left.head)
-        mon.write("        } else {\n          ")
-        handleSendNextCase(statement, statement.branch.right.head)
-      } else {
-        mon.write("External.send(msg)\n")
-        handleSendNextCase(statement, nextStatement)
-        mon.write("        } else {\n")
-      }
+      mon.write("External.send(msg)\n")
+      handleSendNextCase(statement, nextStatement)
+      mon.write("        } else {\n")
     } else {
       mon.write("        External.send(msg)\n")
       handleSendNextCase(statement, nextStatement)
@@ -125,11 +118,10 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         }
 
       case recursiveVar: RecursiveVar =>
-        handleSendNextCase(currentStatement, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name).head)
-//        handleSendNextCase(currentStatement, sessionTypeInterpreter.getCurrentScope.recVariables(recursiveVar.name).head)
+        handleSendNextCase(currentStatement, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name))
 
       case recursiveStatement: RecursiveStatement =>
-        handleSendNextCase(currentStatement, recursiveStatement.body.head)
+        handleSendNextCase(currentStatement, recursiveStatement.body)
 
       case _ =>
     }
@@ -150,14 +142,10 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 //      mon.write("        if("+statement.condition+"){\n")
       handleCondition(statement.condition, statement.label)
 //      handleAssertion(statement.condition)
-      if(statement.branch != null){
-        handleReceiveNextCase(statement, statement.branch.left.head)
-        mon.write("        } else {\n          ")
-        handleReceiveNextCase(statement, statement.branch.right.head)
-      } else {
+
         handleReceiveNextCase(statement, nextStatement)
         mon.write("        } else {\n")
-      }
+
     } else {
       handleReceiveNextCase(statement, nextStatement)
     }
@@ -212,11 +200,11 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         }
 
       case recursiveVar: RecursiveVar =>
-        handleReceiveNextCase(currentStatement, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name).head)
+        handleReceiveNextCase(currentStatement, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name))
       //        handleReceiveNextCase(currentStatement, sessionTypeInterpreter.getCurrentScope.recVariables(recursiveVar.name).head)
 
       case recursiveStatement: RecursiveStatement =>
-        handleReceiveNextCase(currentStatement, recursiveStatement.body.head)
+        handleReceiveNextCase(currentStatement, recursiveStatement.body)
 
       case _ =>
         mon.write("\t\t\t\tinternal ! msg\n")
@@ -249,27 +237,23 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.write("    internal ? {\n")
 
     for (choice <- statement.choices){
-      mon.write("      case msg @ "+choice.head.asInstanceOf[SendStatement].label+"(")
-      addParameters(choice.head.asInstanceOf[SendStatement].types)
+      mon.write("      case msg @ "+choice.asInstanceOf[SendStatement].label+"(")
+      addParameters(choice.asInstanceOf[SendStatement].types)
       mon.write(") =>\n")
-      if(choice.head.asInstanceOf[SendStatement].condition != null){
+      if(choice.asInstanceOf[SendStatement].condition != null){
 //        mon.write("        if("+choice.head.asInstanceOf[SendStatement].condition+"){\n")
-        handleCondition(choice.head.asInstanceOf[SendStatement].condition, choice.head.asInstanceOf[SendStatement].label)
+        handleCondition(choice.asInstanceOf[SendStatement].condition, choice.asInstanceOf[SendStatement].label)
 //        handleAssertion(choice.head.asInstanceOf[SendStatement].condition)
-        if(choice.head.asInstanceOf[SendStatement].branch != null){
-          handleSendNextCase(choice.head.asInstanceOf[SendStatement], choice.head.asInstanceOf[SendStatement].branch.left.head)
-          mon.write("        } else {\n          ")
-          handleSendNextCase(choice.head.asInstanceOf[SendStatement], choice.head.asInstanceOf[SendStatement].branch.right.head)
-        } else {
+
           mon.write("External.send(msg)\n")
-          handleSendNextCase(choice.head.asInstanceOf[SendStatement], if(choice.tail.nonEmpty) choice.tail.head else new EndOfSessionType)
+          handleSendNextCase(choice.asInstanceOf[SendStatement], choice.asInstanceOf[SendStatement].continuation)
           mon.write("        } else {\n")
-        }
+
       } else {
         mon.write("        External.send(msg)\n")
-        handleSendNextCase(choice.head.asInstanceOf[SendStatement], if(choice.tail.nonEmpty) choice.tail.head else new EndOfSessionType)
+        handleSendNextCase(choice.asInstanceOf[SendStatement], choice.asInstanceOf[SendStatement].continuation)
       }
-      if(choice.head.asInstanceOf[SendStatement].condition != null) {
+      if(choice.asInstanceOf[SendStatement].condition != null) {
         mon.write("        }\n")
       }
     }
@@ -286,26 +270,22 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.write("    External.receive() match {\n")
 
     for (choice <- statement.choices){
-      mon.write("      case msg @ " + choice.head.asInstanceOf[ReceiveStatement].label + "(")
-      addParameters(choice.head.asInstanceOf[ReceiveStatement].types)
+      mon.write("      case msg @ " + choice.asInstanceOf[ReceiveStatement].label + "(")
+      addParameters(choice.asInstanceOf[ReceiveStatement].types)
       mon.write(")=>\n")
-      if(choice.head.asInstanceOf[ReceiveStatement].condition != null){
+      if(choice.asInstanceOf[ReceiveStatement].condition != null){
 //        mon.write("        if("+choice.head.asInstanceOf[ReceiveStatement].condition+"){\n")
-        handleCondition(choice.head.asInstanceOf[ReceiveStatement].condition, choice.head.asInstanceOf[ReceiveStatement].label)
+        handleCondition(choice.asInstanceOf[ReceiveStatement].condition, choice.asInstanceOf[ReceiveStatement].label)
 //        handleAssertion(choice.head.asInstanceOf[ReceiveStatement].condition)
-        if(choice.head.asInstanceOf[ReceiveStatement].branch != null){
-          handleReceiveNextCase(choice.head.asInstanceOf[ReceiveStatement], choice.head.asInstanceOf[ReceiveStatement].branch.left.head)
-          mon.write("        } else {\n          ")
-          handleReceiveNextCase(choice.head.asInstanceOf[ReceiveStatement], choice.head.asInstanceOf[ReceiveStatement].branch.right.head)
-        } else {
-          handleReceiveNextCase(choice.head.asInstanceOf[ReceiveStatement], if(choice.tail.nonEmpty) choice.tail.head else new EndOfSessionType)
+
+          handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], choice.asInstanceOf[ReceiveStatement].continuation)
           mon.write("        } else {\n")
-        }
+
       } else {
         mon.write("        ")
-        handleReceiveNextCase(choice.head.asInstanceOf[ReceiveStatement], if(choice.tail.nonEmpty) choice.tail.head else new EndOfSessionType)
+        handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], choice.asInstanceOf[ReceiveStatement].continuation)
       }
-      if(choice.head.asInstanceOf[ReceiveStatement].condition != null) {
+      if(choice.asInstanceOf[ReceiveStatement].condition != null) {
         mon.write("        }\n")
       }
     }

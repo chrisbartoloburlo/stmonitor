@@ -77,8 +77,8 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
         protocol.write("(val cont: Out["+s.label+"])")
       case s @ ReceiveChoiceStatement(_, _) =>
         protocol.write("(val cont: Out["+s.label+"])")
-      case s @ RecursiveVar(_) =>
-        handleSendNextCase(sessionTypeInterpreter.getRecursiveVarScope(s).recVariables(s.name).head)
+      case s @ RecursiveVar(_, _) =>
+        handleSendNextCase(sessionTypeInterpreter.getRecursiveVarScope(s).recVariables(s.name))
       case _ =>
 
     }
