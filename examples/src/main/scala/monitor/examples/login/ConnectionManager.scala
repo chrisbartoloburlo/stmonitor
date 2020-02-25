@@ -26,6 +26,12 @@ class ConnectionManager(){
   def send(x: Any): Unit = x match {
     case Success(id) => outB.write(f"SUCCESS ${id}"); outB.flush();
     case Retry() => outB.write(f"RETRY"); outB.flush();
-    case _ => outB.flush(); inB.close(); outB.close();
+    case _ => close(); throw new Exception("[CM] Error: Unexpected message by Mon");
+  }
+
+  def close(): Unit = {
+    outB.flush();
+    inB.close();
+    outB.close();
   }
 }

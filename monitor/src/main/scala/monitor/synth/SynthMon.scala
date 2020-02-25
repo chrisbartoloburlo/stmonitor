@@ -32,7 +32,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def handleSend(statement: SendStatement, nextStatement: Statement): Unit = {
     if(first){
-      mon.write("      send"+statement.label+"(Internal, cm)\n  }\n")
+      mon.write("      send"+statement.label+"(Internal, cm)\n      cm.close()\n  }\n")
       first = false
     }
 
@@ -129,7 +129,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def handleReceive(statement: ReceiveStatement, nextStatement: Statement): Unit = {
     if (first) {
-      mon.write("      receive" + statement.label + "(Internal, cm)\n  }\n")
+      mon.write("      receive" + statement.label + "(Internal, cm)\n      cm.close()\n  }\n")
       first = false
     }
 
@@ -230,7 +230,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def handleSendChoice(statement: SendChoiceStatement): Unit ={
     if (first) {
-      mon.write("      send" + statement.label + "(Internal, cm)\n  }\n")
+      mon.write("      send" + statement.label + "(Internal, cm)\n      cm.close()\n  }\n")
       first = false
     }
 
@@ -260,7 +260,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def handleReceiveChoice(statement: ReceiveChoiceStatement): Unit = {
     if (first) {
-      mon.write("      receive" + statement.label + "(Internal, cm)\n  }\n")
+      mon.write("      receive" + statement.label + "(Internal, cm)\n      cm.close()\n  }\n")
       first = false
     }
 

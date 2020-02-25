@@ -14,6 +14,7 @@ class Mon(Internal: Out[Login])(implicit ec: ExecutionContext, timeout: Duration
       val cm = new ConnectionManager()
       cm.setup()
       receiveLogin(Internal, cm)
+      cm.close()
   }
   def receiveLogin(internal: Out[Login], External: ConnectionManager): Any = {
     External.receive() match {
