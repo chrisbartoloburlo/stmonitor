@@ -10,8 +10,8 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   var first = true
 
-  def init(statement: Statement): Unit = {
-    mon.write("import akka.actor._\nimport lchannels.{In, Out}\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.collection.mutable\nclass Mon(Internal: ")
+  def startInit(statement: Statement): Unit = {
+    mon.write("import akka.actor._\nimport lchannels.{In, Out}\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nclass Mon(Internal: ")
 
     statement match {
       case ReceiveStatement(label, _, _, _) =>
@@ -25,7 +25,19 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     }
 
     mon.write("(implicit ec: ExecutionContext, timeout: Duration) extends Actor {\n")
-    mon.write("  private var value = new mutable.HashMap[(String, String), Any]\n")
+    mon.write("  object payloads {\n")
+  }
+
+  def handlePayloads(label: String, types: Map[String, String]): Unit ={
+    mon.write("\t\tobject "+label+" {\n")
+    for(typ <- types){
+      mon.write("\t\t\tvar "+typ._1+": "+typ._2+" = _\n")
+    }
+    mon.write("\t\t}\n")
+  }
+
+  def endInit(): Unit = {
+    mon.write("\t}\n")
     mon.write("  def receive: Receive = {\n    case MonStart =>\n      println(\"[Mon] Monitor started\")\n      println(\"[Mon] Setting up connection manager\")\n")
     mon.write("      val cm = new ConnectionManager()\n      cm.setup()\n")
   }
@@ -70,9 +82,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       val (varScope, (global, _)) = sessionTypeInterpreter.getVarInfo(name)
       if(global) {
         if(checkCondition){
-          mon.write("\t\t\t\t\t\tvalue((\""+varScope+"\", \""+name+"\")) = msg."+name+"\n")
+          mon.write("\t\t\t\t\t\tpayloads."+varScope+"."+name+" = msg."+name+"\n")
         } else {
-          mon.write("\t\t\t\t\tvalue((\""+varScope+"\", \""+name+"\")) = msg."+name+"\n")
+          mon.write("\t\t\t\t\tpayloads."+varScope+"."+name+" = msg."+name+"\n")
         }
       }
     }
@@ -82,7 +94,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   private def handleSendNextCase(currentStatement: SendStatement, nextStatement: Statement): Unit ={
     nextStatement match {
       case sendStatement: SendStatement =>
-//        appendToGlobalVar(currentStatement.label)
         storeValue(currentStatement.types, currentStatement.condition==null)
         if(currentStatement.condition==null) {
           mon.write("\t\t\t\tsend"+sendStatement.label+"(msg.cont, External)\n")
@@ -91,7 +102,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         }
 
       case sendChoiceStatement: SendChoiceStatement =>
-//        appendToGlobalVar(currentStatement.label)
         storeValue(currentStatement.types, currentStatement.condition==null)
         if(currentStatement.condition==null) {
           mon.write("\t\t\t\tsend"+sendChoiceStatement.label+"(msg.cont, External)\n")
@@ -100,7 +110,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         }
 
       case receiveStatement: ReceiveStatement =>
-//        appendToGlobalVar(currentStatement.label)
         storeValue(currentStatement.types, currentStatement.condition==null)
         if(currentStatement.condition==null) {
           mon.write("\t\t\t\treceive" + receiveStatement.label + "(msg.cont, External)\n")
@@ -109,7 +118,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         }
 
       case receiveChoiceStatement: ReceiveChoiceStatement =>
-//        appendToGlobalVar(currentStatement.label)
         storeValue(currentStatement.types, currentStatement.condition==null)
         if(currentStatement.condition==null) {
           mon.write("\t\t\t\treceive"+receiveChoiceStatement.label+"(msg.cont, External)\n")
@@ -311,7 +319,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       if(label == varScope){
         stringCondition = identPattern.replaceAllIn(stringCondition, "msg."+identName)
       } else {
-        stringCondition = identPattern.replaceAllIn(stringCondition, "value(\""+varScope+"\", \""+identName+"\").asInstanceOf["+typ+"]")
+        stringCondition = identPattern.replaceAllIn(stringCondition, "payloads."+varScope+"."+identName)
       }
     }
     mon.write(stringCondition+"){\n          ")

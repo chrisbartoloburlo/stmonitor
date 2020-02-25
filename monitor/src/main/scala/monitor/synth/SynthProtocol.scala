@@ -72,7 +72,7 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
       case s @ SendStatement(_, _, _, _) =>
         protocol.write("(val cont: In["+s.label+"])")
       case s @ SendChoiceStatement(_, _) =>
-        protocol.write("(val cont: In["+s.label+"])")
+        protocol.write("(val cont: Out["+s.label+"])")
       case s @ ReceiveStatement(_, _, _, _) =>
         protocol.write("(val cont: Out["+s.label+"])")
       case s @ ReceiveChoiceStatement(_, _) =>

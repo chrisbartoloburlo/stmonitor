@@ -43,19 +43,22 @@ class STInterpreter(sessionType: SessionType, globalVar: mutable.HashMap[String,
   }
 
   def run() {
-    initialWalk(sessionType.statement)
-    curScope = "global"
     sessionType.statement match {
       case recursiveStatement: RecursiveStatement =>
         var tmpStatement: Statement = null
         while(tmpStatement.isInstanceOf[RecursiveStatement]){
           tmpStatement = recursiveStatement.body
         }
-        synthMon.init(recursiveStatement.body)
+        synthMon.startInit(recursiveStatement.body)
       case _ =>
-        synthMon.init(sessionType.statement)
+        synthMon.startInit(sessionType.statement)
     }
     synthProtocol.init()
+
+    initialWalk(sessionType.statement)
+    curScope = "global"
+    synthMon.endInit()
+
     walk(sessionType.statement)
     synthMon.end()
     synthProtocol.end()
@@ -63,14 +66,16 @@ class STInterpreter(sessionType: SessionType, globalVar: mutable.HashMap[String,
 
   def initialWalk(root: Statement): Unit = {
     root match {
-      case ReceiveStatement(label, types, condition, continuation) =>
+      case s @ ReceiveStatement(label, types, condition, continuation) =>
         createAndUpdateScope(label)
         checkAndInitVariables(label, types, condition)
+        synthMon.handlePayloads(label, types)
         initialWalk(continuation)
 
       case SendStatement(label, types, condition, continuation) =>
         createAndUpdateScope(label)
         checkAndInitVariables(label, types, condition)
+        synthMon.handlePayloads(label, types)
         initialWalk(continuation)
 
       case ReceiveChoiceStatement(label, choices) =>
@@ -78,6 +83,7 @@ class STInterpreter(sessionType: SessionType, globalVar: mutable.HashMap[String,
         for(choice <- choices) {
           createAndUpdateScope(choice.asInstanceOf[ReceiveStatement].label)
           checkAndInitVariables(choice.asInstanceOf[ReceiveStatement].label, choice.asInstanceOf[ReceiveStatement].types, choice.asInstanceOf[ReceiveStatement].condition)
+          synthMon.handlePayloads(choice.asInstanceOf[ReceiveStatement].label, choice.asInstanceOf[ReceiveStatement].types)
           initialWalk(choice.asInstanceOf[ReceiveStatement].continuation)
           curScope = scopes(choice.asInstanceOf[ReceiveStatement].label).parentScope.name
         }
@@ -87,6 +93,7 @@ class STInterpreter(sessionType: SessionType, globalVar: mutable.HashMap[String,
         for(choice <- choices) {
           createAndUpdateScope(choice.asInstanceOf[SendStatement].label)
           checkAndInitVariables(choice.asInstanceOf[SendStatement].label, choice.asInstanceOf[SendStatement].types, choice.asInstanceOf[SendStatement].condition)
+          synthMon.handlePayloads(choice.asInstanceOf[SendStatement].label, choice.asInstanceOf[SendStatement].types)
           initialWalk(choice.asInstanceOf[SendStatement].continuation)
           curScope = scopes(choice.asInstanceOf[SendStatement].label).parentScope.name
         }

@@ -1,5 +1,4 @@
 package monitor.examples.login
-
 import lchannels.{In, Out}
 case class Login(uname: String, pwd: String, token: String)(val cont: Out[InternalChoice1])
 sealed abstract class InternalChoice1
