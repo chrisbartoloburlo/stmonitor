@@ -40,7 +40,7 @@ class STInterpreter(sessionType: SessionType, path: String) {
     scopes(scopeName)
   }
 
-  def run() {
+  def run(): (StringBuilder, StringBuilder) = {
     sessionType.statement match {
       case recursiveStatement: RecursiveStatement =>
         var tmpStatement: Statement = null
@@ -60,6 +60,7 @@ class STInterpreter(sessionType: SessionType, path: String) {
     walk(sessionType.statement)
     synthMon.end()
     synthProtocol.end()
+    (synthMon.getMon(), synthProtocol.getProtocol())
   }
 
   def initialWalk(root: Statement): Unit = {
@@ -263,8 +264,8 @@ class STInterpreter(sessionType: SessionType, path: String) {
     true
   }
 
-  def getVarInfo(identName: String): (String, (Boolean, String)) = {
-    (searchIdent(curScope, identName), scopes(searchIdent(curScope, identName)).variables(identName))
+  def getVarInfo(identName: String, tmpCurScope: String): (String, (Boolean, String)) = {
+    (searchIdent(tmpCurScope, identName), scopes(searchIdent(tmpCurScope, identName)).variables(identName))
   }
 
 }
