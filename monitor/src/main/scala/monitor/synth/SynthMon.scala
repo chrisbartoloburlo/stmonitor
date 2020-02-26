@@ -2,10 +2,13 @@ package monitor.synth
 
 import java.io.{File, PrintWriter}
 
+import com.typesafe.scalalogging.Logger
 import monitor.interpreter.STInterpreter
 import monitor.model._
 
 class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
+  val logger: Logger = Logger("SynthMon")
+
   private val mon = new PrintWriter(new File(path+"/Mon.scala"))
 
   var first = true
@@ -26,6 +29,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
     mon.write("(implicit ec: ExecutionContext, timeout: Duration) extends Actor {\n")
     mon.write("  object payloads {\n")
+    logger.debug("initialisation started")
   }
 
   def handlePayloads(label: String, types: Map[String, String]): Unit ={
@@ -55,14 +59,12 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         mon.write("  def send"+statement.label+"(internal: In["+statement.label+"], External: ConnectionManager): Any = {\n")
     }
 
-//    mon.write("  def send"+statement.label+"(internal: In["+statement.label+"], External: ConnectionManager): Any = {\n")
     mon.write("    internal ? {\n")
     mon.write("      case msg @ "+statement.label+"(")
     addParameters(statement.types)
     mon.write(") =>\n")
 
     if(statement.condition != null){
-//      mon.write("        if("+statement.condition+"){\n")
       handleCondition(statement.condition, statement.label)
       mon.write("External.send(msg)\n")
       handleSendNextCase(statement, nextStatement)
@@ -147,13 +149,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     addParameters(statement.types)
     mon.write(")=>\n")
     if(statement.condition != null){
-//      mon.write("        if("+statement.condition+"){\n")
       handleCondition(statement.condition, statement.label)
-//      handleAssertion(statement.condition)
-
-        handleReceiveNextCase(statement, nextStatement)
-        mon.write("        } else {\n")
-
+      handleReceiveNextCase(statement, nextStatement)
+      mon.write("        } else {\n")
     } else {
       handleReceiveNextCase(statement, nextStatement)
     }
@@ -169,7 +167,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     nextStatement match {
       case sendStatement: SendStatement =>
         handleReceiveCases(currentStatement)
-//        appendToGlobalVar(currentStatement.label)
         storeValue(currentStatement.types, currentStatement.condition==null)
         if(currentStatement.condition==null) {
           mon.write("\t\t\t\tsend" + sendStatement.label + "(cont, External)\n")
@@ -179,7 +176,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
       case sendChoiceStatement: SendChoiceStatement =>
         handleReceiveCases(currentStatement)
-//        appendToGlobalVar(currentStatement.label)
         storeValue(currentStatement.types, currentStatement.condition==null)
         if(currentStatement.condition==null) {
           mon.write("\t\t\t\tsend" + sendChoiceStatement.label + "(cont, External)\n")
@@ -251,10 +247,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       mon.write(") =>\n")
       if(choice.asInstanceOf[SendStatement].condition != null){
         handleCondition(choice.asInstanceOf[SendStatement].condition, choice.asInstanceOf[SendStatement].label)
-          mon.write("External.send(msg)\n")
-          handleSendNextCase(choice.asInstanceOf[SendStatement], choice.asInstanceOf[SendStatement].continuation)
-          mon.write("        } else {\n")
-
+        mon.write("External.send(msg)\n")
+        handleSendNextCase(choice.asInstanceOf[SendStatement], choice.asInstanceOf[SendStatement].continuation)
+        mon.write("        } else {\n")
       } else {
         mon.write("        External.send(msg)\n")
         handleSendNextCase(choice.asInstanceOf[SendStatement], choice.asInstanceOf[SendStatement].continuation)
@@ -280,13 +275,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       addParameters(choice.asInstanceOf[ReceiveStatement].types)
       mon.write(")=>\n")
       if(choice.asInstanceOf[ReceiveStatement].condition != null){
-//        mon.write("        if("+choice.head.asInstanceOf[ReceiveStatement].condition+"){\n")
         handleCondition(choice.asInstanceOf[ReceiveStatement].condition, choice.asInstanceOf[ReceiveStatement].label)
-//        handleAssertion(choice.head.asInstanceOf[ReceiveStatement].condition)
-
-          handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], choice.asInstanceOf[ReceiveStatement].continuation)
-          mon.write("        } else {\n")
-
+        handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], choice.asInstanceOf[ReceiveStatement].continuation)
+        mon.write("        } else {\n")
       } else {
         mon.write("        ")
         handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], choice.asInstanceOf[ReceiveStatement].continuation)
@@ -314,7 +305,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     val identifierNames = sessionTypeInterpreter.getIdentifiers(condition)
     for(identName <- identifierNames){
       val varScope = sessionTypeInterpreter.searchIdent(label, identName)
-      val (_, typ) = sessionTypeInterpreter.getScope(varScope).variables(identName)
       val identPattern = ("\\b"+identName+"\\b").r
       if(label == varScope){
         stringCondition = identPattern.replaceAllIn(stringCondition, "msg."+identName)

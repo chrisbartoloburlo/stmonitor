@@ -38,7 +38,6 @@ class STParser extends StandardTokenParsers {
       ReceiveStatement(l, t, c.get, End())
     case l ~ t ~ c ~ cT =>
       ReceiveStatement(l, t, c.get, cT.get)
-
   }
 
   def receiveChoice: Parser[ReceiveChoiceStatement] = "&" ~ "{" ~> (repsep(sessionType, ",") <~ "}") ^^ {

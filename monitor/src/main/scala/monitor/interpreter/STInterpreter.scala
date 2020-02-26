@@ -1,8 +1,8 @@
 package monitor.interpreter
 
+import com.typesafe.scalalogging.Logger
 import monitor.model._
 import monitor.model.Scope
-import monitor.model.Expr
 import monitor.synth.{SynthMon, SynthProtocol}
 
 import scala.collection.mutable
@@ -21,6 +21,8 @@ class STInterpreter(sessionType: SessionType, globalVar: mutable.HashMap[String,
 
   var synthMon = new SynthMon(this, path)
   var synthProtocol = new SynthProtocol(this, path)
+
+  val logger: Logger = Logger("STInterpreter")
 
   def getGlobalVar: mutable.HashMap[String, String] = {
     globalVar
@@ -112,7 +114,7 @@ class STInterpreter(sessionType: SessionType, globalVar: mutable.HashMap[String,
   def walk(statement: Statement): Unit = {
     statement match {
       case statement @ ReceiveStatement(label, types, condition, _) =>
-        println("Receive "+label+"("+types+")")
+        logger.info("Receive "+label+"("+types+")")
         curScope = label
         checkCondition(label, types, condition)
 
@@ -121,7 +123,7 @@ class STInterpreter(sessionType: SessionType, globalVar: mutable.HashMap[String,
         walk(statement.continuation)
 
       case statement @ SendStatement(label, types, condition, _) =>
-        println("Send "+label+"("+types+")")
+        logger.info("Send "+label+"("+types+")")
         curScope = label
         checkCondition(label, types, condition)
 
@@ -130,8 +132,8 @@ class STInterpreter(sessionType: SessionType, globalVar: mutable.HashMap[String,
         walk(statement.continuation)
 
       case statement @ ReceiveChoiceStatement(label, choices) =>
+        logger.info("Receive Choice Statement "+label+"{"+choices+"}")
         curScope = label
-        println("Receive Choice Statement "+label+"{"+choices+"}")
         synthMon.handleReceiveChoice(statement)
         synthProtocol.handleReceiveChoice(statement.label)
 
@@ -149,7 +151,7 @@ class STInterpreter(sessionType: SessionType, globalVar: mutable.HashMap[String,
       //          }
 
       case statement @ SendChoiceStatement(label, choices) =>
-        println("Send Choice Statement "+label+"{"+choices+"}")
+        logger.info("Send Choice Statement "+label+"{"+choices+"}")
         curScope = label
         synthMon.handleSendChoice(statement)
         synthProtocol.handleSendChoice(statement.label)
@@ -168,11 +170,11 @@ class STInterpreter(sessionType: SessionType, globalVar: mutable.HashMap[String,
       //          }
 
       case statement @ RecursiveStatement(label, body) =>
-        println("Recursive statement with variable "+label+" and body: " +body)
+        logger.info("Recursive statement with variable "+label+" and body: " +body)
         walk(statement.body)
 
       case statement @ RecursiveVar(name, continuation) =>
-        println("Recursive variable "+name)
+        logger.info("Recursive variable "+name)
         checkRecVariable(scopes(curScope), statement)
         walk(statement.continuation)
 

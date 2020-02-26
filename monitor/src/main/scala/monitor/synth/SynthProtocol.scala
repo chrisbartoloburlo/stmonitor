@@ -38,7 +38,7 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
     protocol.write("case class "+statement.label+"(")
     handleParam(statement)
     protocol.write(")")
-    handleSendNextCase(nextStatement)
+    handleReceiveNextCase(nextStatement)
 
     label match {
       case null =>
@@ -72,13 +72,30 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
       case s @ SendStatement(_, _, _, _) =>
         protocol.write("(val cont: In["+s.label+"])")
       case s @ SendChoiceStatement(_, _) =>
-        protocol.write("(val cont: Out["+s.label+"])")
+        protocol.write("(val cont: In["+s.label+"])")
       case s @ ReceiveStatement(_, _, _, _) =>
         protocol.write("(val cont: Out["+s.label+"])")
       case s @ ReceiveChoiceStatement(_, _) =>
         protocol.write("(val cont: Out["+s.label+"])")
       case s @ RecursiveVar(_, _) =>
         handleSendNextCase(sessionTypeInterpreter.getRecursiveVarScope(s).recVariables(s.name))
+      case _ =>
+
+    }
+  }
+
+  def handleReceiveNextCase(statement: Statement): Unit ={
+    statement match {
+      case s @ SendStatement(_, _, _, _) =>
+        protocol.write("(val cont: Out["+s.label+"])")
+      case s @ SendChoiceStatement(_, _) =>
+        protocol.write("(val cont: Out["+s.label+"])")
+      case s @ ReceiveStatement(_, _, _, _) =>
+        protocol.write("(val cont: In["+s.label+"])")
+      case s @ ReceiveChoiceStatement(_, _) =>
+        protocol.write("(val cont: In["+s.label+"])")
+      case s @ RecursiveVar(_, _) =>
+        handleReceiveNextCase(sessionTypeInterpreter.getRecursiveVarScope(s).recVariables(s.name))
       case _ =>
 
     }
