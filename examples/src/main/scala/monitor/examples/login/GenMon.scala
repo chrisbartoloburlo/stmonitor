@@ -23,12 +23,13 @@ object GenMon {
         try {
           interpreter.run()
         } catch {
-          case e: RuntimeException => println(e.getMessage)
+          case e: Exception =>
+            println("Error: " + e.getMessage)
         }
 
-      case parser.Error(msg, n) => println("Error: " + msg + " n: "+n.offset )
+      case parser.Error(msg, n) => println("Parser Error: " + msg + " offset: "+n.offset )
 
-      case parser.Failure(msg, n) => println("Error: " + msg + " n: "+n.offset )
+      case parser.Failure(msg, n) => println("Parser Error: " + msg + " offset: "+n.offset )
 
       case _ =>
 
