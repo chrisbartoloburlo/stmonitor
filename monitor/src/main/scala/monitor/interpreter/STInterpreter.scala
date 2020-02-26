@@ -214,6 +214,9 @@ class STInterpreter(sessionType: SessionType, path: String) {
 
   def searchIdent(tmpCurScope: String, identifierName: String): String = {
     if(!scopes(tmpCurScope).variables.contains(identifierName)){
+      if(scopes(tmpCurScope).parentScope==null){
+        throw new Exception("STInterpreter - Identifier "+identifierName+" not in scope")
+      }
       searchIdent(scopes(tmpCurScope).parentScope.name, identifierName)
     } else {
       tmpCurScope

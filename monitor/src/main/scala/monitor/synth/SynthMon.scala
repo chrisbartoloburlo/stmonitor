@@ -2,13 +2,10 @@ package monitor.synth
 
 import java.io.{File, PrintWriter}
 
-import com.typesafe.scalalogging.Logger
 import monitor.interpreter.STInterpreter
 import monitor.model._
 
 class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
-  val logger: Logger = Logger("SynthMon")
-
   private val mon = new PrintWriter(new File(path+"/Mon.scala"))
 
   var first = true
@@ -29,7 +26,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
     mon.write("(implicit ec: ExecutionContext, timeout: Duration) extends Actor {\n")
     mon.write("  object payloads {\n")
-    logger.debug("initialisation started")
   }
 
   def handlePayloads(label: String, types: Map[String, String]): Unit ={

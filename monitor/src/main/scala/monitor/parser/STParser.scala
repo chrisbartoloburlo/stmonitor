@@ -96,6 +96,6 @@ class STParser extends StandardTokenParsers {
 
   def parseAll[T](p: Parser[T], in: String): ParseResult[T] = {
     val assertionPattern = """\[(.*?)\]""".r
-    phrase(p)(new lexical.Scanner(assertionPattern.replaceAllIn(in.replace("\"", "\\\""), "[\""+_.group(1)+"\"]")))
+    phrase(p)(new lexical.Scanner(assertionPattern.replaceAllIn(in, "[\""+_.group(1).replace("\"", "\\\\\"")+"\"]")))
   }
 }
