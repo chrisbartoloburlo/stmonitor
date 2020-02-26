@@ -11,14 +11,8 @@ class STParser extends StandardTokenParsers {
 
   lexical.delimiters += ("?", "!", "&", "+", "(", ")", "{", "}", ",", ":", "=", ".", "[", "]")
 
-  private var globalVar = new mutable.HashMap[String, String]
-
   private var sendChoiceCounter: Int = 0
   private var receiveChoiceCounter: Int = 0
-
-  def getGlobalVar: mutable.HashMap[String, String] = {
-    globalVar
-  }
 
   def sessionTypeVar: Parser[SessionType] = (ident ~> "=") ~ sessionType ^^ {
     case i ~ t =>

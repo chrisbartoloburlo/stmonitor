@@ -19,7 +19,7 @@ object GenMon {
 
         println("parser success")
 
-        val interpreter = new STInterpreter(r, parser.getGlobalVar, path)
+        val interpreter = new STInterpreter(r, path)
         try {
           interpreter.run()
         } catch {
