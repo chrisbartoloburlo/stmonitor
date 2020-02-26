@@ -34,6 +34,7 @@ class Mon(Internal: Out[Login])(implicit ec: ExecutionContext, timeout: Duration
 					sendInternalChoice1(cont, External)
         } else {
         }
+      case _ =>
     }
   }
   def sendInternalChoice1(internal: In[InternalChoice1], External: ConnectionManager): Any = {

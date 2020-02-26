@@ -158,7 +158,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     if(statement.condition != null){
       mon.write("        }\n")
     }
-
+    mon.write("      case _ =>\n")
     mon.write("    }\n  }\n")
   }
 
@@ -286,6 +286,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         mon.write("        }\n")
       }
     }
+    mon.write("      case _ =>\n")
     mon.write("    }\n  }\n")
   }
 
