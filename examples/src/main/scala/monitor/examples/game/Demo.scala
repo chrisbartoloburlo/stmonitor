@@ -5,7 +5,7 @@ import lchannels.LocalChannel
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-object Main extends App{
+object Demo extends App{
   val timeout = 30.seconds
 
   val system = ActorSystem("System")
