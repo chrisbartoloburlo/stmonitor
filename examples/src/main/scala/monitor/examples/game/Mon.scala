@@ -1,10 +1,14 @@
 package monitor.examples.game
 
 import akka.actor._
+import com.typesafe.scalalogging.Logger
 import lchannels.{In, Out}
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
+
 class Mon(Internal: In[InternalChoice1])(implicit ec: ExecutionContext, timeout: Duration) extends Actor {
+  val logger: Logger = Logger("Mon")
   object payloads {
 		object Guess {
 			var num: Int = _
@@ -19,8 +23,8 @@ class Mon(Internal: In[InternalChoice1])(implicit ec: ExecutionContext, timeout:
 	}
   def receive: Receive = {
     case MonStart =>
-      println("[Mon] Monitor started")
-      println("[Mon] Setting up connection manager")
+      logger.info("Monitor started")
+      logger.info("Setting up connection manager")
       val cm = new ConnectionManager()
       cm.setup()
       sendInternalChoice1(Internal, cm)
@@ -34,6 +38,8 @@ class Mon(Internal: In[InternalChoice1])(implicit ec: ExecutionContext, timeout:
 					payloads.Guess.num = msg.num
 					receiveExternalChoice1(msg.cont, External)
         } else {
+          External.close()
+          throw new Exception("[Mon] Incorrect value sent by client")
         }
       case msg @ Quit() =>
         External.send(msg)
@@ -45,11 +51,15 @@ class Mon(Internal: In[InternalChoice1])(implicit ec: ExecutionContext, timeout:
         if(msg.ans==payloads.Guess.num){
           	internal ! msg
         } else {
+          External.close()
+          throw new Exception("[Mon] Incorrect value sent by server")
         }
       case msg @ Incorrect()=>
-        				val cont = internal !! Incorrect()_
+        val cont = internal !! Incorrect()_
 				sendInternalChoice1(cont, External)
       case _ =>
+        External.close()
+        throw new Exception("[Mon] Received unknown message from server")
     }
   }
 }

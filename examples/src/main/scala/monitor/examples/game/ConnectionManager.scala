@@ -4,14 +4,17 @@ import java.io
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 import java.net.Socket
 
+import com.typesafe.scalalogging.Logger
+
 class ConnectionManager(){
+  val logger: Logger = Logger("CM")
   var outB: BufferedWriter = _
   var inB: BufferedReader = _
   private val correctR = """CORRECT (.+)""".r
   private val incorrectR = """INCORRECT""".r
 
   def setup(): Unit ={
-    println("[CM] Connecting to 127.0.0.1:1337")
+    logger.info("Connecting to 127.0.0.1:1337")
     val conn = new Socket("127.0.0.1", 1337)
     outB = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream))
     inB = new BufferedReader(new InputStreamReader(conn.getInputStream))
