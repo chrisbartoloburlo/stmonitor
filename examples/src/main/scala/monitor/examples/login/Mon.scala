@@ -33,8 +33,12 @@ class Mon(Internal: Out[Login])(implicit ec: ExecutionContext, timeout: Duration
 					payloads.Login.uname = msg.uname
 					sendInternalChoice1(cont, External)
         } else {
+          External.close()
+          throw new Exception("[Mon] Incorrect value received by client")
         }
       case _ =>
+        External.close()
+        throw new Exception("[Mon] Received unknown message from client")
     }
   }
   def sendInternalChoice1(internal: In[InternalChoice1], External: ConnectionManager): Any = {
@@ -43,6 +47,8 @@ class Mon(Internal: Out[Login])(implicit ec: ExecutionContext, timeout: Duration
         if(util.validateId(msg.id,payloads.Login.uname)){
           External.send(msg)
         } else {
+          External.close()
+          throw new Exception("[Mon] Incorrect value sent by server")
         }
       case msg @ Retry() =>
         External.send(msg)
