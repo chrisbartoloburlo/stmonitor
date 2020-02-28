@@ -3,9 +3,9 @@
 
 A tool ([Synth](https://github.com/chrisbartoloburlo/stmonitor/blob/master/monitor/src/main/scala/monitor/Synth.scala)) that, given a session type _S_, can synthesise the Scala code of a type-checked monitor that verifies at runtime whether an interaction abides by _S_, and signatures usable to implement a process that interacts according to _S_. The generated monitors are embedded with runtime data checks as specified in the session types. More information can be found [here]().
 
-To synthesise the monitors use [Synth](https://github.com/chrisbartoloburlo/stmonitor/blob/master/monitor/src/main/scala/monitor/Synth.scala) and pass the following as arguments: the **path** in which the file util.scala is found and where the monitor.scala and protocol.scala shall be generated, the **file name** containing the session type, and **what to synthesise** (i.e. the monitor or the classes only or both). The file util.scala might contain any functions used in the session types as assertions. If no assertions are present in the session type, the empty util.scala file should still be in the directory. Otherwise, before generating the monitor ensure to remove the `package` declaration. Once generated, the declaration should be placed again. Similarly, the declaration should also be placed in the generated monitors. 
+To synthesise the monitors use [Synth](https://github.com/chrisbartoloburlo/stmonitor/blob/master/monitor/src/main/scala/monitor/Synth.scala) and pass the following as arguments: the **path** in which the file util.scala is found and where the monitor.scala and protocol.scala shall be generated, the **file name** containing the session type, and **what to synthesise** (i.e. the monitor or the classes only or both). The file util.scala might contain any functions used in the session types as assertions. If no assertions are present in the session type, the empty util.scala file should still be in the directory. Otherwise, before generating the monitor ensure to remove the `package` declaration. Once generated, the declaration should be placed again. Similarly, the declaration should also be placed in the generated monitor (mon.scala) and classes (protocol.scala). 
 
-_Examples_:
+_Examples_: 
 
 The monitors for the below examples are already generated and found in their respective directory. 
 
