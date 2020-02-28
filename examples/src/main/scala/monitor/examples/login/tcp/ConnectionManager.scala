@@ -1,7 +1,8 @@
-package monitor.examples.login
+package monitor.examples.login.tcp
 
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 import java.net.ServerSocket
+import monitor.examples.login.{Login, Retry, Success}
 
 class ConnectionManager(){
   var outB: BufferedWriter = _

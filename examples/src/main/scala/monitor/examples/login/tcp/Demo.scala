@@ -1,7 +1,8 @@
-package monitor.examples.login
+package monitor.examples.login.tcp
 
 import akka.actor.{ActorSystem, Props}
 import lchannels.LocalChannel
+import monitor.examples.login.{Login, Mon, MonStart, Server}
 
 object Demo extends App{
   import scala.concurrent.ExecutionContext.Implicits.global

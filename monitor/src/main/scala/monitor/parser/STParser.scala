@@ -2,7 +2,6 @@ package monitor.parser
 
 import monitor.model._
 
-import scala.collection.mutable
 import scala.language.postfixOps
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 

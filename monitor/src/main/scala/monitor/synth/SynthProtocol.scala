@@ -1,7 +1,5 @@
 package monitor.synth
 
-import java.io.{File, PrintWriter}
-
 import monitor.interpreter.STInterpreter
 import monitor.model._
 

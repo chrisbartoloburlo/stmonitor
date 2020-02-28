@@ -1,3 +1,4 @@
 .idea
 target
 *.iml
+examples/src/main/scala/monitor/examples/login/http/
