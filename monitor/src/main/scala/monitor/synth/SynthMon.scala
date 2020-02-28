@@ -1,12 +1,9 @@
 package monitor.synth
 
-import java.io.{File, PrintWriter}
-
 import monitor.interpreter.STInterpreter
 import monitor.model._
 
 class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
-//  private val mon = new PrintWriter(new File(path+"/Mon.scala"))
   private val mon = new StringBuilder()
 
   def getMon(): StringBuilder = {
@@ -33,6 +30,12 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("  object payloads {\n")
   }
 
+  /**
+   * Generates the code for storing values used from other parts in the monitor.
+   *
+   * @param label The label of the current statement.
+   * @param types A mapping from identifiers to their type.
+   */
   def handlePayloads(label: String, types: Map[String, String]): Unit ={
     mon.append("\t\tobject "+label+" {\n")
     for(typ <- types){
@@ -78,19 +81,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       mon.append("        }\n")
     }
     mon.append("    }\n  }\n")
-  }
-
-  private def storeValue(types: Map[String, String], checkCondition: Boolean, curStatementScope: String): Unit = {
-    for((name, _) <- types) {
-      val (varScope, (global, _)) = sessionTypeInterpreter.getVarInfo(name, curStatementScope)
-      if(global) {
-        if(checkCondition){
-          mon.append("\t\t\t\t\t\tpayloads."+varScope+"."+name+" = msg."+name+"\n")
-        } else {
-          mon.append("\t\t\t\t\tpayloads."+varScope+"."+name+" = msg."+name+"\n")
-        }
-      }
-    }
   }
 
   @scala.annotation.tailrec
@@ -291,6 +281,11 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("    }\n  }\n")
   }
 
+  /**
+   * Generates the parameters for the statements depending on the payload size.
+   *
+   * @param types A mapping from identifiers to their type.
+   */
   private def addParameters(types: Map[String, String]): Unit ={
     for (typ <- types) {
       if(typ == types.last){
@@ -301,6 +296,34 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     }
   }
 
+  /**
+   * Generates the code for storing a value in the respective identifier object within the monitor.
+   *
+   * @param types A mapping from identifiers to their type.
+   * @param checkCondition A boolean indicating whether current statement has a condition.
+   * @param curStatementScope The label of the current statement used to retrieve identifier
+   *                          information from the interpreter.
+   */
+  private def storeValue(types: Map[String, String], checkCondition: Boolean, curStatementScope: String): Unit = {
+    for((name, _) <- types) {
+      val (varScope, (global, _)) = sessionTypeInterpreter.getVarInfo(name, curStatementScope)
+      if(global) {
+        if(checkCondition){
+          mon.append("\t\t\t\t\t\tpayloads."+varScope+"."+name+" = msg."+name+"\n")
+        } else {
+          mon.append("\t\t\t\t\tpayloads."+varScope+"."+name+" = msg."+name+"\n")
+        }
+      }
+    }
+  }
+
+  /**
+   * Generates the code for conditions by identifying identifiers and changing them for the
+   * respective variable within the monitor.
+   *
+   * @param condition Condition in String format.
+   * @param label The label of the current statment.
+   */
   private def handleCondition(condition: String, label: String): Unit ={
     mon.append("        if(")
     var stringCondition = condition

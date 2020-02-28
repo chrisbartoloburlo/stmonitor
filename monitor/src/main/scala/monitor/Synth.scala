@@ -9,6 +9,15 @@ import monitor.parser.STParser
 import scala.io.Source
 
 class Synth {
+  /**
+   * Synthesises the monitor and the protocol files.
+   *
+   * @param path The path containing the util.scala file which also represents the directory where the monitor
+   *             and protocol files are to be generated in.
+   * @param fileName The name of the file containing the session type.
+   * @param synthMonFile A flag to indicate whether to synthesise the monitor file or not.
+   * @param synthProtocolFile A flag to indicate whether to synthesise the protocol file or not.
+   */
   def apply(path: String, fileName: String, synthMonFile: Boolean, synthProtocolFile: Boolean): Unit ={
     val logger = Logger("Synth")
     val inputFile = Source.fromFile(path+"/"+fileName)
