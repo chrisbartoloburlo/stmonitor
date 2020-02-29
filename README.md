@@ -16,9 +16,9 @@ S_login = rec X.?Login(uname:Str, pwd:Str, token:Str)[validateAuth(uname, token)
 
 The functions `validateAuth()` and `validateId()` are present in the `util.scala` file. The package declaration (first line) must be temporarily removed from the file before proceeding.
 
-To generate the monitor and the CPSP classes, run `Generate.scala` using the following command:
+To generate the monitor and the CPSP classes, run `Generate.scala` using the following command in a terminal inside the project root directory:
 ```
-
+sbt "project examples" "runMain monitor.examples.test.Generate"
 ```
 Once completed, the files `mon.scala` and `CPSPc.scala` should be present in the test directory.
 
