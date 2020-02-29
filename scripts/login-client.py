@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 CLIENT_HOST = '127.0.0.1'
-CLIENT_PORT = 1337
+CLIENT_PORT = 1330
 
 import re, socket
 

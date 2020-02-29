@@ -8,7 +8,7 @@ class ConnectionManager(){
   var outB: BufferedWriter = _
   var inB: BufferedReader = _
 
-  val server = new ServerSocket(1337)
+  val server = new ServerSocket(1330)
 
   private val loginR = """LOGIN (.+) (.+) (.+)""".r
 

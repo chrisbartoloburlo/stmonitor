@@ -7,7 +7,7 @@ import monitor.examples.login.{Login, Mon, MonStart, Server}
 object Demo extends App{
   import scala.concurrent.ExecutionContext.Implicits.global
   import scala.concurrent.duration._
-  val timeout = 30.seconds
+  val timeout = Duration.Inf
 
   val system = ActorSystem("System")
 
