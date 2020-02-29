@@ -11,7 +11,7 @@ It is recommended that the generation of `mon.scala` and `CPSPc.scala` is done f
 
 A server must follow the type found in `login.st`:
 ```
-S_login = rec X.?Login(uname:Str, pwd:Str, token:Str)[validateAuth(uname, token)]. +{!Success(id:Str)[validateId(id,uname)].R , !Retry().X􏰂}
+S_login = rec X.?Login(uname:Str, pwd:Str, token:Str)[validateAuth(uname, token)]. +{!Success(id:Str)[validateId(id,uname)].R , !Retry().X}
 ```
 
 The functions `validateAuth()` and `validateId()` are present in the `util.scala` file. The package declaration (first line) must be temporarily removed from the file before proceeding.
