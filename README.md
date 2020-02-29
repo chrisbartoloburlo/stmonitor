@@ -7,7 +7,7 @@ A tool ([Synth](https://github.com/chrisbartoloburlo/stmonitor/blob/master/monit
 
 #### 1. Synthesising the monitor and CPSP classes.
 
-It is recommended that the generation of `mon.scala` and `CPSPc.scala` is done first thing, i.e. before implementing anything else. However, in order to be able to proceed to the next step to start the server together with the monitor, the implementation of the other components must be present. Therefore, for the sake of this example follow the below steps in the test directory, set up specifically for this demo.
+It is recommended that the generation of `mon.scala` and `CPSPc.scala` is done first thing, i.e. before implementing anything else. However, in order to be able to proceed to the next step to start the server together with the monitor, the implementation of the other components must be present. Therefore, for the sake of this example follow the below steps in the [test](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/examples/test) directory, set up specifically for this demo containing only the files required to generate the monitor and the classes.
 
 A server must follow the type found in `login.st`:
 ```
