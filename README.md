@@ -28,7 +28,7 @@ sbt "project examples" "runMain monitor.examples.test.Generate"
 Once completed, the files `mon.scala` and `CPSPc.scala` should be present in the test directory. These files are the same as those found in the [login]() directory, with the exception handling and logging added where violations are expected. Moreover, the package declarations are also added accordingly.
 
 #### 2. Starting the setup.
-1. Start the server together with the monitor using `Demo.scala` found in `tcp/` using the following command:
+1. Start the server together with the monitor using `Demo.scala` found in [`tcp/`](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/examples/login/tcp) using the following command:
     ```
     sbt "project examples" "runMain monitor.examples.login.tcp.Demo"
     ```
