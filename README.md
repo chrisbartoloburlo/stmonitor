@@ -8,7 +8,7 @@ These instructions are for recreating and executing the example found in the pap
 ### Compile the sources
 This project uses the **`sbt`** build tool which can be downloaded from [here](https://www.scala-sbt.org/0.13/docs/Setup.html) (sbt v. 0.13.x). Once installed, open a terminal in `stmonitor/`* and execute the command `sbt compile`.
 
-\* _All commands from now on must be executed from this location._
+\* _All commands from this point forward must be executed from this location._
 
 ### The login example
 
