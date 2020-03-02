@@ -23,11 +23,11 @@ S_login = rec X.?Login(uname:Str, pwd:Str, token:Str)[validateAuth(uname, token)
 
 The functions `validateAuth()` and `validateId()` are present in the `util.scala` file. The package declaration (first line) must be temporarily removed from the file before proceeding.
 
-To generate the monitor and the CPSP classes, run `Generate.scala` using the following command in a terminal inside the project root directory:
+To generate the monitor and the CPSP classes, run `Generate.scala` using the following command in a terminal inside the project root directory (replace `[root]` accordingly to represent the absolute path to the test directory):
 ```
-sbt "project examples" "runMain monitor.examples.test.Generate"
+sbt "project examples" "runMain monitor.examples.test.Generate [root]/stmonitor/examples/src/main/scala/monitor/examples/test"
 ```
-Once completed, the files `mon.scala` and `CPSPc.scala` should be present in the test directory. These files are the same as those found in the [login]() directory, with the exception handling and logging added where violations are expected. Moreover, the package declarations are also added accordingly.
+Once completed, the files `mon.scala` and `CPSPc.scala` should be present in the test directory. These files are the same as those found in the [login](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/examples/login) directory, with the exception handling and logging added where violations are expected. Moreover, the package declarations are also added accordingly.
 
 #### 2. Starting the setup.
 1. Start the server together with the monitor using `Demo.scala` found in [`tcp/`](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/examples/login/tcp) using the following command:
