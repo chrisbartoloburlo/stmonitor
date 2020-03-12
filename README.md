@@ -27,9 +27,10 @@ To generate the monitor and the CPSP classes, run `Generate.scala` using the fol
 ```
 sbt "project examples" "runMain monitor.examples.test.Generate [root]/stmonitor/examples/src/main/scala/monitor/examples/test"
 ```
-Once completed, the files `mon.scala` and `CPSPc.scala` should be present in the test directory. These files are the same as those found in the [login](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/examples/login) directory, with the exception handling and logging added where violations are expected. Moreover, the package declarations are also added accordingly.
+Once completed, the files `mon.scala` and `CPSPc.scala` should be present in the test directory. These files are the same as those found in the [login](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/examples/login) directory, with the exception handling and logging added where violations are expected. Moreover, the package declarations are also added accordingly. These generated files will not compile due to the lack of other sources (such as the connection manager). For a demo proceed to the next step.
 
 #### 2. Starting the setup.
+**Before proceeding, remove the files generated from the previous step to ensure that the project compiles.**
 1. Start the server together with the monitor using `Demo.scala` found in [`tcp/`](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/examples/login/tcp) using the following command:
     ```
     sbt "project examples" "runMain monitor.examples.login.tcp.Demo"
