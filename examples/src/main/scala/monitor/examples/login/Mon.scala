@@ -1,7 +1,7 @@
 package monitor.examples.login
 import akka.actor._
 import lchannels.{In, Out}
-import monitor.examples.login.tcp.ConnectionManager
+import monitor.examples.login.tcp.SynConnectionManager
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
@@ -22,12 +22,12 @@ class Mon(Internal: Out[Login])(implicit ec: ExecutionContext, timeout: Duration
     case MonStart =>
       println("[Mon] Monitor started")
       println("[Mon] Setting up connection manager")
-      val cm = new ConnectionManager()
+      val cm = new SynConnectionManager()
       cm.setup()
       receiveLogin(Internal, cm)
       cm.close()
   }
-  def receiveLogin(internal: Out[Login], External: ConnectionManager): Any = {
+  def receiveLogin(internal: Out[Login], External: SynConnectionManager): Any = {
     External.receive() match {
       case msg @ Login(_, _, _)=>
         if(util.validateAuth(msg.uname, msg.token)){
@@ -43,7 +43,7 @@ class Mon(Internal: Out[Login])(implicit ec: ExecutionContext, timeout: Duration
         throw new Exception("[Mon] Received unknown message from client")
     }
   }
-  def sendInternalChoice1(internal: In[InternalChoice1], External: ConnectionManager): Any = {
+  def sendInternalChoice1(internal: In[InternalChoice1], External: SynConnectionManager): Any = {
     internal ? {
       case msg @ Success(_) =>
         if(util.validateId(msg.id,payloads.Login.uname)){
