@@ -1,4 +1,4 @@
 .idea
 target
 *.iml
-examples/src/main/scala/monitor/examples/login/http/
+.DS_Store
