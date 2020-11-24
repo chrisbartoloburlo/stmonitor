@@ -1,8 +1,9 @@
 // Kludge to avoid building an empty .jar for the root project
 Keys.`package` := {
-    (Keys.`package` in (lchannels, Compile)).value
-    (Keys.`package` in (monitor, Compile)).value
-    (Keys.`package` in (examples, Compile)).value
+  (Keys.`package` in (lchannels, Compile)).value
+  (Keys.`package` in (monitor, Compile)).value
+  (Keys.`package` in (examples, Compile)).value
+  (Keys.`package` in (benchmarks, Compile)).value
 }
 
 lazy val commonSettings = Seq(
@@ -51,4 +52,19 @@ lazy val examples = (project in file("examples")).
 
     libraryDependencies ++= Seq(
     )
+  )
+
+lazy val benchmarks = (project in file("benchmarks")).
+  dependsOn(lchannels, monitor).
+  settings(commonSettings: _*).
+  settings(
+    name := "benchmarks",
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-http" % "10.0.15"
+    )
+    // Depending on the benchmark size and duration, you might want
+    // to add the following options:
+    //
+    // fork := true, // Fork a JVM, running inside benchmarks/ dir
+    // javaOptions ++= Seq("-Xms1024m", "-Xmx1024m") // Enlarge heap size
   )

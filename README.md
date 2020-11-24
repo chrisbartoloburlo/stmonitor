@@ -14,9 +14,9 @@ This project uses the **`sbt`** build tool which can be downloaded from [here](h
 
 #### 1. Synthesising the monitor and CPSP classes.
 
-It is recommended that the generation of `mon.scala` and `CPSPc.scala` is done first thing, i.e. before implementing anything else. However, in order to be able to proceed to the next step to start the server together with the monitor, the implementation of the other components is required. Therefore, for the sake of this example, follow the below steps in the [test](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/examples/test) directory, set up specifically for this demo containing only the files required to generate the monitor and the classes.
+It is recommended that the generation of `mon.scala` and `CPSPc.scala` is done first thing, i.e. before implementing anything else. However, in order to be able to proceed to the next step to start the server together with the monitor, the implementation of the other components is required. Therefore, for the sake of this example, follow the below steps in the [generate](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/generate) package, set up specifically for this demo containing only the files required to generate the monitor and the classes.
 
-The server must follow the type found in `login.st`:
+Consider the Login example, in which the server must follow the type found in `login.st`:
 ```
 S_login = rec X.?Login(uname:Str, pwd:Str, token:Str)[validateAuth(uname, token)]. +{!Success(id:Str)[validateId(id,uname)].R , !Retry().X}
 ```
@@ -25,15 +25,15 @@ The functions `validateAuth()` and `validateId()` are present in the `util.scala
 
 To generate the monitor and the CPSP classes, run `Generate.scala` using the following command in a terminal inside the project root directory (replace `[root]` accordingly to represent the absolute path to the test directory):
 ```
-sbt "project examples" "runMain monitor.examples.test.Generate [root]/stmonitor/examples/src/main/scala/monitor/examples/test"
+sbt "project examples" "runMain monitor.examples.test.Generate [root]/stmonitor/examples/src/main/scala/monitor/generate/login"
 ```
-Once completed, the files `mon.scala` and `CPSPc.scala` should be present in the test directory. These files are the same as those found in the [login](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/examples/login) directory, with the exception handling and logging added where violations are expected. Moreover, the package declarations are also added accordingly. These generated files will not compile due to the lack of other sources (such as the connection manager). For a demo proceed to the next step.
+Once completed, the files `mon.scala` and `CPSPc.scala` should be present in the test directory. These files are the same as those found in the [login](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/execute/login) directory, with the exception handling and logging added where violations are expected. Moreover, the package declarations are also added accordingly. These generated files will not compile due to the lack of other sources (such as the connection manager). For a demo proceed to the next step.
 
 #### 2. Starting the setup.
 **Before proceeding, remove the files generated from the previous step to ensure that the project compiles.**
-1. Start the server together with the monitor using `Demo.scala` found in [`tcp/`](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/examples/login/tcp) using the following command:
+1. Start the server together with the monitor using `Demo.scala` found in [`tcp/`](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/monitor/execute/login/tcp) using the following command:
     ```
-    sbt "project examples" "runMain monitor.examples.login.tcp.Demo"
+    sbt "project examples" "runMain monitor.execute.login.tcp.Demo"
     ```
    _Note: The server listens on the TCP/IP socket 127.0.0.1:1330._
    
