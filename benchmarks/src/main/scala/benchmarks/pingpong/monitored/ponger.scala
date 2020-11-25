@@ -1,4 +1,4 @@
-package benchmarks.pingpong
+package benchmarks.pingpong.monitored
 
 import lchannels.In
 

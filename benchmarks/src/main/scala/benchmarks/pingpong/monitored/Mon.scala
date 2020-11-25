@@ -1,7 +1,8 @@
-package benchmarks.pingpong
+package benchmarks.pingpong.monitored
 
 import akka.actor._
 import lchannels.{In, Out}
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 

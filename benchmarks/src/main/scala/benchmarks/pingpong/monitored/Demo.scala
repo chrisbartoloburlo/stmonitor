@@ -1,7 +1,9 @@
-package benchmarks.pingpong
+package benchmarks.pingpong.monitored
 
 import akka.actor.{ActorSystem, Props}
 import lchannels.LocalChannel
+
+// curl -w "@curl-format.txt" -o /Desktop -s http://localhost:8080/ping
 
 object Demo extends App{
   import scala.concurrent.ExecutionContext.Implicits.global
