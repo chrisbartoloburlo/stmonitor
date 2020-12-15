@@ -24,7 +24,7 @@ class ConnectionManager {
       val p = Promise[HttpResponse]()
       requestsQueue.put(ping)
       responsesQueue.put(p)
-      println("CM queued ping")
+//      println("CM queued ping")
       p.future
   }
 
@@ -37,10 +37,10 @@ class ConnectionManager {
   def receive(): Any = {
     requestsQueue.take() match {
       case HttpRequest(GET, Uri.Path("/ping"), _, _, _) =>
-        println("CM retrieved ping, responsesQueue size: ",responsesQueue.size)
+//        println("CM retrieved ping, responsesQueue size: ",responsesQueue.size)
         Ping()(null)
       case m =>
-        println("CM retrieved",m)
+//        println("CM retrieved",m)
     }
   }
 

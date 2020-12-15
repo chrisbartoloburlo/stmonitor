@@ -12,8 +12,8 @@ class ponger(Pinger: In[Ping])(implicit ec: ExecutionContext, timeout: Duration)
     while(true) {
       resp ? {
         case ping @ Ping() =>
-          println("[Ponger] Received Ping()")
-          println("[Ponger] Sending Pong()")
+//          println("[Ponger] Received Ping()")
+//          println("[Ponger] Sending Pong()")
           resp = ping.cont !! Pong()
       }
     }
