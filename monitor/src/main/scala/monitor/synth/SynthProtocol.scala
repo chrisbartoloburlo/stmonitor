@@ -82,6 +82,8 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
         protocol.append("(val cont: Out["+s.label+"])")
       case s @ RecursiveVar(_, _) =>
         handleSendNextCase(sessionTypeInterpreter.getRecursiveVarScope(s).recVariables(s.name))
+      case s @ RecursiveStatement(_, _) =>
+        handleSendNextCase(s.body)
       case _ =>
 
     }
@@ -99,6 +101,8 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
         protocol.append("(val cont: In["+s.label+"])")
       case s @ RecursiveVar(_, _) =>
         handleReceiveNextCase(sessionTypeInterpreter.getRecursiveVarScope(s).recVariables(s.name))
+      case s @ RecursiveStatement(_, _) =>
+        handleReceiveNextCase(s.body)
       case _ =>
 
     }
