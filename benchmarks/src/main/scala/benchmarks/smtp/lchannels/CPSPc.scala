@@ -1,10 +1,6 @@
-package benchmarks.smtp.monitored
+package benchmarks.smtp.lchannels
 
 import lchannels.Out
-
-case class M250(msg: String)
-case class M221(msg: String)
-case class Quit() //FIXME not required
 
 case class M220(msg: String)(val cont: Out[InternalChoice3])
 sealed abstract class InternalChoice3

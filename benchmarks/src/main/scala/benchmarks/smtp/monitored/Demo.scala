@@ -3,24 +3,29 @@ package benchmarks.smtp.monitored
 import akka.actor.{ActorSystem, Props}
 import lchannels.LocalChannel
 
-object Demo extends App{
-  import scala.concurrent.ExecutionContext.Implicits.global
-  import scala.concurrent.duration._
-  val timeout = Duration.Inf
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
-  val system = ActorSystem("System")
+object Demo {
+  def main(args: Array[String]): Unit = {
 
-  val (in, out) = LocalChannel.factory[Login]()
-  val Mon = system.actorOf(Props(new Mon(out)(global, timeout)), name="Mon")
-  val server = new Server(in)(global, timeout)
+    val timeout = Duration.Inf
 
-  Mon ! MonStart
+    val system = ActorSystem("System")
 
-  val serverThread = new Thread {
-    override def run(): Unit = {
-      server.run()
+    val (in, out) = LocalChannel.factory[M220]()
+    val Mon = system.actorOf(Props(new Mon(out)(global, timeout)), name="Mon")
+    val mc = new mailclient(in, args(0), args(1).toInt, args(2).toInt)(global, timeout)
+
+    Mon ! MonStart
+
+    val mailclientThread = new Thread {
+      override def run(): Unit = {
+        mc.run()
+        system.terminate()
+      }
     }
-  }
 
-  serverThread.start()
+    mailclientThread.start()
+  }
 }

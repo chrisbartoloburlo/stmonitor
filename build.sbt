@@ -60,7 +60,8 @@ lazy val benchmarks = (project in file("benchmarks")).
   settings(
     name := "benchmarks",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http" % "10.0.15"
+      "com.typesafe.akka" %% "akka-http" % "10.0.15",
+      "com.github.tototoshi" %% "scala-csv" % "1.3.6"
     )
     // Depending on the benchmark size and duration, you might want
     // to add the following options:

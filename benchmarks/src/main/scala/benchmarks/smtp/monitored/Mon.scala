@@ -52,11 +52,6 @@ class Mon(Internal: Out[M220])(implicit ec: ExecutionContext, timeout: Duration)
 		}
 		object Quit_3 {
 		}
-		object M221_3 {
-			var msg: String = _
-		}
-		object Quit_4 {
-		}
 		object M221_4 {
 			var msg: String = _
 		}
@@ -83,17 +78,18 @@ class Mon(Internal: Out[M220])(implicit ec: ExecutionContext, timeout: Duration)
       case msg @ Helo(_) =>
         External.send(msg)
 				receiveM250_1(msg.cont, External)
-      case msg @ Quit_4() =>
+      case msg @ Quit_3() =>
         External.send(msg)
-				receiveM221_4(msg.cont, External)
+        receiveM221_3(msg.cont, External)
     }
   }
   def receiveM250_1(internal: Out[M250_1], External: ConnectionManager): Any = {
     External.receive() match {
-      case msg @ M250_1(_)=>
+      case msg @ M250(_)=>
 				val cont = internal !! M250_1(msg.msg)_
 				sendInternalChoice2(cont, External)
-      case _ =>
+      case err =>
+        println(f"[Mon] **VIOLATION** received: ${err}")
     }
   }
   def sendInternalChoice2(internal: In[InternalChoice2], External: ConnectionManager): Any = {
@@ -104,14 +100,11 @@ class Mon(Internal: Out[M220])(implicit ec: ExecutionContext, timeout: Duration)
       case msg @ Quit_2() =>
         External.send(msg)
 				receiveM221_2(msg.cont, External)
-      case msg @ Quit_3() =>
-        External.send(msg)
-				receiveM221_3(msg.cont, External)
     }
   }
   def receiveM250_2(internal: Out[M250_2], External: ConnectionManager): Any = {
     External.receive() match {
-      case msg @ M250_2(_)=>
+      case msg @ M250(_)=>
 				val cont = internal !! M250_2(msg.msg)_
 				sendInternalChoice1(cont, External)
       case _ =>
@@ -132,7 +125,7 @@ class Mon(Internal: Out[M220])(implicit ec: ExecutionContext, timeout: Duration)
   }
   def receiveM250_3(internal: Out[M250_3], External: ConnectionManager): Any = {
     External.receive() match {
-      case msg @ M250_3(_)=>
+      case msg @ M250(_)=>
 				val cont = internal !! M250_3(msg.msg)_
 				sendInternalChoice1(cont, External)
       case _ =>
@@ -155,36 +148,30 @@ class Mon(Internal: Out[M220])(implicit ec: ExecutionContext, timeout: Duration)
   }
   def receiveM250_4(internal: Out[M250_4], External: ConnectionManager): Any = {
     External.receive() match {
-      case msg @ M250_4(_)=>
-        internal ! msg
+      case msg @ M250(_)=>  //FIXME change from M250_4(_) to M250
+				val cont = internal !! M250_4(msg.msg)_
+				sendInternalChoice2(cont, External)
       case _ =>
     }
   }
   def receiveM221_1(internal: Out[M221_1], External: ConnectionManager): Any = {
     External.receive() match {
-      case msg @ M221_1(_)=>
-        internal ! msg
+      case msg @ M221(_)=>  //FIXME
+        internal ! M221_1(msg.msg)  //FIXME
       case _ =>
     }
   }
   def receiveM221_2(internal: Out[M221_2], External: ConnectionManager): Any = {
     External.receive() match {
-      case msg @ M221_2(_)=>
-        internal ! msg
+      case msg @ M221(_)=>  //FIXME
+        internal ! M221_2(msg.msg) //FIXME
       case _ =>
     }
   }
   def receiveM221_3(internal: Out[M221_3], External: ConnectionManager): Any = {
     External.receive() match {
-      case msg @ M221_3(_)=>
-        internal ! msg
-      case _ =>
-    }
-  }
-  def receiveM221_4(internal: Out[M221_4], External: ConnectionManager): Any = {
-    External.receive() match {
-      case msg @ M221_4(_)=>
-        internal ! msg
+      case msg @ M221(_)=> //FIXME change from M221_3(_) to M221(_)
+        internal ! M221_3(msg.msg)  //FIXME change from msg.msg to M221_3(msg.msg)
       case _ =>
     }
   }
