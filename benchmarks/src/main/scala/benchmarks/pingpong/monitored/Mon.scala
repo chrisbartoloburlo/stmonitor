@@ -6,7 +6,7 @@ import lchannels.{In, Out}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 
-class Mon(Internal: Out[Ping])(implicit ec: ExecutionContext, timeout: Duration) extends Actor {
+class Mon(Internal: Out[ExternalChoice1])(implicit ec: ExecutionContext, timeout: Duration) extends Actor {
   object payloads {
 		object Ping {
 		}
@@ -19,14 +19,16 @@ class Mon(Internal: Out[Ping])(implicit ec: ExecutionContext, timeout: Duration)
       println("[Mon] Setting up connection manager")
       val cm = new ConnectionManager()
       cm.setup()
-      receivePing(Internal, cm)
+      receiveExternalChoice1(Internal, cm)
       cm.close()
   }
-  def receivePing(internal: Out[Ping], External: ConnectionManager): Any = {
+  def receiveExternalChoice1(internal: Out[ExternalChoice1], External: ConnectionManager): Any = {
     External.receive() match {
       case msg @ Ping()=>
 				val cont = internal !! Ping()_
 				sendPong(cont, External)
+      case msg @ Quit()=>
+        internal ! Quit()
       case _ =>
     }
   }
@@ -34,7 +36,7 @@ class Mon(Internal: Out[Ping])(implicit ec: ExecutionContext, timeout: Duration)
     internal ? {
       case msg @ Pong() =>
         External.send(msg)
-				receivePing(msg.cont, External)
+        receiveExternalChoice1(msg.cont, External)
     }
   }
 }

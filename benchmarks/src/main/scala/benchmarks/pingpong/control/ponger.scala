@@ -22,8 +22,8 @@ object ponger {
       case HttpRequest(GET, Uri.Path("/ping"), _, _, _) =>
         HttpResponse(entity = "PONG!")
 
-      case HttpRequest(GET, Uri.Path("/crash"), _, _, _) =>
-        sys.error("BOOM!")
+      case HttpRequest(GET, Uri.Path("/quit"), _, _, _) =>
+        sys.exit(0)
 
       case r: HttpRequest =>
         r.discardEntityBytes() // important to drain incoming HTTP Entity stream
@@ -31,7 +31,7 @@ object ponger {
     }
 
     val bindingFuture = Http().bindAndHandleSync(requestHandler, "localhost", 8080)
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
+    println(s"Server online at http://localhost:8080/\nPress RETURN to stop or send an empty request on /quit.")
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port

@@ -12,7 +12,7 @@ object Demo extends App{
 
   val system = ActorSystem("System")
 
-  val (in, out) = LocalChannel.factory[Ping]()
+  val (in, out) = LocalChannel.factory[ExternalChoice1]()
   val Mon = system.actorOf(Props(new Mon(out)(global, timeout)), name="Mon")
   val ponger = new ponger(in)(global, timeout)
 
@@ -21,6 +21,7 @@ object Demo extends App{
   val pongerThread = new Thread {
     override def run(): Unit = {
       ponger.run()
+      system.terminate()
     }
   }
 
