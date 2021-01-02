@@ -26,6 +26,12 @@ class ConnectionManager {
       responsesQueue.put(p)
 //      println("CM queued ping")
       p.future
+    case quit @ HttpRequest(GET, Uri.Path("/quit"), _, _, _) =>
+      val p = Promise[HttpResponse]()
+      requestsQueue.put(quit)
+      responsesQueue.put(p)
+      //      println("CM queued ping")
+      p.future
   }
 
   val bindingFuture = Http().bindAndHandleAsync(requestQueue, "localhost", 8080)
@@ -39,6 +45,8 @@ class ConnectionManager {
       case HttpRequest(GET, Uri.Path("/ping"), _, _, _) =>
 //        println("CM retrieved ping, responsesQueue size: ",responsesQueue.size)
         Ping()(null)
+      case HttpRequest(GET, Uri.Path("/quit"), _, _, _) =>
+        Quit()
       case m =>
 //        println("CM retrieved",m)
     }

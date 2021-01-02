@@ -6,8 +6,6 @@ import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 
-import scala.collection.mutable
-import scala.concurrent.{Future, Promise}
 import scala.io.StdIn
 
 
@@ -31,7 +29,7 @@ object ponger {
     }
 
     val bindingFuture = Http().bindAndHandleSync(requestHandler, "localhost", 8080)
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop or send an empty request on /quit.")
+    println(s"Server online at http://localhost:8080/\nPress RETURN to stop.")
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port
