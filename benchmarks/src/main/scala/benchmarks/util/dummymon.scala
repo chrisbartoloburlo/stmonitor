@@ -20,7 +20,7 @@ object Main {
     val system = ActorSystem("DummyMonitorSystem")
     val clientSide = system.actorOf(Props(classOf[ClientSide],
                                           listenPort, serverAddr, serverPort),
-                                 "ClientSide")
+                                    "ClientSide")
 
     import scala.concurrent.Await
     import scala.concurrent.duration._
@@ -36,10 +36,10 @@ object util {
     case Tcp.Received(data) =>
       peer ! data
     case _: Tcp.ConnectionClosed =>
-      println("*** TCP connection closed!")
+      // println("*** TCP connection closed!")
       peer ! "close"
     case "close" =>
-      println("*** Peer's connection closed!")
+      // println("*** Peer's connection closed!")
       connection ! Tcp.Close
       context.system.terminate()
     case Tcp.CommandFailed(w: Tcp.Write) =>
@@ -60,7 +60,7 @@ class ClientSide(port: Int, serverAddr: String, serverPort: Int) extends Actor {
   import Tcp._
   import context.system
 
-  println("*** ClientSide running")
+  // println("*** ClientSide running")
   IO(Tcp) ! Bind(self, new InetSocketAddress("localhost", port))
 
   def receive = {
@@ -70,7 +70,7 @@ class ClientSide(port: Int, serverAddr: String, serverPort: Int) extends Actor {
     case CommandFailed(_: Bind) => context.stop(self)
 
     case c @ Connected(remote, local) =>
-      println{"*** Connected!"}
+      // println{"*** Connected!"}
       val connection = sender()
       connection ! Register(self)
       val serverSide = system.actorOf(Props(classOf[ServerSide], serverAddr, serverPort, self), "ServerSide")
@@ -88,12 +88,12 @@ class ServerSide(serverAddr: String, serverPort: Int, clientSide: ActorRef) exte
   import Tcp._
   import context.system
 
-  println(s"*** ServerSide running --- Conneting to: ${serverAddr}:${serverPort}")
+  // println(s"*** ServerSide running --- Conneting to: ${serverAddr}:${serverPort}")
   IO(Tcp) ! Connect(new InetSocketAddress(serverAddr, serverPort))
 
   def receive = {
     case CommandFailed(_: Connect) =>
-      println("*** Connection failed!")
+      // println("*** Connection failed!")
       clientSide ! "connect failed"
       context.stop(self)
 
