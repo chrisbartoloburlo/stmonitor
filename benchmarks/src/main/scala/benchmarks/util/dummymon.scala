@@ -1,21 +1,21 @@
-package benchmarks.dummymon
+package benchmarks.util
 
 import akka.actor.{ Actor, ActorContext, ActorRef, ActorSystem, Props }
 import akka.io.{ IO, Tcp }
 import akka.util.ByteString
 import java.net.InetSocketAddress
 
-object Main {
-  def main(args: Array[String]) {
-    if (args.length != 3) {
-      System.err.println("Usage: java " + this.getClass().getName().split('$').head
-                         + " <listenPort> <serverAddr> <serverPort>")
-      System.exit(1)
-    }
+class dummymon(listenPort: Int, serverAddr: String, serverPort: Int) extends Runnable {
+  override def run() {
+//    if (args.length != 3) {
+//      System.err.println("Usage: java " + this.getClass().getName().split('$').head
+//                         + " <listenPort> <serverAddr> <serverPort>")
+//      System.exit(1)
+//    }
     
-    val listenPort = args(0).toInt
-    val serverAddr = args(1)
-    val serverPort = args(2).toInt
+//    val listenPort = args(0).toInt
+//    val serverAddr = args(1)
+//    val serverPort = args(2).toInt
 
     val system = ActorSystem("DummyMonitorSystem")
     val clientSide = system.actorOf(Props(classOf[ClientSide],
@@ -36,10 +36,10 @@ object util {
     case Tcp.Received(data) =>
       peer ! data
     case _: Tcp.ConnectionClosed =>
-      // println("*** TCP connection closed!")
+       println("*** TCP connection closed!")
       peer ! "close"
     case "close" =>
-      // println("*** Peer's connection closed!")
+       println("*** Peer's connection closed!")
       connection ! Tcp.Close
       context.system.terminate()
     case Tcp.CommandFailed(w: Tcp.Write) =>
@@ -88,12 +88,12 @@ class ServerSide(serverAddr: String, serverPort: Int, clientSide: ActorRef) exte
   import Tcp._
   import context.system
 
-  // println(s"*** ServerSide running --- Conneting to: ${serverAddr}:${serverPort}")
+  println(s"*** ServerSide running --- Conneting to: ${serverAddr}:${serverPort}")
   IO(Tcp) ! Connect(new InetSocketAddress(serverAddr, serverPort))
 
   def receive = {
     case CommandFailed(_: Connect) =>
-      // println("*** Connection failed!")
+       println("*** Connection failed!")
       clientSide ! "connect failed"
       context.stop(self)
 
