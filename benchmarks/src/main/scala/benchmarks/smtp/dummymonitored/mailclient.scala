@@ -48,7 +48,7 @@ class mailclient(pathname: String, iterations: Int, run: Int) extends Runnable {
                       inB.readLine() match {
                         case msg @ M354R(_) =>
 //                          println(f"[MC] ↓ 354 ${m354.msg}")
-                          outB.write(f"ping ${iter}\r\n.\r\n"); outB.flush()
+                          outB.write(f"ping ${iter}\n"); outB.flush()
 //                          println(f"[MC] ↑ ping")
                           inB.readLine() match {
                             case msg @ M250R(_) =>
