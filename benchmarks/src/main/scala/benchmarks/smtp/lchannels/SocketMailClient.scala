@@ -121,8 +121,8 @@ object SocketClient extends App {
   }
 
   println("[*] Connecting to 127.0.0.1:1025...")
-  val conn = new Socket("127.0.0.1", 1025) // Host & port of greeting server
+  val conn = new Socket("127.0.0.1", 1025)
   val sktm = new HelloSocketManager(conn)
-  val c = SocketIn[M220](sktm) // Output endpoint, towards greeting server
+  val c = SocketIn[M220](sktm)
   mailclient(c, args(0), args(1).toInt, args(2).toInt)(global, timeout)
 }
