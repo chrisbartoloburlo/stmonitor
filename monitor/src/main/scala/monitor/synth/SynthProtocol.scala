@@ -109,6 +109,6 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
   }
 
   def end(): Unit ={
-    protocol.append("case class MonStart()\n")
+//    protocol.append("case class MonStart()\n")
   }
 }

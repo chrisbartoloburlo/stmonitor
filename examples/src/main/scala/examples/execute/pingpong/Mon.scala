@@ -2,12 +2,12 @@ package examples.execute.pingpong
 
 //import akka.actor._ FIXME REMOVE
 import lchannels.{In, Out}
+import monitor.util.ConnectionManager
 
-import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 
-class Mon(Internal: Out[ExternalChoice1])(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {
+class Mon(External: ConnectionManager, Internal: Out[ExternalChoice1])(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {
   object payloads {
 		object Ping {
 		}
@@ -19,10 +19,9 @@ class Mon(Internal: Out[ExternalChoice1])(implicit ec: ExecutionContext, timeout
   override def run(): Unit = {
     println("[Mon] Monitor started")
     println("[Mon] Setting up connection manager")
-    val cm = new ConnectionManager()
-    cm.setup()
-    receiveExternalChoice1(Internal, cm)
-    cm.close()
+    External.setup()
+    receiveExternalChoice1(Internal, External)
+    External.close()
   }
 //  def receive: Receive = { FIXME REMOVE
 //    case MonStart =>

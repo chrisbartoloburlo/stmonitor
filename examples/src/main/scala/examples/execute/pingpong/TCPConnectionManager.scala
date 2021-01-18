@@ -1,9 +1,11 @@
 package examples.execute.pingpong
 
+import monitor.util.ConnectionManager
+
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 import java.net.{InetAddress, ServerSocket, Socket}
 
-class ConnectionManager(){
+class TCPConnectionManager() extends ConnectionManager{
   var outB: BufferedWriter = _
   var inB: BufferedReader = _
 

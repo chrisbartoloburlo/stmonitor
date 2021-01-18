@@ -40,7 +40,9 @@ object Demo extends App{
       val ponger = pongerSocket.accept()
       val monSktm = new MonSocketManager(ponger)
       val sPong = SocketOut[ExternalChoice1](monSktm)
-      val Mon = new Mon(sPong)(global, timeout)
+
+      val connectionManager = new TCPConnectionManager
+      val Mon = new Mon(connectionManager, sPong)(global, timeout)
       Mon.run()
     }
   }
