@@ -16,10 +16,10 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("import lchannels.{In, Out}\nimport monitor.util.ConnectionManager\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nclass Mon(external: ConnectionManager, internal: ")
 
     statement match {
-      case ReceiveStatement(label, _, _, _) =>
-        mon.append("Out["+label+"])")
-      case SendStatement(label, _, _, _) =>
-        mon.append("In["+label+"])")
+      case ReceiveStatement(_, statementID, _, _, _) =>
+        mon.append("Out["+statementID+"])")
+      case SendStatement(_, statementID, _, _, _) =>
+        mon.append("In["+statementID+"])")
       case ReceiveChoiceStatement(label, _) =>
         mon.append("Out["+label+"])")
       case SendChoiceStatement(label, _) =>
@@ -52,15 +52,15 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def handleSend(statement: SendStatement, nextStatement: Statement): Unit = {
     if(first){
-      mon.append("    send"+statement.label+"(internal, external)\n    external.close()\n  }\n")
+      mon.append("    send"+statement.statementID+"(internal, external)\n    external.close()\n  }\n")
       first = false
     }
 
     try {
-      mon.append("  def send"+statement.label+"(internal: In["+sessionTypeInterpreter.getBranchLabel(statement)+"], external: ConnectionManager): Any = {\n")
+      mon.append("  def send"+statement.statementID+"(internal: In["+sessionTypeInterpreter.getBranchLabel(statement)+"], external: ConnectionManager): Any = {\n")
     } catch {
       case _: Throwable =>
-        mon.append("  def send"+statement.label+"(internal: In["+statement.label+"], external: ConnectionManager): Any = {\n")
+        mon.append("  def send"+statement.statementID+"(internal: In["+statement.statementID+"], external: ConnectionManager): Any = {\n")
     }
 
     mon.append("    internal ? {\n")
@@ -89,9 +89,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       case sendStatement: SendStatement =>
         storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.label)
         if(currentStatement.condition==null) {
-          mon.append("\t\t\t\tsend"+sendStatement.label+"(msg.cont, external)\n")
+          mon.append("\t\t\t\tsend"+sendStatement.statementID+"(msg.cont, external)\n")
         } else {
-          mon.append("\t\t\t\t\tsend"+sendStatement.label+"(msg.cont, external)\n")
+          mon.append("\t\t\t\t\tsend"+sendStatement.statementID+"(msg.cont, external)\n")
         }
 
       case sendChoiceStatement: SendChoiceStatement =>
@@ -105,9 +105,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       case receiveStatement: ReceiveStatement =>
         storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.label)
         if(currentStatement.condition==null) {
-          mon.append("\t\t\t\treceive" + receiveStatement.label + "(msg.cont, external)\n")
+          mon.append("\t\t\t\treceive" + receiveStatement.statementID + "(msg.cont, external)\n")
         } else {
-          mon.append("\t\t\t\t\treceive" + receiveStatement.label + "(msg.cont, external)\n")
+          mon.append("\t\t\t\t\treceive" + receiveStatement.statementID + "(msg.cont, external)\n")
         }
 
       case receiveChoiceStatement: ReceiveChoiceStatement =>
@@ -130,11 +130,11 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def handleReceive(statement: ReceiveStatement, nextStatement: Statement): Unit = {
     if (first) {
-      mon.append("    receive" + statement.label + "(internal, external)\n    external.close()\n  }\n")
+      mon.append("    receive" + statement.statementID + "(internal, external)\n    external.close()\n  }\n")
       first = false
     }
 
-    mon.append("  def receive" + statement.label + "(internal: Out[" + statement.label + "], external: ConnectionManager): Any = {\n")
+    mon.append("  def receive" + statement.statementID + "(internal: Out[" + statement.statementID + "], external: ConnectionManager): Any = {\n")
     mon.append("    external.receive() match {\n")
     mon.append("      case msg @ " + statement.label + "(")
     addParameters(statement.types)
@@ -160,9 +160,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         handleReceiveCases(currentStatement)
         storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.label)
         if(currentStatement.condition==null) {
-          mon.append("\t\t\t\tsend" + sendStatement.label + "(cont, external)\n")
+          mon.append("\t\t\t\tsend" + sendStatement.statementID + "(cont, external)\n")
         } else {
-          mon.append("\t\t\t\t\tsend" + sendStatement.label + "(cont, external)\n")
+          mon.append("\t\t\t\t\tsend" + sendStatement.statementID + "(cont, external)\n")
         }
 
       case sendChoiceStatement: SendChoiceStatement =>
@@ -178,9 +178,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         handleReceiveCases(currentStatement)
         storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.label)
         if(currentStatement.condition==null) {
-          mon.append("\t\t\t\treceive" + receiveStatement.label + "(cont, external)\n")
+          mon.append("\t\t\t\treceive" + receiveStatement.statementID + "(cont, external)\n")
         } else {
-          mon.append("\t\t\t\t\treceive" + receiveStatement.label + "(cont, external)\n")
+          mon.append("\t\t\t\t\treceive" + receiveStatement.statementID + "(cont, external)\n")
         }
 
       case receiveChoiceStatement: ReceiveChoiceStatement =>

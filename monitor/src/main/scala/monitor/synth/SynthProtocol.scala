@@ -13,6 +13,17 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def init(): Unit = {
     protocol.append("import lchannels.{In, Out}\n")
+    val duplicateLabels = sessionTypeInterpreter.searchDuplicateLabels()
+    for ((label, variables) <- duplicateLabels){
+      protocol.append("case class "+ label + "(")
+      for(variable <- variables){
+        protocol.append(variable._1+": "+variable._2)
+        if(!(variable == variables.last)){
+          protocol.append(", ")
+        }
+      }
+      protocol.append(")\n")
+    }
   }
 
   def handleSendChoice(label: String): Unit ={
@@ -24,7 +35,11 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
   }
 
   def handleSend(statement: SendStatement, nextStatement: Statement, label: String): Unit = {
-    protocol.append("case class "+statement.label+"(")
+    if(sessionTypeInterpreter.searchScope(statement.label).size >= 2){
+      protocol.append("case class "+statement.statementID+"(")
+    } else {
+      protocol.append("case class "+statement.label+"(")
+    }
     handleParam(statement)
     protocol.append(")")
     handleSendNextCase(nextStatement)
@@ -38,7 +53,11 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
   }
 
   def handleReceive(statement: ReceiveStatement, nextStatement: Statement, label: String): Unit = {
-    protocol.append("case class "+statement.label+"(")
+    if(sessionTypeInterpreter.searchScope(statement.label).size >= 2){
+      protocol.append("case class "+statement.statementID+"(")
+    } else {
+      protocol.append("case class "+statement.label+"(")
+    }
     handleParam(statement)
     protocol.append(")")
     handleReceiveNextCase(nextStatement)
@@ -53,14 +72,14 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def handleParam(statement: Statement): Unit = {
     statement match {
-      case s @ SendStatement(_, _, _, _) =>
+      case s @ SendStatement(_, _, _, _, _) =>
         for(t <- s.types){
           protocol.append(t._1+": "+t._2)
           if(!(t == s.types.last)){
             protocol.append(", ")
           }
         }
-      case s @ ReceiveStatement(_, _, _, _) =>
+      case s @ ReceiveStatement(_, _, _, _, _) =>
         for(t <- s.types){
           protocol.append(t._1+": "+t._2)
           if(!(t == s.types.last)){
@@ -72,12 +91,12 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def handleSendNextCase(statement: Statement): Unit ={
     statement match {
-      case s @ SendStatement(_, _, _, _) =>
-        protocol.append("(val cont: In["+s.label+"])")
+      case s @ SendStatement(_, _, _, _, _) =>
+        protocol.append("(val cont: In["+s.statementID+"])")
       case s @ SendChoiceStatement(_, _) =>
         protocol.append("(val cont: In["+s.label+"])")
-      case s @ ReceiveStatement(_, _, _, _) =>
-        protocol.append("(val cont: Out["+s.label+"])")
+      case s @ ReceiveStatement(_, _, _, _, _) =>
+        protocol.append("(val cont: Out["+s.statementID+"])")
       case s @ ReceiveChoiceStatement(_, _) =>
         protocol.append("(val cont: Out["+s.label+"])")
       case s @ RecursiveVar(_, _) =>
@@ -91,12 +110,12 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def handleReceiveNextCase(statement: Statement): Unit ={
     statement match {
-      case s @ SendStatement(_, _, _, _) =>
-        protocol.append("(val cont: Out["+s.label+"])")
+      case s @ SendStatement(_, _, _, _, _) =>
+        protocol.append("(val cont: Out["+s.statementID+"])")
       case s @ SendChoiceStatement(_, _) =>
         protocol.append("(val cont: Out["+s.label+"])")
-      case s @ ReceiveStatement(_, _, _, _) =>
-        protocol.append("(val cont: In["+s.label+"])")
+      case s @ ReceiveStatement(_, _, _, _, _) =>
+        protocol.append("(val cont: In["+s.statementID+"])")
       case s @ ReceiveChoiceStatement(_, _) =>
         protocol.append("(val cont: In["+s.label+"])")
       case s @ RecursiveVar(_, _) =>

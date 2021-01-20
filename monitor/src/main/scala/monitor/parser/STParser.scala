@@ -12,6 +12,12 @@ class STParser extends StandardTokenParsers {
 
   private var sendChoiceCounter: Int = 0
   private var receiveChoiceCounter: Int = 0
+  private var statementIDCounter: Int = 0
+
+  def getAndIncrementIDCounter(): Int = {
+    statementIDCounter+=1
+    statementIDCounter
+  }
 
   def sessionTypeVar: Parser[SessionType] = (ident ~> "=") ~ sessionType ^^ {
     case i ~ t =>
@@ -24,13 +30,13 @@ class STParser extends StandardTokenParsers {
 
   def receive: Parser[ReceiveStatement] = ("?" ~> ident) ~ ("(" ~> types <~ ")") ~ opt("[" ~> stringLit <~ "]") ~ opt("." ~> sessionType) ^^ {
     case l ~ t ~ None ~ None =>
-      ReceiveStatement(l, t, null, End())
+      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, null, End())
     case l ~ t ~ None ~ cT =>
-      ReceiveStatement(l, t, null, cT.get)
+      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, null, cT.get)
     case l ~ t ~ c ~ None =>
-      ReceiveStatement(l, t, c.get, End())
+      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, c.get, End())
     case l ~ t ~ c ~ cT =>
-      ReceiveStatement(l, t, c.get, cT.get)
+      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, c.get, cT.get)
   }
 
   def receiveChoice: Parser[ReceiveChoiceStatement] = "&" ~ "{" ~> (repsep(sessionType, ",") <~ "}") ^^ {
@@ -47,13 +53,13 @@ class STParser extends StandardTokenParsers {
 
   def send: Parser[SendStatement] = ("!" ~> ident) ~ ("(" ~> types <~ ")") ~ opt("[" ~> stringLit <~ "]") ~ opt("." ~> sessionType) ^^ {
     case l ~ t ~ None ~ None =>
-      SendStatement(l, t, null, End())
+      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, null, End())
     case l ~ t ~ None ~ cT =>
-      SendStatement(l, t, null, cT.get)
+      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, null, cT.get)
     case l ~ t ~ c ~ None =>
-      SendStatement(l, t, c.get, End())
+      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, c.get, End())
     case l ~ t ~ c ~ cT =>
-      SendStatement(l, t, c.get, cT.get)
+      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, c.get, cT.get)
   }
 
   def sendChoice: Parser[SendChoiceStatement] = "+" ~ "{" ~> (repsep(sessionType, ",") <~ "}") ^^ {
