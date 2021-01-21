@@ -50,11 +50,11 @@ class STInterpreter(sessionType: SessionType, path: String) {
   def run(): (StringBuilder, StringBuilder) = {
     sessionType.statement match {
       case recursiveStatement: RecursiveStatement =>
-        var tmpStatement: Statement = null
+        var tmpStatement: Statement = recursiveStatement.body
         while(tmpStatement.isInstanceOf[RecursiveStatement]){
           tmpStatement = recursiveStatement.body
         }
-        synthMon.startInit(recursiveStatement.body)
+        synthMon.startInit(tmpStatement)
       case _ =>
         synthMon.startInit(sessionType.statement)
     }
