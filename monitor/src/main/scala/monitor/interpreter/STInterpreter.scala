@@ -37,12 +37,8 @@ class STInterpreter(sessionType: SessionType, path: String) {
     curScope
   }
 
-  def getScope(scopeName: String): Scope = {
-    scopes(scopeName)
-  }
-
-  def defineScopeName(scopeName: String, scopeId: Int): String = {
-    scopeName+"_"+scopeId
+  def getScopes: mutable.HashMap[String, Scope] = {
+    scopes
   }
 
   /**
@@ -134,17 +130,12 @@ class STInterpreter(sessionType: SessionType, path: String) {
    */
   def walk(statement: Statement): Unit = {
     statement match {
-      case statement @ ReceiveStatement(label, id, types, condition, continuation) =>
+      case statement @ ReceiveStatement(label, id, types, condition, _) =>
         logger.info("Receive "+label+"("+types+")")
         curScope = id
         checkCondition(label, types, condition)
-
-//        if(searchScope(label).nonEmpty){
-//          synthMon.handleReceive(ReceiveStatement(scopes(curScope).scopeId, types, condition, continuation), statement.continuation)
-//        } else {
-//        }
-        synthMon.handleReceive(statement, statement.continuation)
-        synthProtocol.handleReceive(statement, statement.continuation, null)
+        synthMon.handleReceive(statement, statement.continuation, scopes(curScope).isUnique) // Change isUnique accordingly
+        synthProtocol.handleReceive(statement, scopes(curScope).isUnique, statement.continuation, getScope(statement.continuation).isUnique, null)
         walk(statement.continuation)
 
       case statement @ SendStatement(label, id, types, condition, _) =>
@@ -152,8 +143,8 @@ class STInterpreter(sessionType: SessionType, path: String) {
         curScope = id
         checkCondition(label, types, condition)
 
-        synthMon.handleSend(statement, statement.continuation)
-        synthProtocol.handleSend(statement, statement.continuation, null)
+        synthMon.handleSend(statement, statement.continuation, scopes(curScope).isUnique) // Change isUnique accordingly
+        synthProtocol.handleSend(statement, scopes(curScope).isUnique, statement.continuation, getScope(statement.continuation).isUnique, null)
         walk(statement.continuation)
 
       case statement @ ReceiveChoiceStatement(label, choices) =>
@@ -166,7 +157,7 @@ class STInterpreter(sessionType: SessionType, path: String) {
         for(choice <- choices) {
           curScope = choice.asInstanceOf[ReceiveStatement].statementID
           checkCondition(choice.asInstanceOf[ReceiveStatement].label, choice.asInstanceOf[ReceiveStatement].types, choice.asInstanceOf[ReceiveStatement].condition)
-          synthProtocol.handleReceive(choice.asInstanceOf[ReceiveStatement], choice.asInstanceOf[ReceiveStatement].continuation, statement.label)
+          synthProtocol.handleReceive(choice.asInstanceOf[ReceiveStatement], scopes(curScope).isUnique, choice.asInstanceOf[ReceiveStatement].continuation, getScope(choice.asInstanceOf[ReceiveStatement].continuation).isUnique, statement.label)
 
           walk(choice.asInstanceOf[ReceiveStatement].continuation)
           curScope = tmpScope
@@ -183,7 +174,7 @@ class STInterpreter(sessionType: SessionType, path: String) {
           curScope = choice.asInstanceOf[SendStatement].statementID
           checkCondition(choice.asInstanceOf[SendStatement].label, choice.asInstanceOf[SendStatement].types, choice.asInstanceOf[SendStatement].condition)
 
-          synthProtocol.handleSend(choice.asInstanceOf[SendStatement], choice.asInstanceOf[SendStatement].continuation, statement.label)
+          synthProtocol.handleSend(choice.asInstanceOf[SendStatement], scopes(curScope).isUnique, choice.asInstanceOf[SendStatement].continuation, getScope(choice.asInstanceOf[SendStatement].continuation).isUnique, statement.label)
           walk(choice.asInstanceOf[SendStatement].continuation)
           curScope = tmpScope
         }
@@ -202,18 +193,6 @@ class STInterpreter(sessionType: SessionType, path: String) {
       }
   }
 
-//  def fixContinuation(statement: Statement): Unit = {
-//    statement match {
-//      case statement @ ReceiveStatement(label, types, condition, continuation) =>
-//        println("curScope",curScope)
-//        print("label, types, condition, continuation", label, types, condition, continuation)
-//        if(searchScope(label).nonEmpty) {
-//          get right scope of the statement to get its id
-//          ReceiveStatement(, types, condition, continuation)
-//        }
-//    }
-//  }
-
   /**
    * Creates a new scope and adds it to the mapping. The current scope is setup as the
    * parent scope of the new scope.
@@ -224,8 +203,46 @@ class STInterpreter(sessionType: SessionType, path: String) {
     if (searchParentScope(label) != null) {
       throw new Exception("Label " + label + " is already defined in scope")
     } else {
-      scopes(id) = new Scope(label, id, scopes(curScope))
+      val tmpScopes = searchScope(label)
+      if(tmpScopes.isEmpty){
+        scopes(id) = new Scope(label, id, scopes(curScope))
+      } else {
+        scopes(id) = new Scope(label, id, scopes(curScope))
+        scopes(id).isUnique = false
+        for(tmpScope <- tmpScopes){
+          scopes(tmpScope.id).isUnique = false
+//          new Scope(tmpScope.name, tmpScope.id, tmpScope.parentScope, false)
+        }
+      }
       curScope = id
+    }
+  }
+
+  def getScope(scopeName: String): Scope = {
+    scopes(scopeName)
+  }
+
+  def getScope(statement: Statement): Scope = {
+    statement match {
+      case ReceiveStatement(label, statementID, types, condition, continuation) =>
+        scopes(statementID)
+
+      case SendStatement(label, statementID, types, condition, continuation) =>
+        scopes(statementID)
+
+      case ReceiveChoiceStatement(label, choices) =>
+       scopes(label)
+
+      case SendChoiceStatement(label, choices) =>
+        scopes(label)
+
+      case RecursiveStatement(label, body) =>
+        getScope(body)
+
+      case RecursiveVar(name, continuation) =>
+        getScope(continuation)
+
+      case End() => scopes(curScope)
     }
   }
 
@@ -249,19 +266,7 @@ class STInterpreter(sessionType: SessionType, path: String) {
     }
     tmpScopes
   }
-
-  def searchDuplicateLabels(): mutable.ListBuffer[(String, mutable.HashMap[String, (Boolean, String)])] = {
-    var tmpScopes: mutable.ListBuffer[(String, mutable.HashMap[String, (Boolean, String)])] = new ListBuffer[(String,mutable.HashMap[String, (Boolean, String)])]
-    for(scope <- scopes) {
-      val tmpSearchScopes = searchScope(scope._2.name)
-      if(tmpSearchScopes.size >= 2 && !tmpScopes.contains((scope._2.name, scope._2.variables))){
-        val tmpTuple = (scope._2.name, scope._2.variables)
-        tmpScopes += tmpTuple
-      }
-    }
-    tmpScopes
-  }
-
+  
   /**
    * Searches for a recursive variable recursively through the scopes. Once found it returns the scope.
    * Otherwise, an exception is thrown indicating that the variable does not exist.
@@ -273,8 +278,8 @@ class STInterpreter(sessionType: SessionType, path: String) {
   @scala.annotation.tailrec
   private def checkRecVariable(scope: Scope, recursiveVar: RecursiveVar): Scope = {
     if(scope != null){
-      if(!scopes(scope.name).recVariables.contains(recursiveVar.name)){
-        checkRecVariable(scopes(scope.name).parentScope, recursiveVar)
+      if(!scopes(scope.id).recVariables.contains(recursiveVar.name)){
+        checkRecVariable(scopes(scope.id).parentScope, recursiveVar)
       } else {
         scope
       }
@@ -322,7 +327,7 @@ class STInterpreter(sessionType: SessionType, path: String) {
       if(scopes(tmpCurScope).parentScope==null){
         throw new Exception("STInterpreter - Identifier "+identifierName+" not in scope")
       }
-      searchIdent(scopes(tmpCurScope).parentScope.name, identifierName)
+      searchIdent(scopes(tmpCurScope).parentScope.id, identifierName)
     } else {
       tmpCurScope
     }

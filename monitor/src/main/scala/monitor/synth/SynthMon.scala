@@ -50,7 +50,11 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("    external.setup()\n")
   }
 
-  def handleSend(statement: SendStatement, nextStatement: Statement): Unit = {
+  def handleSend(statement: SendStatement, nextStatement: Statement, isUnique: Boolean): Unit = {
+    var reference = statement.label
+    if(!isUnique){
+      reference = statement.statementID
+    }
     if(first){
       mon.append("    send"+statement.statementID+"(internal, external)\n    external.close()\n  }\n")
       first = false
@@ -60,22 +64,22 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       mon.append("  def send"+statement.statementID+"(internal: In["+sessionTypeInterpreter.getBranchLabel(statement)+"], external: ConnectionManager): Any = {\n")
     } catch {
       case _: Throwable =>
-        mon.append("  def send"+statement.statementID+"(internal: In["+statement.statementID+"], external: ConnectionManager): Any = {\n")
+        mon.append("  def send"+statement.statementID+"(internal: In["+reference+"], external: ConnectionManager): Any = {\n")
     }
 
     mon.append("    internal ? {\n")
-    mon.append("      case msg @ "+statement.label+"(")
+    mon.append("      case msg @ "+reference+"(")
     addParameters(statement.types)
     mon.append(") =>\n")
 
     if(statement.condition != null){
-      handleCondition(statement.condition, statement.label)
+      handleCondition(statement.condition, statement.statementID)
       mon.append("external.send(msg)\n")
-      handleSendNextCase(statement, nextStatement)
+      handleSendNextCase(statement, isUnique, nextStatement)
       mon.append("        } else {\n")
     } else {
       mon.append("        external.send(msg)\n")
-      handleSendNextCase(statement, nextStatement)
+      handleSendNextCase(statement, isUnique, nextStatement)
     }
     if(statement.condition != null){
       mon.append("        }\n")
@@ -84,10 +88,10 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   }
 
   @scala.annotation.tailrec
-  private def handleSendNextCase(currentStatement: SendStatement, nextStatement: Statement): Unit ={
+  private def handleSendNextCase(currentStatement: SendStatement, isUnique: Boolean, nextStatement: Statement): Unit ={
     nextStatement match {
       case sendStatement: SendStatement =>
-        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.label)
+        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
         if(currentStatement.condition==null) {
           mon.append("\t\t\t\tsend"+sendStatement.statementID+"(msg.cont, external)\n")
         } else {
@@ -103,7 +107,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         }
 
       case receiveStatement: ReceiveStatement =>
-        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.label)
+        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
         if(currentStatement.condition==null) {
           mon.append("\t\t\t\treceive" + receiveStatement.statementID + "(msg.cont, external)\n")
         } else {
@@ -119,32 +123,36 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         }
 
       case recursiveVar: RecursiveVar =>
-        handleSendNextCase(currentStatement, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name))
+        handleSendNextCase(currentStatement, isUnique, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name))
 
       case recursiveStatement: RecursiveStatement =>
-        handleSendNextCase(currentStatement, recursiveStatement.body)
+        handleSendNextCase(currentStatement, isUnique, recursiveStatement.body)
 
       case _ =>
     }
   }
 
-  def handleReceive(statement: ReceiveStatement, nextStatement: Statement): Unit = {
+  def handleReceive(statement: ReceiveStatement, nextStatement: Statement, isUnique: Boolean): Unit = {
+    var reference = statement.label
+    if(!isUnique){
+      reference = statement.statementID
+    }
     if (first) {
       mon.append("    receive" + statement.statementID + "(internal, external)\n    external.close()\n  }\n")
       first = false
     }
 
-    mon.append("  def receive" + statement.statementID + "(internal: Out[" + statement.statementID + "], external: ConnectionManager): Any = {\n")
+    mon.append("  def receive" + statement.statementID + "(internal: Out[" + reference + "], external: ConnectionManager): Any = {\n")
     mon.append("    external.receive() match {\n")
-    mon.append("      case msg @ " + statement.label + "(")
+    mon.append("      case msg @ " + reference + "(")
     addParameters(statement.types)
     mon.append(")=>\n")
     if(statement.condition != null){
-      handleCondition(statement.condition, statement.label)
-      handleReceiveNextCase(statement, nextStatement)
+      handleCondition(statement.condition, statement.statementID)
+      handleReceiveNextCase(statement, isUnique, nextStatement)
       mon.append("        } else {\n")
     } else {
-      handleReceiveNextCase(statement, nextStatement)
+      handleReceiveNextCase(statement, isUnique, nextStatement)
     }
     if(statement.condition != null){
       mon.append("        }\n")
@@ -154,11 +162,11 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   }
 
   @scala.annotation.tailrec
-  private def handleReceiveNextCase(currentStatement: ReceiveStatement, nextStatement: Statement): Unit ={
+  private def handleReceiveNextCase(currentStatement: ReceiveStatement, isUnique: Boolean, nextStatement: Statement): Unit ={
     nextStatement match {
       case sendStatement: SendStatement =>
         handleReceiveCases(currentStatement)
-        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.label)
+        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
         if(currentStatement.condition==null) {
           mon.append("\t\t\t\tsend" + sendStatement.statementID + "(cont, external)\n")
         } else {
@@ -176,7 +184,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
       case receiveStatement: ReceiveStatement =>
         handleReceiveCases(currentStatement)
-        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.label)
+        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
         if(currentStatement.condition==null) {
           mon.append("\t\t\t\treceive" + receiveStatement.statementID + "(cont, external)\n")
         } else {
@@ -193,10 +201,10 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         }
 
       case recursiveVar: RecursiveVar =>
-        handleReceiveNextCase(currentStatement, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name))
+        handleReceiveNextCase(currentStatement, isUnique, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name))
 
       case recursiveStatement: RecursiveStatement =>
-        handleReceiveNextCase(currentStatement, recursiveStatement.body)
+        handleReceiveNextCase(currentStatement, isUnique, recursiveStatement.body)
 
       case _ =>
         if(currentStatement.condition==null) {
@@ -237,13 +245,13 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       addParameters(choice.asInstanceOf[SendStatement].types)
       mon.append(") =>\n")
       if(choice.asInstanceOf[SendStatement].condition != null){
-        handleCondition(choice.asInstanceOf[SendStatement].condition, choice.asInstanceOf[SendStatement].label)
+        handleCondition(choice.asInstanceOf[SendStatement].condition, choice.asInstanceOf[SendStatement].statementID)
         mon.append("external.send(msg)\n")
-        handleSendNextCase(choice.asInstanceOf[SendStatement], choice.asInstanceOf[SendStatement].continuation)
+        handleSendNextCase(choice.asInstanceOf[SendStatement], true, choice.asInstanceOf[SendStatement].continuation)
         mon.append("        } else {\n")
       } else {
         mon.append("        external.send(msg)\n")
-        handleSendNextCase(choice.asInstanceOf[SendStatement], choice.asInstanceOf[SendStatement].continuation)
+        handleSendNextCase(choice.asInstanceOf[SendStatement], true, choice.asInstanceOf[SendStatement].continuation)
       }
       if(choice.asInstanceOf[SendStatement].condition != null) {
         mon.append("        }\n")
@@ -266,12 +274,12 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       addParameters(choice.asInstanceOf[ReceiveStatement].types)
       mon.append(")=>\n")
       if(choice.asInstanceOf[ReceiveStatement].condition != null){
-        handleCondition(choice.asInstanceOf[ReceiveStatement].condition, choice.asInstanceOf[ReceiveStatement].label)
-        handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], choice.asInstanceOf[ReceiveStatement].continuation)
+        handleCondition(choice.asInstanceOf[ReceiveStatement].condition, choice.asInstanceOf[ReceiveStatement].statementID)
+        handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], true, choice.asInstanceOf[ReceiveStatement].continuation)
         mon.append("        } else {\n")
       } else {
         mon.append("        ")
-        handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], choice.asInstanceOf[ReceiveStatement].continuation)
+        handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], true, choice.asInstanceOf[ReceiveStatement].continuation)
       }
       if(choice.asInstanceOf[ReceiveStatement].condition != null) {
         mon.append("        }\n")

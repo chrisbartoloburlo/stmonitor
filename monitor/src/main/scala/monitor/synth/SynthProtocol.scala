@@ -3,6 +3,8 @@ package monitor.synth
 import monitor.interpreter.STInterpreter
 import monitor.model._
 
+import scala.collection.mutable.ListBuffer
+
 class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
 //  private val protocol = new PrintWriter(new File(path+"/CPSPc.scala"))
   private val protocol = new StringBuilder()
@@ -13,16 +15,19 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def init(): Unit = {
     protocol.append("import lchannels.{In, Out}\n")
-    val duplicateLabels = sessionTypeInterpreter.searchDuplicateLabels()
-    for ((label, variables) <- duplicateLabels){
-      protocol.append("case class "+ label + "(")
-      for(variable <- variables){
-        protocol.append(variable._1+": "+variable._2)
-        if(!(variable == variables.last)){
-          protocol.append(", ")
+    var nonUniqueScopes = new ListBuffer[String]
+    for(scope <- sessionTypeInterpreter.getScopes){
+      if (!scope._2.isUnique && !nonUniqueScopes.contains(scope._2.name)) {
+        protocol.append("case class "+ scope._2.name + "(")
+        for(variable <- scope._2.variables){
+          protocol.append(variable._1+": "+variable._2._2)
+          if(!(variable == scope._2.variables.last)){
+            protocol.append(", ")
+          }
         }
+        nonUniqueScopes += scope._2.name
+        protocol.append(")\n")
       }
-      protocol.append(")\n")
     }
   }
 
@@ -34,15 +39,15 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
     protocol.append("sealed abstract class "+label+"\n")
   }
 
-  def handleSend(statement: SendStatement, nextStatement: Statement, label: String): Unit = {
-    if(sessionTypeInterpreter.searchScope(statement.label).size >= 2){
-      protocol.append("case class "+statement.statementID+"(")
-    } else {
+  def handleSend(statement: SendStatement, isCurUnique: Boolean, nextStatement: Statement, isNextUnique: Boolean, label: String): Unit = {
+    if(isCurUnique){
       protocol.append("case class "+statement.label+"(")
+    } else {
+      protocol.append("case class "+statement.statementID+"(")
     }
     handleParam(statement)
     protocol.append(")")
-    handleSendNextCase(nextStatement)
+    handleSendNextCase(nextStatement, isNextUnique)
 
     label match {
       case null =>
@@ -52,15 +57,15 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
     }
   }
 
-  def handleReceive(statement: ReceiveStatement, nextStatement: Statement, label: String): Unit = {
-    if(sessionTypeInterpreter.searchScope(statement.label).size >= 2){
-      protocol.append("case class "+statement.statementID+"(")
-    } else {
+  def handleReceive(statement: ReceiveStatement, isCurUnique: Boolean, nextStatement: Statement, isNextUnique: Boolean, label: String): Unit = {
+    if(isCurUnique){
       protocol.append("case class "+statement.label+"(")
+    } else {
+      protocol.append("case class "+statement.statementID+"(")
     }
     handleParam(statement)
     protocol.append(")")
-    handleReceiveNextCase(nextStatement)
+    handleReceiveNextCase(nextStatement, isNextUnique)
 
     label match {
       case null =>
@@ -89,39 +94,55 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
     }
   }
 
-  def handleSendNextCase(statement: Statement): Unit ={
+  def handleSendNextCase(statement: Statement, isUnique: Boolean): Unit ={
     statement match {
       case s @ SendStatement(_, _, _, _, _) =>
-        protocol.append("(val cont: In["+s.statementID+"])")
+        if(isUnique){
+          protocol.append("(val cont: In["+s.label+"])")
+        } else {
+          protocol.append("(val cont: In["+s.statementID+"])")
+        }
       case s @ SendChoiceStatement(_, _) =>
         protocol.append("(val cont: In["+s.label+"])")
       case s @ ReceiveStatement(_, _, _, _, _) =>
-        protocol.append("(val cont: Out["+s.statementID+"])")
+        if(isUnique){
+          protocol.append("(val cont: Out["+s.label+"])")
+        } else {
+          protocol.append("(val cont: Out["+s.statementID+"])")
+        }
       case s @ ReceiveChoiceStatement(_, _) =>
         protocol.append("(val cont: Out["+s.label+"])")
       case s @ RecursiveVar(_, _) =>
-        handleSendNextCase(sessionTypeInterpreter.getRecursiveVarScope(s).recVariables(s.name))
+        handleSendNextCase(sessionTypeInterpreter.getRecursiveVarScope(s).recVariables(s.name), isUnique)
       case s @ RecursiveStatement(_, _) =>
-        handleSendNextCase(s.body)
+        handleSendNextCase(s.body, isUnique)
       case _ =>
 
     }
   }
 
-  def handleReceiveNextCase(statement: Statement): Unit ={
+  def handleReceiveNextCase(statement: Statement, isUnique: Boolean): Unit ={
     statement match {
       case s @ SendStatement(_, _, _, _, _) =>
-        protocol.append("(val cont: Out["+s.statementID+"])")
+        if(isUnique){
+          protocol.append("(val cont: Out["+s.label+"])")
+        } else {
+          protocol.append("(val cont: Out["+s.statementID+"])")
+        }
       case s @ SendChoiceStatement(_, _) =>
         protocol.append("(val cont: Out["+s.label+"])")
       case s @ ReceiveStatement(_, _, _, _, _) =>
-        protocol.append("(val cont: In["+s.statementID+"])")
+        if(isUnique){
+          protocol.append("(val cont: In["+s.label+"])")
+        } else {
+          protocol.append("(val cont: In["+s.statementID+"])")
+        }
       case s @ ReceiveChoiceStatement(_, _) =>
         protocol.append("(val cont: In["+s.label+"])")
       case s @ RecursiveVar(_, _) =>
-        handleReceiveNextCase(sessionTypeInterpreter.getRecursiveVarScope(s).recVariables(s.name))
+        handleReceiveNextCase(sessionTypeInterpreter.getRecursiveVarScope(s).recVariables(s.name), isUnique)
       case s @ RecursiveStatement(_, _) =>
-        handleReceiveNextCase(s.body)
+        handleReceiveNextCase(s.body, isUnique)
       case _ =>
 
     }

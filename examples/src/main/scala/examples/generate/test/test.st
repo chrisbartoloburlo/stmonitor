@@ -1,1 +1,1 @@
-S_test=+{!L1().?L2(), !L3().?L2()}
+S_test=+{!L1(msg1: String).?L2(msg2: String)[msg1 == msg2], !L3().?L2(msg2: String)}
