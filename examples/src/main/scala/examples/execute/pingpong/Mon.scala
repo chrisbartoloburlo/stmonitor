@@ -7,7 +7,7 @@ import monitor.util.ConnectionManager
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 
-class Mon(External: ConnectionManager, Internal: Out[ExternalChoice1])(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {
+class Mon(External: ConnectionManager, Internal: Any)(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {
   object payloads {
 		object Ping {
 		}
@@ -20,7 +20,7 @@ class Mon(External: ConnectionManager, Internal: Out[ExternalChoice1])(implicit 
     println("[Mon] Monitor started")
     println("[Mon] Setting up connection manager")
     External.setup()
-    receiveExternalChoice1(Internal, External)
+    receiveExternalChoice1(Internal.asInstanceOf[Out[ExternalChoice1]], External)
     External.close()
   }
 //  def receive: Receive = { FIXME REMOVE
