@@ -15,20 +15,21 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def init(): Unit = {
     protocol.append("import lchannels.{In, Out}\n")
-    var nonUniqueScopes = new ListBuffer[String]
-    for(scope <- sessionTypeInterpreter.getScopes){
-      if (!scope._2.isUnique && !nonUniqueScopes.contains(scope._2.name)) {
-        protocol.append("case class "+ scope._2.name + "(")
-        for(variable <- scope._2.variables){
-          protocol.append(variable._1+": "+variable._2._2)
-          if(!(variable == scope._2.variables.last)){
-            protocol.append(", ")
-          }
-        }
-        nonUniqueScopes += scope._2.name
-        protocol.append(")\n")
-      }
-    }
+//    CODE FOR GENERATING UNIQUE PROTOCOL CLASSES
+//    var nonUniqueScopes = new ListBuffer[String]
+//    for(scope <- sessionTypeInterpreter.getScopes){
+//      if (!scope._2.isUnique && !nonUniqueScopes.contains(scope._2.name)) {
+//        protocol.append("case class "+ scope._2.name + "(")
+//        for(variable <- scope._2.variables){
+//          protocol.append(variable._1+": "+variable._2._2)
+//          if(!(variable == scope._2.variables.last)){
+//            protocol.append(", ")
+//          }
+//        }
+//        nonUniqueScopes += scope._2.name
+//        protocol.append(")\n")
+//      }
+//    }
   }
 
   def handleSendChoice(label: String): Unit ={
