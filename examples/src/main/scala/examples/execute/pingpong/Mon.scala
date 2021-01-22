@@ -25,8 +25,14 @@ class Mon(External: ConnectionManager, Internal: Out[ExternalChoice1])(implicit 
     println("[Mon] Setting up connection manager")
     External.setup()
     var control: Control = Continue( () => receiveExternalChoice1(Internal, External))
-    while(control.isInstanceOf[Continue]){
-      control = control.asInstanceOf[Continue].f.apply()
+    var quit = false
+    while(!quit){
+      control match {
+        case Continue(f) =>
+          f.apply()
+        case Stop() =>
+          quit = true
+      }
     }
     External.close()
   }
