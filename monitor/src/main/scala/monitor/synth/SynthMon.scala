@@ -25,8 +25,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 //      case SendChoiceStatement(label, _) =>
 //        mon.append("In["+label+"])")
 //    }
-    mon.append("Any)")
-//    mon.replace(mon.find('$'), type)
+    mon.append("$)")
 
     mon.append("(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {\n")
     mon.append("  object payloads {\n")
@@ -58,7 +57,8 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       reference = statement.statementID
     }
     if(first){
-      mon.append("    send"+statement.statementID+"(internal.asInstanceOf[In["+reference+"]], external)\n    external.close()\n  }\n")
+      mon.replace(mon.indexOf("$"), mon.indexOf("$")+1, "In["+reference+"]")
+      mon.append("    send"+statement.statementID+"(internal, external)\n    external.close()\n  }\n")
       first = false
     }
 
@@ -140,7 +140,8 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       reference = statement.statementID
     }
     if(first) {
-      mon.append("    receive" + statement.statementID + "(internal.asInstanceOf[Out["+reference+"]], external)\n    external.close()\n  }\n")
+      mon.replace(mon.indexOf("$"), mon.indexOf("$")+1, "Out["+reference+"]")
+      mon.append("    receive" + statement.statementID + "(internal, external)\n    external.close()\n  }\n")
 //      reference = statement.statementID
       first = false
     }
@@ -239,8 +240,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   }
 
   def handleSendChoice(statement: SendChoiceStatement): Unit ={
-    if (first) {
-      mon.append("    send" + statement.label + "(internal.asInstanceOf[In["+statement.label+"]], external)\n    external.close()\n  }\n")
+    if(first) {
+      mon.replace(mon.indexOf("$"), mon.indexOf("$")+1, "In["+statement.label+"]")
+      mon.append("    send" + statement.label + "(internal, external)\n    external.close()\n  }\n")
       first = false
     }
 
@@ -268,8 +270,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   }
 
   def handleReceiveChoice(statement: ReceiveChoiceStatement): Unit = {
-    if (first) {
-      mon.append("    receive" + statement.label + "(internal.asInstanceOf[Out["+statement.label+"]], external)\n    external.close()\n  }\n")
+    if(first) {
+      mon.replace(mon.indexOf("$"), mon.indexOf("$")+1, "Out["+statement.label+"]")
+      mon.append("    receive" + statement.label + "(internal, external)\n    external.close()\n  }\n")
       first = false
     }
 
