@@ -250,7 +250,11 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("    internal ? {\n")
 
     for (choice <- statement.choices){
-      mon.append("      case msg @ "+choice.asInstanceOf[SendStatement].label+"(")
+      var reference = choice.asInstanceOf[SendStatement].label
+      if(!sessionTypeInterpreter.getScope(choice).isUnique){
+        reference = choice.asInstanceOf[SendStatement].statementID
+      }
+      mon.append("      case msg @ "+reference+"(")
       addParameters(choice.asInstanceOf[SendStatement].types)
       mon.append(") =>\n")
       if(choice.asInstanceOf[SendStatement].condition != null){
@@ -280,7 +284,11 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("    external.receive() match {\n")
 
     for (choice <- statement.choices){
-      mon.append("      case msg @ " + choice.asInstanceOf[ReceiveStatement].label + "(")
+      var reference = choice.asInstanceOf[ReceiveStatement].label
+      if(!sessionTypeInterpreter.getScope(choice).isUnique){
+        reference = choice.asInstanceOf[ReceiveStatement].statementID
+      }
+      mon.append("      case msg @ " + reference + "(")
       addParameters(choice.asInstanceOf[ReceiveStatement].types)
       mon.append(")=>\n")
       if(choice.asInstanceOf[ReceiveStatement].condition != null){
