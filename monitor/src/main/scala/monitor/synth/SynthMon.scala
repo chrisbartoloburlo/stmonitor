@@ -26,6 +26,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 //        mon.append("In["+label+"])")
 //    }
     mon.append("Any)")
+//    mon.replace(mon.find('$'), type)
 
     mon.append("(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {\n")
     mon.append("  object payloads {\n")
