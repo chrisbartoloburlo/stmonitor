@@ -29,7 +29,7 @@ class Mon(External: ConnectionManager, Internal: Out[ExternalChoice1])(implicit 
     while(!quit){
       control match {
         case Continue(f) =>
-          f.apply()
+          control = f.apply()
         case Stop() =>
           quit = true
       }

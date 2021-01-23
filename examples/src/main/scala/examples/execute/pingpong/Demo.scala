@@ -11,7 +11,7 @@ object Demo extends App{
   import scala.concurrent.duration._
   val timeout = Duration.Inf
 
-  val (lIn, lOut) = LocalChannel.factory[ExternalChoice1]()
+//  val (lIn, lOut) = LocalChannel.factory[ExternalChoice1]()
 
   class MonSocketManager(socket: Socket) extends SocketManager(socket) {
     private val inB = new BufferedReader(new InputStreamReader(in))
