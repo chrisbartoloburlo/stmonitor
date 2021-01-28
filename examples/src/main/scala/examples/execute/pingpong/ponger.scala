@@ -17,8 +17,8 @@ object ponger {
       resp ? {
         case ping @ Ping() =>
           println("[PONGER] Received Ping()")
-          println("[PONGER] Sending Pong()")
           resp = ping.cont !! Pong()
+          println("[PONGER] Sending Pong()")
         case quit @ Quit() =>
           exit = true
       }
