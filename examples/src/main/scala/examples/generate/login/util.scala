@@ -1,3 +1,4 @@
+//comment package statement to generate
 package examples.generate.login
 
 object util {
