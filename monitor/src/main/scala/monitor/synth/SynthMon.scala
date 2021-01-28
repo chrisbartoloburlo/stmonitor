@@ -25,9 +25,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 //      case SendChoiceStatement(label, _) =>
 //        mon.append("In["+label+"])")
 //    }
-    mon.append("$)")
+    mon.append("$, max: Int)")
 
-    mon.append("(implicit ec: ExecutionContext, timeout: Duration, max: Int) extends Runnable {\n")
+    mon.append("(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {\n")
     mon.append("  object payloads {\n")
   }
 
