@@ -33,7 +33,7 @@ class STInterpreter(sessionType: SessionType, path: String) {
     branches(statement)
   }
 
-  def getCurScope(): String ={
+  def getCurScope: String ={
     curScope
   }
 
@@ -65,6 +65,9 @@ class STInterpreter(sessionType: SessionType, path: String) {
 
     synthProtocol.init()
     walk(sessionType.statement)
+
+    curScope = "global"
+    probabilityWalk(sessionType.statement)
     synthMon.end()
     synthProtocol.end()
     (synthMon.getMon(), synthProtocol.getProtocol())
@@ -77,25 +80,23 @@ class STInterpreter(sessionType: SessionType, path: String) {
    */
   def initialWalk(root: Statement): Unit = {
     root match {
-      case ReceiveStatement(label, statementID, types, condition, continuation) =>
+      case ReceiveStatement(label, statementID, types, probability, continuation) =>
         createAndUpdateScope(label, statementID)
-        checkAndInitVariables(statementID, types, condition)
-        synthMon.handlePayloads(statementID, types)
+        synthMon.handleLabels(statementID, probability, false)
         initialWalk(continuation)
 
-      case SendStatement(label, statementID, types, condition, continuation) =>
+      case SendStatement(label, statementID, types, probability, continuation) =>
         createAndUpdateScope(label, statementID)
-        checkAndInitVariables(statementID, types, condition)
-        synthMon.handlePayloads(statementID, types)
+        synthMon.handleLabels(statementID, probability, false)
         initialWalk(continuation)
 
       case ReceiveChoiceStatement(label, choices) =>
         createAndUpdateScope(label, label)
         val tmpScope = curScope
+        synthMon.handleLabels(label, 0, true)
         for(choice <- choices) {
           createAndUpdateScope(choice.asInstanceOf[ReceiveStatement].label, choice.asInstanceOf[ReceiveStatement].statementID)
-          checkAndInitVariables(choice.asInstanceOf[ReceiveStatement].statementID, choice.asInstanceOf[ReceiveStatement].types, choice.asInstanceOf[ReceiveStatement].condition)
-          synthMon.handlePayloads(choice.asInstanceOf[ReceiveStatement].statementID, choice.asInstanceOf[ReceiveStatement].types)
+          synthMon.handleLabels(choice.asInstanceOf[ReceiveStatement].statementID, choice.asInstanceOf[ReceiveStatement].probability, false)
           initialWalk(choice.asInstanceOf[ReceiveStatement].continuation)
           curScope = tmpScope
         }
@@ -103,10 +104,10 @@ class STInterpreter(sessionType: SessionType, path: String) {
       case SendChoiceStatement(label, choices) =>
         createAndUpdateScope(label, label)
         val tmpScope = curScope
+        synthMon.handleLabels(label, 0, true)
         for(choice <- choices) {
           createAndUpdateScope(choice.asInstanceOf[SendStatement].label, choice.asInstanceOf[SendStatement].statementID)
-          checkAndInitVariables(choice.asInstanceOf[SendStatement].statementID, choice.asInstanceOf[SendStatement].types, choice.asInstanceOf[SendStatement].condition)
-          synthMon.handlePayloads(choice.asInstanceOf[SendStatement].statementID, choice.asInstanceOf[SendStatement].types)
+          synthMon.handleLabels(choice.asInstanceOf[SendStatement].statementID, choice.asInstanceOf[SendStatement].probability, false)
           initialWalk(choice.asInstanceOf[SendStatement].continuation)
           curScope = tmpScope
         }
@@ -130,19 +131,22 @@ class STInterpreter(sessionType: SessionType, path: String) {
    */
   def walk(statement: Statement): Unit = {
     statement match {
-      case statement @ ReceiveStatement(label, id, types, condition, _) =>
+      case statement @ ReceiveStatement(label, id, types, probability, _) =>
         logger.info("Receive "+label+"("+types+")")
         curScope = id
-        checkCondition(label, types, condition)
+        if(probability!=1){
+          throw new Exception("Probability in " + label + " is not 1")
+        }
         synthMon.handleReceive(statement, statement.continuation, scopes(curScope).isUnique) // Change isUnique accordingly
         synthProtocol.handleReceive(statement, scopes(curScope).isUnique, statement.continuation, getScope(statement.continuation).isUnique, null)
         walk(statement.continuation)
 
-      case statement @ SendStatement(label, id, types, condition, _) =>
+      case statement @ SendStatement(label, id, types, probability, _) =>
         logger.info("Send "+label+"("+types+")")
         curScope = id
-        checkCondition(label, types, condition)
-
+        if(probability!=1){
+          throw new Exception("Probability in " + label + " is not 1")
+        }
         synthMon.handleSend(statement, statement.continuation, scopes(curScope).isUnique) // Change isUnique accordingly
         synthProtocol.handleSend(statement, scopes(curScope).isUnique, statement.continuation, getScope(statement.continuation).isUnique, null)
         walk(statement.continuation)
@@ -153,10 +157,14 @@ class STInterpreter(sessionType: SessionType, path: String) {
         val tmpScope = curScope
         synthMon.handleReceiveChoice(statement)
         synthProtocol.handleReceiveChoice(statement.label)
+        var totalProb=0.0
 
         for(choice <- choices) {
           curScope = choice.asInstanceOf[ReceiveStatement].statementID
-          checkCondition(choice.asInstanceOf[ReceiveStatement].label, choice.asInstanceOf[ReceiveStatement].types, choice.asInstanceOf[ReceiveStatement].condition)
+          totalProb+=choice.asInstanceOf[ReceiveStatement].probability
+          if(totalProb > 1){
+            throw new Exception("Probabilities in " + label + " exceed 1")
+          }
           synthProtocol.handleReceive(choice.asInstanceOf[ReceiveStatement], scopes(curScope).isUnique, choice.asInstanceOf[ReceiveStatement].continuation, getScope(choice.asInstanceOf[ReceiveStatement].continuation).isUnique, statement.label)
 
           walk(choice.asInstanceOf[ReceiveStatement].continuation)
@@ -169,10 +177,14 @@ class STInterpreter(sessionType: SessionType, path: String) {
         val tmpScope = curScope
         synthMon.handleSendChoice(statement)
         synthProtocol.handleSendChoice(statement.label)
+        var totalProb=0.0
 
         for(choice <- choices) {
           curScope = choice.asInstanceOf[SendStatement].statementID
-          checkCondition(choice.asInstanceOf[SendStatement].label, choice.asInstanceOf[SendStatement].types, choice.asInstanceOf[SendStatement].condition)
+          totalProb+=choice.asInstanceOf[SendStatement].probability
+          if(totalProb > 1){
+            throw new Exception("Probabilities in " + label + " exceed 1")
+          }
 
           synthProtocol.handleSend(choice.asInstanceOf[SendStatement], scopes(curScope).isUnique, choice.asInstanceOf[SendStatement].continuation, getScope(choice.asInstanceOf[SendStatement].continuation).isUnique, statement.label)
           walk(choice.asInstanceOf[SendStatement].continuation)
@@ -191,6 +203,47 @@ class STInterpreter(sessionType: SessionType, path: String) {
       case End() =>
 
       }
+  }
+
+  def probabilityWalk(statement: Statement): Unit = {
+    statement match {
+      case statement@ReceiveStatement(label, id, types, probability, _) =>
+        curScope = id
+        probabilityWalk(statement.continuation)
+
+      case statement@SendStatement(label, id, types, probability, _) =>
+        curScope = id
+        probabilityWalk(statement.continuation)
+
+      case statement@ReceiveChoiceStatement(label, choices) =>
+        curScope = label
+        val tmpScope = curScope
+        for (choice <- choices) {
+          curScope = choice.asInstanceOf[ReceiveStatement].statementID
+
+          probabilityWalk(choice.asInstanceOf[ReceiveStatement].continuation)
+          curScope = tmpScope
+        }
+
+      case statement@SendChoiceStatement(label, choices) =>
+        curScope = label
+        val tmpScope = curScope
+
+        for (choice <- choices) {
+          curScope = choice.asInstanceOf[SendStatement].statementID
+          probabilityWalk(choice.asInstanceOf[SendStatement].continuation)
+          curScope = tmpScope
+        }
+
+      case statement@RecursiveStatement(label, body) =>
+        probabilityWalk(statement.body)
+
+      case statement@RecursiveVar(name, continuation) =>
+        probabilityWalk(statement.continuation)
+
+      case End() =>
+
+    }
   }
 
   /**
@@ -289,32 +342,6 @@ class STInterpreter(sessionType: SessionType, path: String) {
   }
 
   /**
-   * Initialises the identifiers within the scope. If the current statement contains a condition,
-   * the identifiers within the condition are retrieved and searched for within the previous scopes
-   * starting from the current scope. If the identifier is found in another scope a flag is set to
-   * indicate that the value it represents shall be used from within other statements.
-   *
-   * @param label The label of the current statement.
-   * @param types A mapping from an identifier to its respective type (representing the payload of
-   *              the current statement).
-   * @param condition The condition of the current statement.
-   */
-  private def checkAndInitVariables(label: String, types: Map[String, String], condition: String): Unit ={
-    for(typ <- types) {
-      scopes(curScope).variables(typ._1) = (false, typ._2)
-    }
-    if (condition != null){
-      val identifiersInCondition = getIdentifiers(condition)
-      for(ident <- identifiersInCondition){
-        val identScope = searchIdent(curScope, ident)
-        if(identScope != curScope) {
-          scopes(identScope).variables(ident) = (true, scopes(identScope).variables(ident)._2)
-        }
-      }
-    }
-  }
-
-  /**
    * Searches for an identifier recursively through the scopes. Once found it returns the scope.
    * Otherwise, an exception is thrown indicating that the identifier does not exist.
    *
@@ -331,76 +358,6 @@ class STInterpreter(sessionType: SessionType, path: String) {
     } else {
       tmpCurScope
     }
-  }
-
-  /**
-   * A traverser for traversing scala parse trees.
-   */
-  class traverser extends Traverser {
-    var identifiers: List[String] = List[String]()
-
-    /**
-     * Populates a list of identifiers found within a scala parse tree.
-     *
-     * @param tree The scala parse tree.
-     */
-    override def traverse(tree: Tree): Unit = tree match {
-      case i @ Ident(_) =>
-        identifiers = i.name.decodedName.toString :: identifiers
-        super.traverse(tree)
-      case _ =>
-        super.traverse(tree)
-    }
-  }
-
-  /**
-   * Parses a string to obtain a Scala parse tree which is passed to the traverse function in the traverser
-   * and returns the distinct identifiers of the traverser excluding util since it represents the file
-   * containing any boolean functions used in the condition.
-   *
-   * @param condition The condition to retrieve identifiers from.
-   * @return The distinct identifiers found in the condition.
-   */
-  def getIdentifiers(condition: String): List[String] = {
-    val conditionTree = toolbox.parse(condition)
-    val traverser = new traverser
-    traverser.traverse(conditionTree)
-    traverser.identifiers.distinct.filter(_ != "util")
-  }
-
-  /**
-   * Type checks a condition of type String using the scala compiler. First, the identifiers are extracted
-   * from the condition. Their type is then retrieved and appended to a string as variable declarations. The contents
-   * of the util file are extracted as string. The latter, the variable declarations and the condition itself
-   * are all appended to a string which is parsed using the Scala parsers and then type-checked using the
-   * Scala compiler.
-   *
-   * @param label The label of the current statement.
-   * @param types A mapping from an identifier to its respective type (representing the payload of
-   *              the current statement).
-   * @param condition The condition to type-check.
-   * @return The whether the condition is of type boolean or not.
-   */
-  private def checkCondition(label: String, types: Map[String, String], condition: String): Boolean ={
-    if(condition != null) {
-      var stringVariables = ""
-      val identifiersInCondition = getIdentifiers(condition)
-      val source = scala.io.Source.fromFile(path+"/util.scala", "utf-8")
-      val util = try source.mkString finally source.close()
-      for(identName <- identifiersInCondition){
-        val identifier = scopes(searchIdent(curScope, identName)).variables(identName)
-        stringVariables = stringVariables+"val "+identName+": "+identifier._2+"= ???;"
-      }
-      val eval = s"""
-           |$util
-           |$stringVariables
-           |$condition
-           |""".stripMargin
-      val tree = toolbox.parse(eval)
-      val checked = toolbox.typecheck(tree)
-      checked.tpe == Boolean
-    }
-    true
   }
 
   /**

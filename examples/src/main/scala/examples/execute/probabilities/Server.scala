@@ -39,15 +39,15 @@ object Server {
 }
 
 //S_game=rec X.(
-// &{?Guess(num: Int)[num > 0 && num < 50].+{ !Correct(ans: Int)[ans==num].X, !Incorrect().X },
-// ?New().X,
-// ?Quit()} )
+// &{?Guess(num: Int)[0.7].+{ !Correct(ans: Int)[0.2].X, !Incorrect()[*].X },
+// ?New()[0.2].X,
+// ?Quit()[0.1]} )
 object MonitoredServer extends App {
   def run() = main(Array())
   val timeout = Duration.Inf
 
   val (in, out) = LocalChannel.factory[ExternalChoice1]()
-  val mon = new MonCI(new GameConnectionManager(), out, 300, 1.6449)(global, timeout)
+  val mon = new MonCI(new GameConnectionManager(), out, 300, 0.6745)(global, timeout)
 
   val monThread = new Thread {
     override def run(): Unit = {

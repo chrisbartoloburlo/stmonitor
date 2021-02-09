@@ -28,15 +28,15 @@ class STParser extends StandardTokenParsers {
 
   def choice: Parser[Statement] = positioned( receiveChoice | sendChoice ) ^^ {a=>a}
 
-  def receive: Parser[ReceiveStatement] = ("?" ~> ident) ~ ("(" ~> types <~ ")") ~ opt("[" ~> stringLit <~ "]") ~ opt("." ~> sessionType) ^^ {
-    case l ~ t ~ None ~ None =>
-      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, null, End())
-    case l ~ t ~ None ~ cT =>
-      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, null, cT.get)
-    case l ~ t ~ c ~ None =>
-      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, c.get, End())
-    case l ~ t ~ c ~ cT =>
-      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, c.get, cT.get)
+  def receive: Parser[ReceiveStatement] = ("?" ~> ident) ~ ("(" ~> types <~ ")") ~ ("[" ~> stringLit <~ "]") ~ opt("." ~> sessionType) ^^ {
+    case l ~ t ~ p ~ None =>
+      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, End())
+    case l ~ t ~ p ~ cT =>
+      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, cT.get)
+    case l ~ t ~ p~ None =>
+      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, End())
+    case l ~ t ~ p ~ cT =>
+      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, cT.get)
   }
 
   def receiveChoice: Parser[ReceiveChoiceStatement] = "&" ~ "{" ~> (repsep(sessionType, ",") <~ "}") ^^ {
@@ -51,15 +51,15 @@ class STParser extends StandardTokenParsers {
       ReceiveChoiceStatement(f"ExternalChoice${receiveChoiceCounter+=1;receiveChoiceCounter.toString}", cN)
   }
 
-  def send: Parser[SendStatement] = ("!" ~> ident) ~ ("(" ~> types <~ ")") ~ opt("[" ~> stringLit <~ "]") ~ opt("." ~> sessionType) ^^ {
-    case l ~ t ~ None ~ None =>
-      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, null, End())
-    case l ~ t ~ None ~ cT =>
-      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, null, cT.get)
-    case l ~ t ~ c ~ None =>
-      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, c.get, End())
-    case l ~ t ~ c ~ cT =>
-      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, c.get, cT.get)
+  def send: Parser[SendStatement] = ("!" ~> ident) ~ ("(" ~> types <~ ")") ~ ("[" ~> stringLit <~ "]") ~ opt("." ~> sessionType) ^^ {
+    case l ~ t ~ p ~ None =>
+      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, End())
+    case l ~ t ~ p ~ cT =>
+      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, cT.get)
+    case l ~ t ~ p ~ None =>
+      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, End())
+    case l ~ t ~ p ~ cT =>
+      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, cT.get)
   }
 
   def sendChoice: Parser[SendChoiceStatement] = "+" ~ "{" ~> (repsep(sessionType, ",") <~ "}") ^^ {

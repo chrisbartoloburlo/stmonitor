@@ -13,34 +13,24 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   private var first = true
 
   def startInit(statement: Statement): Unit = {
-    mon.append("import lchannels.{In, Out}\nimport monitor.util.ConnectionManager\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.util.control.TailCalls.{TailRec, done, tailcall}\nclass Mon(external: ConnectionManager, internal: ")
-
-//    statement match {
-//      case ReceiveStatement(_, statementID, _, _, _) =>
-//        mon.append("Out["+statementID+"])")
-//      case SendStatement(_, statementID, _, _, _) =>
-//        mon.append("In["+statementID+"])")
-//      case ReceiveChoiceStatement(label, _) =>
-//        mon.append("Out["+label+"])")
-//      case SendChoiceStatement(label, _) =>
-//        mon.append("In["+label+"])")
-//    }
-    mon.append("$, max: Int)")
-
+    mon.append("import lchannels.{In, Out}\nimport monitor.util.ConnectionManager\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.util.control.TailCalls.{TailRec, done, tailcall}\n")
+    mon.append("class Mon(external: ConnectionManager, internal: $, max: Int, zvalue: Double)")
     mon.append("(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {\n")
-    mon.append("\tobject payloads {\n")
+    mon.append("\tobject labels {\n")
   }
 
   /**
    * Generates the code for storing values used from other parts in the monitor.
    *
    * @param label The label of the current statement.
-   * @param types A mapping from identifiers to their type.
+   * @param probability The actual probability stated in the type.
    */
-  def handlePayloads(label: String, types: Map[String, String]): Unit ={
+  def handleLabels(label: String, probability: Double, choice: Boolean): Unit ={
     mon.append("\t\tobject "+label+" {\n")
-    for(typ <- types){
-      mon.append("\t\t\tvar "+typ._1+": "+typ._2+" = _\n")
+    mon.append("\t\t\tvar counter = 0\n")
+    if(!choice){
+      mon.append("\t\t\tval prob = "+probability+"\n")
+      mon.append("\t\t\tvar alert = false\n")
     }
     mon.append("\t\t}\n")
   }
@@ -73,19 +63,8 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("\t\t\tcase msg @ "+reference+"(")
     addParameters(statement.types)
     mon.append(") =>\n")
-
-    if(statement.condition != null){
-      handleCondition(statement.condition, statement.statementID)
-      mon.append("external.send(msg)\n")
-      handleSendNextCase(statement, isUnique, nextStatement)
-      mon.append("\t\t\t\t} else {\n")
-    } else {
-      mon.append("\t\t\t\texternal.send(msg)\n")
-      handleSendNextCase(statement, isUnique, nextStatement)
-    }
-    if(statement.condition != null){
-      mon.append("\t\t\t\tdone() }\n")
-    }
+    mon.append("\t\t\t\texternal.send(msg)\n")
+    handleSendNextCase(statement, isUnique, nextStatement)
     mon.append("\t\t}\n\t}\n")
   }
 
@@ -93,36 +72,16 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   private def handleSendNextCase(currentStatement: SendStatement, isUnique: Boolean, nextStatement: Statement): Unit ={
     nextStatement match {
       case sendStatement: SendStatement =>
-        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
-        if(currentStatement.condition==null) {
-          mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\tsend"+sendStatement.statementID+"(msg.cont, external, count+1)\n\t\t\t\t} else { tailcall(send"+sendStatement.statementID+"(msg.cont, external, 0)) }\n")
-        } else {
-          mon.append("\t\t\t\t\tif (count < max) {\n\t\t\t\t\t\tsend"+sendStatement.statementID+"(msg.cont, external, count+1)\n\t\t\t\t\t} else { tailcall(send"+sendStatement.statementID+"(msg.cont, external,0)) }\n")
-        }
+        mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\tsend"+sendStatement.statementID+"(msg.cont, external, count+1)\n\t\t\t\t} else { tailcall(send"+sendStatement.statementID+"(msg.cont, external, 0)) }\n")
 
       case sendChoiceStatement: SendChoiceStatement =>
-        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
-        if(currentStatement.condition==null) {
-          mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\tsend"+sendChoiceStatement.label+"(msg.cont, external, count+1)\n\t\t\t\t} else { tailcall(send"+sendChoiceStatement.label+"(msg.cont, external, 0)) }\n")
-        } else {
-          mon.append("\t\t\t\t\tif (count < max) {\n\t\t\t\t\t\tsend"+sendChoiceStatement.label+"(msg.cont, external, count+1)\n\t\t\t\t\t} else { tailcall("+sendChoiceStatement.label+"(msg.cont, external, 0)) }\n")
-        }
+        mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\tsend"+sendChoiceStatement.label+"(msg.cont, external, count+1)\n\t\t\t\t} else { tailcall(send"+sendChoiceStatement.label+"(msg.cont, external, 0)) }\n")
 
       case receiveStatement: ReceiveStatement =>
-        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
-        if(currentStatement.condition==null) {
-          mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\treceive" + receiveStatement.statementID + "(msg.cont, external, count+1)\n\t\t\t\t} else { tailcall(receive" + receiveStatement.statementID + "(msg.cont, external, 0)) }\n")
-        } else {
-          mon.append("\t\t\t\t\tif (count < max) {\n\t\t\t\t\t\treceive" + receiveStatement.statementID + "(msg.cont, external, count+1)\n\t\t\t\t\t} else { tailcall(receive" + receiveStatement.statementID + "(msg.cont, external, 0)) }\n")
-        }
+        mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\treceive" + receiveStatement.statementID + "(msg.cont, external, count+1)\n\t\t\t\t} else { tailcall(receive" + receiveStatement.statementID + "(msg.cont, external, 0)) }\n")
 
       case receiveChoiceStatement: ReceiveChoiceStatement =>
-        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
-        if(currentStatement.condition==null) {
-          mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\treceive"+receiveChoiceStatement.label+"(msg.cont, external, count+1)\n\t\t\t\t} else { tailcall(receive"+receiveChoiceStatement.label+"(msg.cont, external, 0)) }\n")
-        } else {
-          mon.append("\t\t\t\t\tif (count < max) {\n\t\t\t\t\t\treceive"+receiveChoiceStatement.label+"(msg.cont, external, count+1)\n\t\t\t\t\t} else { tailcall(receive"+receiveChoiceStatement.label+"(msg.cont, external, 0)) }\n")
-        }
+        mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\treceive"+receiveChoiceStatement.label+"(msg.cont, external, count+1)\n\t\t\t\t} else { tailcall(receive"+receiveChoiceStatement.label+"(msg.cont, external, 0)) }\n")
 
       case recursiveVar: RecursiveVar =>
         handleSendNextCase(currentStatement, isUnique, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name))
@@ -131,11 +90,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         handleSendNextCase(currentStatement, isUnique, recursiveStatement.body)
 
       case _ =>
-        if(currentStatement.condition==null) {
-          mon.append("\t\t\t\tdone()\n")
-        } else {
           mon.append("\t\t\t\t\tdone()\n")
-        }
     }
   }
 
@@ -156,16 +111,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("\t\t\tcase msg @ " + reference + "(")
     addParameters(statement.types)
     mon.append(")=>\n")
-    if(statement.condition != null){
-      handleCondition(statement.condition, statement.statementID)
-      handleReceiveNextCase(statement, isUnique, nextStatement)
-      mon.append("\t\t\t\t} else {\n")
-    } else {
-      handleReceiveNextCase(statement, isUnique, nextStatement)
-    }
-    if(statement.condition != null){
-      mon.append("\t\t\t\tdone() }\n")
-    }
+    handleReceiveNextCase(statement, isUnique, nextStatement)
     mon.append("\t\t\tcase _ => done()\n")
     mon.append("\t\t}\n\t}\n")
   }
@@ -175,39 +121,19 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     nextStatement match {
       case sendStatement: SendStatement =>
         handleReceiveCases(currentStatement, isUnique)
-        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
-        if(currentStatement.condition==null) {
-          mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\tsend" + sendStatement.statementID + "(cont, external, count+1)\n\t\t\t\t} else { tailcall(send"+sendStatement.statementID+"(cont, external, 0)) }\n")
-        } else {
-          mon.append("\t\t\t\t\tif (count < max) {\n\t\t\t\t\t\tsend" + sendStatement.statementID + "(cont, external, count+1)\n\t\t\t\t\t} else { tailcall(send"+ sendStatement.statementID +"(cont, external, 0)) }\n")
-        }
+        mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\tsend" + sendStatement.statementID + "(cont, external, count+1)\n\t\t\t\t} else { tailcall(send"+sendStatement.statementID+"(cont, external, 0)) }\n")
 
       case sendChoiceStatement: SendChoiceStatement =>
         handleReceiveCases(currentStatement, isUnique)
-        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
-        if(currentStatement.condition==null) {
-          mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\tsend" + sendChoiceStatement.label + "(cont, external, count+1)\n\t\t\t\t} else { tailcall(send"+sendChoiceStatement.label+"(cont, external,0)) }\n")
-        } else {
-          mon.append("\t\t\t\t\tif (count < max) {\n\t\t\t\t\t\tsend" + sendChoiceStatement.label + "(cont, external,count+1)\n\t\t\t\t\t} else { tailcall(send" + sendChoiceStatement.label + "(cont, external,0)) }\n")
-        }
+        mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\tsend" + sendChoiceStatement.label + "(cont, external, count+1)\n\t\t\t\t} else { tailcall(send"+sendChoiceStatement.label+"(cont, external,0)) }\n")
 
       case receiveStatement: ReceiveStatement =>
         handleReceiveCases(currentStatement, isUnique)
-        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
-        if(currentStatement.condition==null) {
-          mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\treceive" + receiveStatement.statementID + "(cont, external, count+1)\n\t\t\t\t} else { tailcall(receive"+ receiveStatement.statementID +"(cont, external,0)) }\n")
-        } else {
-          mon.append("\t\t\t\t\tif (count < max) {\n\t\t\t\t\t\treceive" + receiveStatement.statementID + "(cont, external,count+1)\n\t\t\t\t\t} else { tailcall(receive" + receiveStatement.statementID + "(cont, external,0)) }\n")
-        }
+        mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\treceive" + receiveStatement.statementID + "(cont, external, count+1)\n\t\t\t\t} else { tailcall(receive"+ receiveStatement.statementID +"(cont, external,0)) }\n")
 
       case receiveChoiceStatement: ReceiveChoiceStatement =>
         handleReceiveCases(currentStatement, isUnique)
-        storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
-        if(currentStatement.condition==null) {
-          mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\treceive" + receiveChoiceStatement.label + "(cont, external, count+1)\n\t\t\t\t} else { tailcall(receive"+ receiveChoiceStatement.label +"(cont, external,0)) }\n")
-        } else {
-          mon.append("\t\t\t\t\tif (count < max) {\n\t\t\t\t\t\treceive" + receiveChoiceStatement.label + "(cont, external, count+1)\n\t\t\t\t\t} else { tailcall(receive" + receiveChoiceStatement.label + "(cont, external, 0)) }\n")
-        }
+        mon.append("\t\t\t\tif (count < max) {\n\t\t\t\t\treceive" + receiveChoiceStatement.label + "(cont, external, count+1)\n\t\t\t\t} else { tailcall(receive"+ receiveChoiceStatement.label +"(cont, external,0)) }\n")
 
       case recursiveVar: RecursiveVar =>
         handleReceiveNextCase(currentStatement, isUnique, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name))
@@ -216,11 +142,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         handleReceiveNextCase(currentStatement, isUnique, recursiveStatement.body)
 
       case _ =>
-        if(currentStatement.condition==null) {
-          mon.append("internal ! msg; done()\n")
-        } else {
-          mon.append("\tinternal ! msg; done()\n")
-        }
+        mon.append("\tinternal ! msg; done()\n")
     }
   }
 
@@ -229,11 +151,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     if(isUnique){
       reference = statement.label
     }
-    if(statement.condition != null) {
-      mon.append("val cont = internal !! " + reference + "(")
-    } else {
-      mon.append("\t\t\t\tval cont = internal !! " + reference + "(")
-    }
+    mon.append("val cont = internal !! " + reference + "(")
     for ((k, v) <- statement.types) {
       if ((k, v) == statement.types.last) {
         mon.append("msg." + k)
@@ -252,6 +170,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     }
 
     mon.append("\tdef send" + statement.label + "(internal: In[" + statement.label + "], external: ConnectionManager, count: Int): TailRec[Unit] = {\n")
+    mon.append("\t\tlabels."+statement.label+".counter+=1\n")
     mon.append("\t\tinternal ? {\n")
 
     for (choice <- statement.choices){
@@ -262,18 +181,10 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       mon.append("\t\t\tcase msg @ "+reference+"(")
       addParameters(choice.asInstanceOf[SendStatement].types)
       mon.append(") =>\n")
-      if(choice.asInstanceOf[SendStatement].condition != null){
-        handleCondition(choice.asInstanceOf[SendStatement].condition, choice.asInstanceOf[SendStatement].statementID)
-        mon.append("external.send(msg)\n")
-        handleSendNextCase(choice.asInstanceOf[SendStatement], true, choice.asInstanceOf[SendStatement].continuation)
-        mon.append("\t\t\t\t} else {\n")
-      } else {
-        mon.append("\t\t\t\texternal.send(msg)\n")
-        handleSendNextCase(choice.asInstanceOf[SendStatement], true, choice.asInstanceOf[SendStatement].continuation)
-      }
-      if(choice.asInstanceOf[SendStatement].condition != null) {
-        mon.append("\t\t\t\tdone() }\n")
-      }
+      mon.append("\t\t\t\tlabels."+choice.asInstanceOf[SendStatement].statementID+".counter+=1\n")
+      mon.append("\t\t\t\tcheck"+statement.label+"Intervals()\n\t\t\t\t")
+      mon.append("\t\t\t\texternal.send(msg)\n")
+      handleSendNextCase(choice.asInstanceOf[SendStatement], isUnique = true, choice.asInstanceOf[SendStatement].continuation)
     }
     mon.append("\t\t}\n\t}\n")
   }
@@ -286,6 +197,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     }
 
     mon.append("\tdef receive" + statement.label + "(internal: Out[" + statement.label + "], external: ConnectionManager, count: Int): TailRec[Unit] = {\n")
+    mon.append("\t\tlabels."+statement.label+".counter+=1\n")
     mon.append("\t\texternal.receive() match {\n")
 
     for (choice <- statement.choices){
@@ -296,17 +208,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       mon.append("\t\t\tcase msg @ " + reference + "(")
       addParameters(choice.asInstanceOf[ReceiveStatement].types)
       mon.append(")=>\n")
-      if(choice.asInstanceOf[ReceiveStatement].condition != null){
-        handleCondition(choice.asInstanceOf[ReceiveStatement].condition, choice.asInstanceOf[ReceiveStatement].statementID)
-        handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], true, choice.asInstanceOf[ReceiveStatement].continuation)
-        mon.append("\t\t\t\t} else {\n")
-      } else {
-        mon.append("\t\t\t\t")
-        handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], true, choice.asInstanceOf[ReceiveStatement].continuation)
-      }
-      if(choice.asInstanceOf[ReceiveStatement].condition != null) {
-        mon.append("\t\t\t\tdone() }\n")
-      }
+      mon.append("\t\t\t\tlabels."+choice.asInstanceOf[ReceiveStatement].statementID+".counter+=1\n")
+      mon.append("\t\t\t\tcheck"+statement.label+"Intervals()\n\t\t\t\t")
+      handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], isUnique = true, choice.asInstanceOf[ReceiveStatement].continuation)
     }
     mon.append("\t\t\tcase _ => done()\n")
     mon.append("\t\t}\n\t}\n")
@@ -325,50 +229,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         mon.append("_, ")
       }
     }
-  }
-
-  /**
-   * Generates the code for storing a value in the respective identifier object within the monitor.
-   *
-   * @param types A mapping from identifiers to their type.
-   * @param checkCondition A boolean indicating whether current statement has a condition.
-   * @param curStatementScope The label of the current statement used to retrieve identifier
-   *                          information from the interpreter.
-   */
-  private def storeValue(types: Map[String, String], checkCondition: Boolean, curStatementScope: String): Unit = {
-    for((name, _) <- types) {
-      val (varScope, (global, _)) = sessionTypeInterpreter.getVarInfo(name, curStatementScope)
-      if(global) {
-        if(checkCondition){
-          mon.append("\t\t\t\t\t\tpayloads."+varScope+"."+name+" = msg."+name+"\n")
-        } else {
-          mon.append("\t\t\t\t\tpayloads."+varScope+"."+name+" = msg."+name+"\n")
-        }
-      }
-    }
-  }
-
-  /**
-   * Generates the code for conditions by identifying identifiers and changing them for the
-   * respective variable within the monitor.
-   *
-   * @param condition Condition in String format.
-   * @param label The label of the current statment.
-   */
-  private def handleCondition(condition: String, label: String): Unit ={
-    mon.append("\t\t\t\tif(")
-    var stringCondition = condition
-    val identifierNames = sessionTypeInterpreter.getIdentifiers(condition)
-    for(identName <- identifierNames){
-      val varScope = sessionTypeInterpreter.searchIdent(label, identName)
-      val identPattern = ("\\b"+identName+"\\b").r
-      if(label == varScope){
-        stringCondition = identPattern.replaceAllIn(stringCondition, "msg."+identName)
-      } else {
-        stringCondition = identPattern.replaceAllIn(stringCondition, "payloads."+varScope+"."+identName)
-      }
-    }
-    mon.append(stringCondition+"){\n\t\t\t\t\t")
   }
 
   def end(): Unit = {

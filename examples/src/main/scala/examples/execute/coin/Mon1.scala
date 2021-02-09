@@ -11,9 +11,12 @@ class Mon1(external: ConnectionManager, internal: Out[ExternalChoice1], max: Int
 	object labels {
 		object Heads_1 {
 			var counter = 0
+			var alert = false
+
 		}
 		object Tails_2 {
 			var counter = 0
+			var alert = false
 		}
 		object ExternalChoice1 {
 			var counter = 0
@@ -26,41 +29,52 @@ class Mon1(external: ConnectionManager, internal: Out[ExternalChoice1], max: Int
 		receiveExternalChoice1(internal, external, 0).result
     external.close()
   }
+//	S_test=rec X.(&{?Heads[0.5].X, ?Tails[0.5].X})
 	def receiveExternalChoice1(internal: Out[ExternalChoice1], external: ConnectionManager, count: Int): TailRec[Unit] = {
 		labels.ExternalChoice1.counter+=1
 		external.receive() match {
 			case msg @ Heads()=>
 				val cont = internal !! Heads()_
-
 				labels.Heads_1.counter+=1
-
-				val (pmint, pmaxt) = calculateInterval(labels.Tails_2.counter, labels.ExternalChoice1.counter)
-				println(f"[MON] ?TAILS()[0.5] | interval: $pmint,$pmaxt | received ${labels.Tails_2.counter} Heads out of ${labels.ExternalChoice1.counter}")
-
-				val (pmin, pmax) = calculateInterval(labels.Heads_1.counter, labels.ExternalChoice1.counter)
-//				if(pmin >= 0.5 || pmax <= 0.5) {
-					println(f"[MON] ?HEADS()[0.5] | interval: $pmin,$pmax | received ${labels.Heads_1.counter} Heads out of ${labels.ExternalChoice1.counter}")
-
+				checkExternalChoice1Intervals()
 				if (count < max) {
 					receiveExternalChoice1(cont, external, count+1)
 				} else { tailcall(receiveExternalChoice1(cont, external,0)) }
 			case msg @ Tails()=>
-				val cont = internal !! Tails() _
-
+				val cont = internal !! Tails()_
 				labels.Tails_2.counter+=1
-
-				val (pminh, pmaxh) = calculateInterval(labels.Heads_1.counter, labels.ExternalChoice1.counter)
-				println(f"[MON] ?HEADS()[0.5] | interval: $pminh,$pmaxh | received ${labels.Heads_1.counter} Heads out of ${labels.ExternalChoice1.counter}")
-
-				val (pmin, pmax) = calculateInterval(labels.Tails_2.counter, labels.ExternalChoice1.counter)
-//				if(pmin >= 0.5 || pmax <= 0.5) {
-					println(f"[MON] ?TAILS()[0.5] | interval $pmin,$pmax | received ${labels.Tails_2.counter} Heads out of ${labels.ExternalChoice1.counter}")
-
+				checkExternalChoice1Intervals()
 				if (count < max) {
 					receiveExternalChoice1(cont, external, count + 1)
 				} else {
 				tailcall(receiveExternalChoice1(cont, external, 0)) }
 			case _ => done()
+		}
+	}
+	def checkExternalChoice1Intervals(): Unit = {
+		val (pmin_Heads, pmax_Heads) = calculateInterval(labels.Heads_1.counter, labels.ExternalChoice1.counter)
+		if(pmin_Heads >= 0.5 || pmax_Heads <= 0.5) {
+			if(!labels.Heads_1.alert){
+				println(f"[MON] **ALERT** ?HEADS()[0.5] outside interval: $pmin_Heads,$pmax_Heads")
+				labels.Heads_1.alert = true
+			}
+		} else {
+			if(labels.Heads_1.alert){
+				println(f"[MON] **INFO** ?HEADS()[0.5] within interval: $pmin_Heads,$pmax_Heads ")
+				labels.Heads_1.alert = false
+			}
+		}
+		val (pmin_Tails, pmax_Tails) = calculateInterval(labels.Tails_2.counter, labels.ExternalChoice1.counter)
+		if(pmin_Tails >= 0.5 || pmax_Tails <= 0.5){
+			if(!labels.Tails_2.alert) {
+				println(f"[MON] **ALERT** ?TAILS()[0.5] outside interval: $pmin_Tails,$pmax_Tails")
+				labels.Tails_2.alert = true
+			}
+		} else {
+			if (labels.Tails_2.alert) {
+				println(f"[MON] **INFO** ?TAILS()[0.5] within interval: $pmin_Tails,$pmax_Tails")
+				labels.Tails_2.alert = false
+			}
 		}
 	}
 	def calculateInterval(count: Double, trials: Int): (Double, Double) = {
