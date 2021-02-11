@@ -1,0 +1,1 @@
+S_test=rec X.(&{?Heads()[0.5].X, ?Tails()[0.5].X})

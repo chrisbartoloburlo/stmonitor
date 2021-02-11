@@ -1,1 +1,1 @@
-S_game=rec X.( +{!Guess(num: Int)[num > 0 && num < 10].&{ ?Correct(ans: Int)[ans==num], ?Incorrect().X }, !Quit()} )
+S_game=rec X.(&{?Guess(num: Int)[0.8].+{!Correct()[0.1].X, !Incorrect()[0.9].X}, ?New()[0.19].X, ?Quit()[0.01]} )

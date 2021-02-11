@@ -1,39 +1,41 @@
-package examples.execute.login.tcp
+package examples.execute.testprobabilities
 
-import examples.execute.login.{Login, Retry, Success}
+import monitor.util.ConnectionManager
 
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
-import java.net.ServerSocket
-import examples.execute.login.Retry
+import java.net.{InetAddress, ServerSocket, Socket}
 
-class AsynConnectionManager(){
+class GameConnectionManager() extends ConnectionManager {
   var outB: BufferedWriter = _
   var inB: BufferedReader = _
 
   val server = new ServerSocket(1330)
 
-  private val loginR = """LOGIN (.+) (.+) (.+)""".r
+  private val GUESSR = """GUESS (.*)""".r
+  private val NEWR = """NEW""".r
+  private val QUITR = """QUIT""".r
 
   def setup(): Unit = {
+    println("[CM] Waiting for a connection on 127.0.0.1 1330")
     val client = server.accept()
-    println("[CM] Waiting for requests on 127.0.0.1:1337")
     outB = new BufferedWriter(new OutputStreamWriter(client.getOutputStream))
     inB = new BufferedReader(new InputStreamReader(client.getInputStream))
   }
 
   def receive(): Any = inB.readLine() match {
-    case loginR(uname, pwd, token) => Login(uname, pwd, token)(null);
+    case GUESSR(num) => Guess(num.toInt)(null);
+    case NEWR() => New()(null);
+    case QUITR() => Quit();
     case e => e
   }
 
   def send(x: Any): Unit = x match {
-    case Success(id) => outB.write(f"SUCCESS ${id}"); outB.flush();
-    case Retry() => outB.write(f"RETRY"); outB.flush();
+    case Correct(ans) => outB.write(f"CORRECT ${ans}\r\n"); outB.flush();
+    case Incorrect() => outB.write(f"INCORRECT\r\n"); outB.flush();
     case _ => close(); throw new Exception("[CM] Error: Unexpected message by Mon");
   }
 
   def close(): Unit = {
-    outB.flush();
     inB.close();
     outB.close();
   }

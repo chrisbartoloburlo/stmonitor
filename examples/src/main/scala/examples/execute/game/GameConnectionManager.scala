@@ -1,9 +1,9 @@
-package examples.execute.probabilities
+package examples.execute.game
 
 import monitor.util.ConnectionManager
 
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
-import java.net.{InetAddress, ServerSocket, Socket}
+import java.net.ServerSocket
 
 class GameConnectionManager() extends ConnectionManager {
   var outB: BufferedWriter = _
@@ -30,7 +30,7 @@ class GameConnectionManager() extends ConnectionManager {
   }
 
   def send(x: Any): Unit = x match {
-    case Correct(ans) => outB.write(f"CORRECT ${ans}\r\n"); outB.flush();
+    case Correct() => outB.write(f"CORRECT\r\n"); outB.flush();
     case Incorrect() => outB.write(f"INCORRECT\r\n"); outB.flush();
     case _ => close(); throw new Exception("[CM] Error: Unexpected message by Mon");
   }

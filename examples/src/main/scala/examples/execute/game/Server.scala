@@ -1,11 +1,10 @@
-package examples.execute.probabilities
+package examples.execute.game
 
-import lchannels.{In, LocalChannel, Out}
+import lchannels.{In, LocalChannel}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.global
 import scala.concurrent.duration.Duration
-import scala.io.StdIn
 
 object Server {
   def apply(Client: In[ExternalChoice1])(implicit ec: ExecutionContext, timeout: Duration) {
@@ -20,7 +19,7 @@ object Server {
           println(f"[SRV] Received Guess ${g.num}")
           if (g.num == ans) {
             println(f"[SRV] Sending Correct")
-            cont = g.cont !! Correct(ans)
+            cont = g.cont !! Correct()
           } else {
             println(f"[SRV] Sending Incorrect")
             cont = g.cont !! Incorrect()
@@ -38,16 +37,12 @@ object Server {
   }
 }
 
-//S_game=rec X.(
-// &{?Guess(num: Int)[0.7].+{ !Correct(ans: Int)[0.2].X, !Incorrect()[*].X },
-// ?New()[0.2].X,
-// ?Quit()[0.1]} )
 object MonitoredServer extends App {
   def run() = main(Array())
   val timeout = Duration.Inf
 
   val (in, out) = LocalChannel.factory[ExternalChoice1]()
-  val mon = new MonCI(new GameConnectionManager(), out, 300, 0.6745)(global, timeout)
+  val mon = new Mon(new GameConnectionManager(), out, 300, 0.6745)(global, timeout)
 
   val monThread = new Thread {
     override def run(): Unit = {

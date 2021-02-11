@@ -1,4 +1,4 @@
-package examples.execute.probabilities
+package examples.execute.testprobabilities
 
 import lchannels.{In, Out}
 sealed abstract class ExternalChoice1

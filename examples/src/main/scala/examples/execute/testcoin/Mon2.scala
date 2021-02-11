@@ -1,4 +1,4 @@
-package examples.execute.coin
+package examples.execute.testcoin
 
 import lchannels.Out
 import monitor.util.ConnectionManager

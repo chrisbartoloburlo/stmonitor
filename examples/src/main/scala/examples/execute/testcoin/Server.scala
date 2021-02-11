@@ -1,4 +1,4 @@
-package examples.execute.coin
+package examples.execute.testcoin
 
 import lchannels.{In, LocalChannel, Out}
 
@@ -24,12 +24,16 @@ object Server {
   }
 }
 
+//S_game=rec X.(
+// &{?Guess(num: Int)[num > 0 && num < 50].+{ !Correct(ans: Int)[ans==num].X, !Incorrect().X },
+// ?New().X,
+// ?Quit()} )
 object MonitoredServer extends App {
   def run() = main(Array())
   val timeout = Duration.Inf
 
   val (in, out) = LocalChannel.factory[ExternalChoice1]()
-  val mon = new Mon(new CoinConnectionManager(), out, 300, 1.9599)(global, timeout)
+  val mon = new Mon1(new CoinConnectionManager(), out, 300, 1.9599)(global, timeout)
 
   val monThread = new Thread {
     override def run(): Unit = {
