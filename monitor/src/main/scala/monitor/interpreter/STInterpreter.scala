@@ -68,6 +68,7 @@ class STInterpreter(sessionType: SessionType, path: String) {
 
     curScope = "global"
     probabilityWalk(sessionType.statement)
+    synthMon.addCalculateInterval()
     synthMon.end()
     synthProtocol.end()
     (synthMon.getMon(), synthProtocol.getProtocol())
@@ -207,20 +208,20 @@ class STInterpreter(sessionType: SessionType, path: String) {
 
   def probabilityWalk(statement: Statement): Unit = {
     statement match {
-      case statement@ReceiveStatement(label, id, types, probability, _) =>
+      case statement@ReceiveStatement(_, id, _, _, _) =>
         curScope = id
         probabilityWalk(statement.continuation)
 
-      case statement@SendStatement(label, id, types, probability, _) =>
+      case statement@SendStatement(_, id, _, _, _) =>
         curScope = id
         probabilityWalk(statement.continuation)
 
-      case statement@ReceiveChoiceStatement(label, choices) =>
+      case statement @ ReceiveChoiceStatement(label, choices) =>
         curScope = label
         val tmpScope = curScope
+        synthMon.handleReceiveChoiceInterval(statement)
         for (choice <- choices) {
           curScope = choice.asInstanceOf[ReceiveStatement].statementID
-
           probabilityWalk(choice.asInstanceOf[ReceiveStatement].continuation)
           curScope = tmpScope
         }
@@ -228,7 +229,7 @@ class STInterpreter(sessionType: SessionType, path: String) {
       case statement@SendChoiceStatement(label, choices) =>
         curScope = label
         val tmpScope = curScope
-
+        synthMon.handleSendChoiceInterval(statement)
         for (choice <- choices) {
           curScope = choice.asInstanceOf[SendStatement].statementID
           probabilityWalk(choice.asInstanceOf[SendStatement].continuation)

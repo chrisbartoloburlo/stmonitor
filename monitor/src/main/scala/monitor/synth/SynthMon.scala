@@ -30,7 +30,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("\t\t\tvar counter = 0\n")
     if(!choice){
       mon.append("\t\t\tval prob = "+probability+"\n")
-      mon.append("\t\t\tvar alert = false\n")
+      mon.append("\t\t\tvar warn = false\n")
     }
     mon.append("\t\t}\n")
   }
@@ -214,6 +214,60 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     }
     mon.append("\t\t\tcase _ => done()\n")
     mon.append("\t\t}\n\t}\n")
+  }
+
+  def handleReceiveChoiceInterval(statement: ReceiveChoiceStatement): Unit = {
+    mon.append("\tdef check"+statement.label+"Intervals(): Unit = {\n")
+    for (choice <- statement.choices){
+      val choiceLabel = choice.asInstanceOf[ReceiveStatement].label
+      val choiceRefId = choice.asInstanceOf[ReceiveStatement].statementID
+      val pmin = "pmin_"+choiceLabel
+      val pmax = "pmax_"+choiceLabel
+      mon.append("\t\tval ("+pmin+","+pmax+") = calculateInterval(labels."+choiceRefId+".counter, labels."+statement.label+".counter)\n")
+      mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob || "+pmax+" <= labels."+choiceRefId+".prob) {\n")
+      mon.append("\t\t\tif(!labels."+choiceRefId+".warn){\n")
+      mon.append("\t\t\t\tprintln(f\"[MON] **WARN** ?"+choiceLabel+"[${labels."+choiceRefId+".prob}] outside interval [$"+pmin+",$"+pmax+"]\")\n")
+      mon.append("\t\t\t\tlabels."+choiceRefId+".warn = true\n")
+      mon.append("\t\t\t}\n")
+      mon.append("\t\t} else {\n")
+      mon.append("\t\t\tif(labels."+choiceRefId+".warn){\n")
+      mon.append("\t\t\t\tprintln(f\"[MON] **INFO** ?"+choiceLabel+"[${labels."+choiceRefId+".prob}] within interval [$"+pmin+",$"+pmax+"]\")\n")
+      mon.append("\t\t\t\tlabels."+choiceRefId+".warn = false\n")
+      mon.append("\t\t\t}\n")
+      mon.append("\t\t}\n")
+    }
+    mon.append("\t}\n")
+  }
+
+  def handleSendChoiceInterval(statement: SendChoiceStatement): Unit = {
+    mon.append("\tdef check"+statement.label+"Intervals(): Unit = {\n")
+    for (choice <- statement.choices){
+      val choiceLabel = choice.asInstanceOf[SendStatement].label
+      val choiceRefId = choice.asInstanceOf[SendStatement].statementID
+      val pmin = "pmin_"+choiceLabel
+      val pmax = "pmax_"+choiceLabel
+      mon.append("\t\tval ("+pmin+","+pmax+") = calculateInterval(labels."+choiceRefId+".counter, labels."+statement.label+".counter)\n")
+      mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob || "+pmax+" <= labels."+choiceRefId+".prob) {\n")
+      mon.append("\t\t\tif(!labels."+choiceRefId+".warn){\n")
+      mon.append("\t\t\t\tprintln(f\"[MON] **WARN** !"+choiceLabel+"[${labels."+choiceRefId+".prob}] outside interval [$"+pmin+",$"+pmax+"]\")\n")
+      mon.append("\t\t\t\tlabels."+choiceRefId+".warn = true\n")
+      mon.append("\t\t\t}\n")
+      mon.append("\t\t} else {\n")
+      mon.append("\t\t\tif(labels."+choiceRefId+".warn){\n")
+      mon.append("\t\t\t\tprintln(f\"[MON] **INFO** !"+choiceLabel+"[${labels."+choiceRefId+".prob}] within interval [$"+pmin+",$"+pmax+"]\")\n")
+      mon.append("\t\t\t\tlabels."+choiceRefId+".warn = false\n")
+      mon.append("\t\t\t}\n")
+      mon.append("\t\t}\n")
+    }
+    mon.append("\t}\n")
+  }
+
+  def addCalculateInterval():Unit = {
+    mon.append("\tdef calculateInterval(count: Double, trials: Int): (Double, Double) = {\n")
+    mon.append("\t\tval prob = count/trials\n")
+    mon.append("\t\tval err = zvalue/(2*math.sqrt(trials))\n")
+    mon.append("\t\t(prob-err,prob+err)\n")
+    mon.append("\t}\n")
   }
 
   /**
