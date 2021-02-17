@@ -33,10 +33,10 @@ class STParser extends StandardTokenParsers {
       ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, End())
     case l ~ t ~ p ~ cT =>
       ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, cT.get)
-    case l ~ t ~ p~ None =>
-      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, End())
-    case l ~ t ~ p ~ cT =>
-      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, cT.get)
+//    case l ~ t ~ p~ None =>
+//      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, End())
+//    case l ~ t ~ p ~ cT =>
+//      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, cT.get)
   }
 
   def receiveChoice: Parser[ReceiveChoiceStatement] = "&" ~ "{" ~> (repsep(sessionType, ",") <~ "}") ^^ {
@@ -56,10 +56,10 @@ class STParser extends StandardTokenParsers {
       SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, End())
     case l ~ t ~ p ~ cT =>
       SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, cT.get)
-    case l ~ t ~ p ~ None =>
-      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, End())
-    case l ~ t ~ p ~ cT =>
-      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, cT.get)
+//    case l ~ t ~ p ~ None =>
+//      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, End())
+//    case l ~ t ~ p ~ cT =>
+//      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, cT.get)
   }
 
   def sendChoice: Parser[SendChoiceStatement] = "+" ~ "{" ~> (repsep(sessionType, ",") <~ "}") ^^ {

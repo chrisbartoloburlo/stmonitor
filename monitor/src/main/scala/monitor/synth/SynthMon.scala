@@ -142,7 +142,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         handleReceiveNextCase(currentStatement, isUnique, recursiveStatement.body)
 
       case _ =>
-        mon.append("\tinternal ! msg; done()\n")
+        mon.append("internal ! msg; done()\n")
     }
   }
 
@@ -182,7 +182,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       addParameters(choice.asInstanceOf[SendStatement].types)
       mon.append(") =>\n")
       mon.append("\t\t\t\tlabels."+choice.asInstanceOf[SendStatement].statementID+".counter+=1\n")
-      mon.append("\t\t\t\tcheck"+statement.label+"Intervals()\n\t\t\t\t")
+      mon.append("\t\t\t\tcheck"+statement.label+"Intervals()\n")
       mon.append("\t\t\t\texternal.send(msg)\n")
       handleSendNextCase(choice.asInstanceOf[SendStatement], isUnique = true, choice.asInstanceOf[SendStatement].continuation)
     }

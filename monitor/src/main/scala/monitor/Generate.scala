@@ -1,4 +1,4 @@
-package examples.generate.game
+package monitor
 
 import monitor.synth.Synth
 

@@ -1,11 +1,10 @@
-package monitor
-
-import java.io.{File, PrintWriter}
+package monitor.synth
 
 import com.typesafe.scalalogging.Logger
 import monitor.interpreter.STInterpreter
 import monitor.parser.STParser
 
+import java.io.{File, PrintWriter}
 import scala.io.Source
 
 class Synth {
@@ -14,13 +13,13 @@ class Synth {
    *
    * @param path The path containing the util.scala file which also represents the directory where the monitor
    *             and protocol files are to be generated in.
-   * @param fileName The name of the file containing the session type.
+   * @param filePath The path of the file containing the session type.
    * @param synthMonFile A flag to indicate whether to synthesise the monitor file or not.
    * @param synthProtocolFile A flag to indicate whether to synthesise the protocol file or not.
    */
-  def apply(path: String, fileName: String, synthMonFile: Boolean, synthProtocolFile: Boolean): Unit ={
+  def apply(path: String, filePath: String, synthMonFile: Boolean, synthProtocolFile: Boolean): Unit ={
     val logger = Logger("Synth")
-    val inputFile = Source.fromFile(path+"/"+fileName)
+    val inputFile = Source.fromFile(filePath)
     val inputSource = inputFile.mkString
 
     val parser = new STParser
