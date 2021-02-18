@@ -1,4 +1,4 @@
-# Session Types Monitor
+# Probabilistic Session Types Monitor
 **Hybrid verification methodology for communication protocols in Scala built around the library [lchannels](https://github.com/alcestes/lchannels).** *(As seen in [FORTE 2020](https://link.springer.com/chapter/10.1007/978-3-030-50086-3_13) with [this](http://staff.um.edu.mt/afra1/papers/forte2020.pdf) paper.)*
 
 A tool ([Synth](https://github.com/chrisbartoloburlo/stmonitor/blob/master/monitor/src/main/scala/monitor/Synth.scala)) that, given a session type _S_, can synthesise the Scala code of a type-checked monitor that verifies at runtime whether an interaction abides by _S_, and signatures usable to implement a process that interacts according to _S_. The generated monitors are embedded with runtime data checks as specified in the session types. A presentation outlining our approach can be found [here](https://youtu.be/FL_teSjllSE).
