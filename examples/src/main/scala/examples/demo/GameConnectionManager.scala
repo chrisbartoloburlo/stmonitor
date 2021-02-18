@@ -23,16 +23,16 @@ class GameConnectionManager(port: Int) extends ConnectionManager {
   }
 
   def receive(): Any = inB.readLine() match {
-    case GUESSR(num) => Guess(num.toInt)(null);
-    case HELPR() => Help()(null);
-    case QUITR() => Quit();
+    // case GUESSR(num) => Guess(num.toInt)(null);
+    // case HELPR() => Help()(null);
+    // case QUITR() => Quit();
     case e => e
   }
 
   def send(x: Any): Unit = x match {
-    case Correct() => outB.write(f"CORRECT\r\n"); outB.flush();
-    case Incorrect() => outB.write(f"INCORRECT\r\n"); outB.flush();
-    case Hint(info) => outB.write(f"HINT $info\r\n"); outB.flush();
+    // case Correct() => outB.write(f"CORRECT\r\n"); outB.flush();
+    // case Incorrect() => outB.write(f"INCORRECT\r\n"); outB.flush();
+    // case Hint(info) => outB.write(f"HINT $info\r\n"); outB.flush();
     case _ => close(); throw new Exception("[CM] Error: Unexpected message by Mon");
   }
 
