@@ -13,7 +13,7 @@ This project uses the **`sbt`** build tool which can be downloaded from [here](h
 
 #### 1. Synthesising the monitor and CPSP classes.
 
-Consider the lottery game example, in which the server generates a number between 1 and 100 and should follow the type found in `S_game.st`:
+Consider the lottery game example, in which the server generates a number between 1 and 100 and should follow the type found in `S_game.st` in [`examples/demo/`](https://github.com/chrisbartoloburlo/stmonitor/tree/pstmonitor/examples/src/main/scala/examples/demo) :
 ```
 S_login = rec X.&{?Guess(num: Int)[0.75].+{!Correct()[0.01].X, !Incorrect()[0.99].X}, ?Help()[0.2].!Hint()[1], ?Quit()[0.05].end}
 ```
@@ -22,7 +22,7 @@ To generate the monitor and the CPSP classes, run `Generate.scala` using the fol
 ```
 sbt "project monitor" "runMain monitor.Generate $DIRECTORY $SESSION_TYPE"
 ```
-Replace `$DIRECTORY` with the absolute path to the directory in which the files should be generated. In this case, one can use the following directory (by replacing `[root] accordingly)`:
+Replace `$DIRECTORY` with the absolute path to the directory in which the files should be generated. In this case, one can use the following directory (by replacing `[root]` accordingly):
 ```
 [root]/stmonitor/examples/src/main/scala/examples/demo/
 ```
@@ -37,7 +37,7 @@ Once completed, the files `mon.scala` and `CPSPc.scala` should be present in the
 #### 2. Starting the setup.
 **Before proceeding, uncomment all the lines within the `MonWrapper.scala` and `GameConnectionManager.scala` found in the `demo` directory.**
 
-1. Start the provided python server `game_server.py` found in [`scripts/`](https://github.com/chrisbartoloburlo/stmonitor/tree/master/scripts):
+1. Start the provided python server `game_server.py` found in [`scripts/`](https://github.com/chrisbartoloburlo/stmonitor/tree/pstmonitor/scripts):
     ```
     python3 game-server.py $PORT $p_correct $p_incorrect
     ```
@@ -50,7 +50,7 @@ Once completed, the files `mon.scala` and `CPSPc.scala` should be present in the
     ```
     Replace `$LISTEN_PORT` with the port to expose for a client (_e.g.,_ 1330), and `$FORWARDING_PORT` with the port for the monitor to connect connect to (_e.g.,_ 1335). Replace `$z-value` with the _Z_ value for the desired confidence level (_e.g.,_ 1.9599 for 95%). More information about the _Z_ value and the confidence level can be found [here](https://en.wikipedia.org/wiki/Checking_whether_a_coin_is_fair).
 
-3. In a separate terminal, start the provided python client `game_client.py` also found in [`scripts/`](https://github.com/chrisbartoloburlo/stmonitor/tree/master/scripts): 
+3. In a separate terminal, start the provided python client `game_client.py` also found in [`scripts/`](https://github.com/chrisbartoloburlo/stmonitor/tree/pstmonitor/scripts): 
    ```
    python3 game-client.py $PORT $p_guess $p_help $p_quit 
    ```
