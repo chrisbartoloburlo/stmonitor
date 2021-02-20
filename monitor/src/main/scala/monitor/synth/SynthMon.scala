@@ -265,7 +265,8 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   def addCalculateInterval():Unit = {
     mon.append("\tdef calculateInterval(count: Double, trials: Int): (Double, Double) = {\n")
     mon.append("\t\tval prob = count/trials\n")
-    mon.append("\t\tval err = zvalue/(2*math.sqrt(trials))\n")
+    mon.append("\t\tif(prob==0 || prob==1) return (0,1)\n")
+    mon.append("\t\tval err = zvalue*math.sqrt(prob*(1-prob)/trials)\n")
     mon.append("\t\t(prob-err,prob+err)\n")
     mon.append("\t}\n")
   }
