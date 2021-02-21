@@ -65,6 +65,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append(") =>\n")
     mon.append("\t\t\t\texternal.send(msg)\n")
     handleSendNextCase(statement, isUnique, nextStatement)
+    mon.append("\t\t\tcase _ => done()\n")
     mon.append("\t\t}\n\t}\n")
   }
 
@@ -186,6 +187,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       mon.append("\t\t\t\texternal.send(msg)\n")
       handleSendNextCase(choice.asInstanceOf[SendStatement], isUnique = true, choice.asInstanceOf[SendStatement].continuation)
     }
+    mon.append("\t\t\tcase _ => done()\n")
     mon.append("\t\t}\n\t}\n")
   }
 
@@ -223,7 +225,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       val choiceRefId = choice.asInstanceOf[ReceiveStatement].statementID
       val pmin = "pmin_"+choiceLabel
       val pmax = "pmax_"+choiceLabel
-      mon.append("\t\tval ("+pmin+","+pmax+") = calculateInterval(labels."+choiceRefId+".counter, labels."+statement.label+".counter)\n")
+      mon.append("\t\tval ("+pmin+","+pmax+") = calculateInterval(labels."+choiceRefId+".counter, labels."+statement.label+".counter, labels."+choiceRefId+".prob)\n")
       mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob || "+pmax+" <= labels."+choiceRefId+".prob) {\n")
       mon.append("\t\t\tif(!labels."+choiceRefId+".warn){\n")
       mon.append("\t\t\t\tprintln(f\"[MON] **WARN** ?"+choiceLabel+"[${labels."+choiceRefId+".prob}] outside interval [$"+pmin+",$"+pmax+"]\")\n")
@@ -246,7 +248,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       val choiceRefId = choice.asInstanceOf[SendStatement].statementID
       val pmin = "pmin_"+choiceLabel
       val pmax = "pmax_"+choiceLabel
-      mon.append("\t\tval ("+pmin+","+pmax+") = calculateInterval(labels."+choiceRefId+".counter, labels."+statement.label+".counter)\n")
+      mon.append("\t\tval ("+pmin+","+pmax+") = calculateInterval(labels."+choiceRefId+".counter, labels."+statement.label+".counter, labels."+choiceRefId+".prob)\n")
       mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob || "+pmax+" <= labels."+choiceRefId+".prob) {\n")
       mon.append("\t\t\tif(!labels."+choiceRefId+".warn){\n")
       mon.append("\t\t\t\tprintln(f\"[MON] **WARN** !"+choiceLabel+"[${labels."+choiceRefId+".prob}] outside interval [$"+pmin+",$"+pmax+"]\")\n")
@@ -263,11 +265,10 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   }
 
   def addCalculateInterval():Unit = {
-    mon.append("\tdef calculateInterval(count: Double, trials: Int): (Double, Double) = {\n")
-    mon.append("\t\tval prob = count/trials\n")
-    mon.append("\t\tif(prob==0 || prob==1) return (0,1)\n")
-    mon.append("\t\tval err = zvalue*math.sqrt(prob*(1-prob)/trials)\n")
-    mon.append("\t\t(prob-err,prob+err)\n")
+    mon.append("\tdef calculateInterval(count: Double, trials: Int, prob_a: Double): (Double, Double) = {\n")
+    mon.append("\t\tval prob_e = count/trials\n")
+    mon.append("\t\tval err = zvalue*math.sqrt(prob_a*(1-prob_a)/trials)\n")
+    mon.append("\t\t(prob_e-err,prob_e+err)\n")
     mon.append("\t}\n")
   }
 
