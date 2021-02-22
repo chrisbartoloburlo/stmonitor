@@ -31,11 +31,11 @@ Similarly, replace `$SESSION_TYPE` with the absolute path to the file containing
 [root]/stmonitor/examples/src/main/scala/examples/demo/S_game.st
 ```
 
-Once completed, the files `mon.scala` and `CPSPc.scala` should be present in the demo directory. 
+Once completed, the files `Mon.scala` and `CPSPc.scala` should be present in the demo directory. 
 
 
 #### 2. Starting the setup.
-**Before proceeding, uncomment all the lines within the `MonWrapper.scala` and `GameConnectionManager.scala` found in the `demo` directory.**
+**Before proceeding: (1) uncomment all the lines within the `MonWrapper.scala` and `GameConnectionManager.scala` found in the `demo` directory and (2) add the package statement `package examples.demo` at the top of the files `Mon.scala` and `CPSPc.scala`.**
 
 1. Start the provided python server `game_server.py` found in [`scripts/`](https://github.com/chrisbartoloburlo/stmonitor/tree/pstmonitor/scripts):
     ```
