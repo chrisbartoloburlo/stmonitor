@@ -15,16 +15,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   def startInit(statement: Statement): Unit = {
     mon.append("import lchannels.{In, Out}\nimport monitor.util.ConnectionManager\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.util.control.TailCalls.{TailRec, done, tailcall}\nclass Mon(external: ConnectionManager, internal: ")
 
-//    statement match {
-//      case ReceiveStatement(_, statementID, _, _, _) =>
-//        mon.append("Out["+statementID+"])")
-//      case SendStatement(_, statementID, _, _, _) =>
-//        mon.append("In["+statementID+"])")
-//      case ReceiveChoiceStatement(label, _) =>
-//        mon.append("Out["+label+"])")
-//      case SendChoiceStatement(label, _) =>
-//        mon.append("In["+label+"])")
-//    }
     mon.append("$, max: Int)")
 
     mon.append("(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {\n")
@@ -76,7 +66,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
     if(statement.condition != null){
       handleCondition(statement.condition, statement.statementID)
-      mon.append("external.send(msg)\n")
+      mon.append("\t\t\t\t\texternal.send(msg)\n")
       handleSendNextCase(statement, isUnique, nextStatement)
       mon.append("\t\t\t\t} else {\n")
     } else {
@@ -217,9 +207,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
       case _ =>
         if(currentStatement.condition==null) {
-          mon.append("internal ! msg; done()\n")
+          mon.append("\t\t\t\tinternal ! msg; done()\n")
         } else {
-          mon.append("\tinternal ! msg; done()\n")
+          mon.append("\t\t\t\t\tinternal ! msg; done()\n")
         }
     }
   }
@@ -230,7 +220,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       reference = statement.label
     }
     if(statement.condition != null) {
-      mon.append("val cont = internal !! " + reference + "(")
+      mon.append("\t\t\t\t\tval cont = internal !! " + reference + "(")
     } else {
       mon.append("\t\t\t\tval cont = internal !! " + reference + "(")
     }
@@ -264,7 +254,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       mon.append(") =>\n")
       if(choice.asInstanceOf[SendStatement].condition != null){
         handleCondition(choice.asInstanceOf[SendStatement].condition, choice.asInstanceOf[SendStatement].statementID)
-        mon.append("external.send(msg)\n")
+        mon.append("\t\t\t\t\texternal.send(msg)\n")
         handleSendNextCase(choice.asInstanceOf[SendStatement], true, choice.asInstanceOf[SendStatement].continuation)
         mon.append("\t\t\t\t} else {\n")
       } else {
@@ -301,7 +291,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], true, choice.asInstanceOf[ReceiveStatement].continuation)
         mon.append("\t\t\t\t} else {\n")
       } else {
-        mon.append("\t\t\t\t")
         handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], true, choice.asInstanceOf[ReceiveStatement].continuation)
       }
       if(choice.asInstanceOf[ReceiveStatement].condition != null) {
@@ -368,7 +357,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         stringCondition = identPattern.replaceAllIn(stringCondition, "payloads."+varScope+"."+identName)
       }
     }
-    mon.append(stringCondition+"){\n\t\t\t\t\t")
+    mon.append(stringCondition+"){\n")
   }
 
   def end(): Unit = {

@@ -1,6 +1,6 @@
 package examples.generate.smtp
 
-import monitor.Synth
+import monitor.synth.Synth
 
 object Generate {
   def main(args: Array[String]): Unit = {

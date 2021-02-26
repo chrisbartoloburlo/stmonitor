@@ -6,7 +6,6 @@ import monitor.model.Scope
 import monitor.synth.{SynthMon, SynthProtocol}
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import scala.reflect.runtime._
 import scala.reflect.runtime.universe._
 import scala.tools.reflect.ToolBox

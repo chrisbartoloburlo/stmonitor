@@ -3,8 +3,6 @@ package monitor.synth
 import monitor.interpreter.STInterpreter
 import monitor.model._
 
-import scala.collection.mutable.ListBuffer
-
 class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
 //  private val protocol = new PrintWriter(new File(path+"/CPSPc.scala"))
   private val protocol = new StringBuilder()

@@ -1,6 +1,6 @@
 package examples.generate.game
 
-import monitor.Synth
+import monitor.synth.Synth
 
 object Generate {
   def main(args: Array[String]): Unit = {
