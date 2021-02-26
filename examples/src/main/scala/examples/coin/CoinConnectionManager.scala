@@ -1,19 +1,18 @@
-package examples.execute.game
+package examples.coin
 
 import monitor.util.ConnectionManager
 
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 import java.net.ServerSocket
 
-class GameConnectionManager() extends ConnectionManager {
+class CoinConnectionManager() extends ConnectionManager {
   var outB: BufferedWriter = _
   var inB: BufferedReader = _
 
   val server = new ServerSocket(1330)
 
-  private val GUESSR = """GUESS (.*)""".r
-  private val NEWR = """NEW""".r
-  private val QUITR = """QUIT""".r
+  private val HEADSR = """HEADS""".r
+  private val TAILSR = """TAILS""".r
 
   def setup(): Unit = {
     println("[CM] Waiting for a connection on 127.0.0.1 1330")
@@ -23,15 +22,12 @@ class GameConnectionManager() extends ConnectionManager {
   }
 
   def receive(): Any = inB.readLine() match {
-    case GUESSR(num) => Guess(num.toInt)(null);
-    case NEWR() => New()(null);
-    case QUITR() => Quit();
+    case HEADSR() => Heads()(null);
+    case TAILSR() => Tails()(null);
     case e => e
   }
 
   def send(x: Any): Unit = x match {
-    case Correct() => outB.write(f"CORRECT\r\n"); outB.flush();
-    case Incorrect() => outB.write(f"INCORRECT\r\n"); outB.flush();
     case _ => close(); throw new Exception("[CM] Error: Unexpected message by Mon");
   }
 

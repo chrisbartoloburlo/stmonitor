@@ -1,1 +1,0 @@
-S_game=rec X.(&{?Guess(num: Int)[0.8].+{!Correct()[0.1].X, !Incorrect()[0.9].X}, ?Help()[0.19].!Hint(info: String)[1].X, ?Quit()[0.01]} )

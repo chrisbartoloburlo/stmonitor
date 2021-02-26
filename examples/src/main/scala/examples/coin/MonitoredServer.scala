@@ -1,11 +1,10 @@
-package examples.execute.coin
+package examples.coin
 
 import lchannels.{In, LocalChannel, Out}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.global
 import scala.concurrent.duration.Duration
-import scala.io.StdIn
 
 object Server {
   def apply(Client: In[ExternalChoice1])(implicit ec: ExecutionContext, timeout: Duration) {

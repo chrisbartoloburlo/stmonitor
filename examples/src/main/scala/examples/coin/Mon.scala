@@ -1,12 +1,9 @@
-package examples.execute.coin
-
-import lchannels.Out
+package examples.coin
+import lchannels.{In, Out}
 import monitor.util.ConnectionManager
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.util.control.TailCalls.{TailRec, done, tailcall}
-
 class Mon(external: ConnectionManager, internal: Out[ExternalChoice1], max: Int, zvalue: Double)(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {
 	object labels {
 		object ExternalChoice1 {
@@ -51,7 +48,7 @@ class Mon(external: ConnectionManager, internal: Out[ExternalChoice1], max: Int,
 		}
 	}
 	def checkExternalChoice1Intervals(): Unit = {
-		val (pmin_Heads,pmax_Heads) = calculateInterval(labels.Heads_1.counter, labels.ExternalChoice1.counter)
+		val (pmin_Heads,pmax_Heads) = calculateInterval(labels.Heads_1.counter, labels.ExternalChoice1.counter, labels.Heads_1.prob)
 		if(pmin_Heads >= labels.Heads_1.prob || pmax_Heads <= labels.Heads_1.prob) {
 			if(!labels.Heads_1.warn){
 				println(f"[MON] **WARN** ?Heads[${labels.Heads_1.prob}] outside interval [$pmin_Heads,$pmax_Heads]")
@@ -63,7 +60,7 @@ class Mon(external: ConnectionManager, internal: Out[ExternalChoice1], max: Int,
 				labels.Heads_1.warn = false
 			}
 		}
-		val (pmin_Tails,pmax_Tails) = calculateInterval(labels.Tails_2.counter, labels.ExternalChoice1.counter)
+		val (pmin_Tails,pmax_Tails) = calculateInterval(labels.Tails_2.counter, labels.ExternalChoice1.counter, labels.Tails_2.prob)
 		if(pmin_Tails >= labels.Tails_2.prob || pmax_Tails <= labels.Tails_2.prob) {
 			if(!labels.Tails_2.warn){
 				println(f"[MON] **WARN** ?Tails[${labels.Tails_2.prob}] outside interval [$pmin_Tails,$pmax_Tails]")
@@ -76,9 +73,9 @@ class Mon(external: ConnectionManager, internal: Out[ExternalChoice1], max: Int,
 			}
 		}
 	}
-	def calculateInterval(count: Double, trials: Int): (Double, Double) = {
-		val prob = count/trials
-		val err = zvalue/(2*math.sqrt(trials))
-		(prob-err,prob+err)
+	def calculateInterval(count: Double, trials: Int, prob_a: Double): (Double, Double) = {
+		val prob_e = count/trials
+		val err = zvalue*math.sqrt(prob_a*(1-prob_a)/trials)
+		(prob_e-err,prob_e+err)
 	}
 }
