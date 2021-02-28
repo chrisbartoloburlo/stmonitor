@@ -382,15 +382,18 @@ class STInterpreter(sessionType: SessionType, path: String) {
    */
   private def checkCondition(label: String, types: Map[String, String], condition: String): Boolean ={
     if(condition != null) {
+      var util = ""
+      if(condition.contains("util.")){
+        val source = scala.io.Source.fromFile(path+"/util.scala", "utf-8")
+        util = try source.mkString finally source.close()
+        util = util.replaceFirst("package .*\n", "")
+      }
       var stringVariables = ""
       val identifiersInCondition = getIdentifiers(condition)
-      val source = scala.io.Source.fromFile(path+"/util.scala", "utf-8")
-      var util = try source.mkString finally source.close()
       for(identName <- identifiersInCondition){
         val identifier = scopes(searchIdent(curScope, identName)).variables(identName)
         stringVariables = stringVariables+"val "+identName+": "+identifier._2+"= ???;"
       }
-      util = util.replaceFirst("package .*\n", "")
       val eval = s"""
            |$util
            |$stringVariables

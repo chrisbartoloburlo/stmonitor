@@ -1,4 +1,4 @@
-package examples.execute.game
+package examples.game
 
 import java.io
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
@@ -33,8 +33,8 @@ class ConnectionManager(){
   }
 
   def close(): Unit = {
-    outB.flush();
-    inB.close();
-    outB.close();
+    outB.flush()
+    inB.close()
+    outB.close()
   }
 }
