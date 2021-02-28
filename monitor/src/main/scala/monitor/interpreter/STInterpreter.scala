@@ -378,18 +378,19 @@ class STInterpreter(sessionType: SessionType, path: String) {
    * @param types A mapping from an identifier to its respective type (representing the payload of
    *              the current statement).
    * @param condition The condition to type-check.
-   * @return The whether the condition is of type boolean or not.
+   * @return Whether the condition is of type boolean or not.
    */
   private def checkCondition(label: String, types: Map[String, String], condition: String): Boolean ={
     if(condition != null) {
       var stringVariables = ""
       val identifiersInCondition = getIdentifiers(condition)
       val source = scala.io.Source.fromFile(path+"/util.scala", "utf-8")
-      val util = try source.mkString finally source.close()
+      var util = try source.mkString finally source.close()
       for(identName <- identifiersInCondition){
         val identifier = scopes(searchIdent(curScope, identName)).variables(identName)
         stringVariables = stringVariables+"val "+identName+": "+identifier._2+"= ???;"
       }
+      util = util.replaceFirst("package .*\n", "")
       val eval = s"""
            |$util
            |$stringVariables
