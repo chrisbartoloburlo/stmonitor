@@ -1,17 +1,15 @@
-package examples.execute.auth
+package examples.auth
 
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 import java.net.ServerSocket
 
-import examples.execute.login.Retry
-
-class SynConnectionManager(){
+class ConnectionManager(port: Int){
   var outB: BufferedWriter = _
   var inB: BufferedReader = _
 
-  val server = new ServerSocket(1330)
+  val server = new ServerSocket(port)
 
-  private val authR = """AUTH%(.+)%(.+)""".r
+  private val authR = """AUTH (.+) (.+)""".r
   private val ackR = """ACK""".r
 
   def setup(): Unit = {
@@ -22,22 +20,14 @@ class SynConnectionManager(){
   }
 
   def receive(): Any = inB.readLine() match {
-    case authR(uname, pwd) => sendACK(); Auth(uname, pwd)(null);
-    case e => sendACK(); e
-  }
-
-  private def sendACK(): Unit = {
-    outB.write("ACK"); outB.flush()
+    case authR(uname, pwd) => Auth(uname, pwd)(null);
+    case e => e
   }
 
   def send(x: Any): Unit = x match {
-    case Succ(tok) => outB.write(f"SUCC%%${tok}"); outB.flush(); receiveACK();
-    case Fail(code) => outB.write(f"FAIL%%${code}"); outB.flush(); receiveACK();
+    case Succ(tok) => outB.write(f"SUCC%%${tok}"); outB.flush();
+    case Fail(code) => outB.write(f"FAIL%%${code}"); outB.flush();
     case _ => close(); throw new Exception("[CM] Error: Unexpected message by Mon");
-  }
-
-  private def receiveACK(): Unit = inB.readLine() match {
-    case ackR() => Unit
   }
 
   def close(): Unit = {

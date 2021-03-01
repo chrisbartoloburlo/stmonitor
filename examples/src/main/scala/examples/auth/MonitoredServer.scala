@@ -1,12 +1,13 @@
-package examples.execute.auth
+package examples.auth
 
-import lchannels.In
+import lchannels.{In, LocalChannel}
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.global
 import scala.concurrent.duration.Duration
 
-class Server(Client: In[Auth])(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {
-  override def run(): Unit = {
+object Server {
+  def apply(Client: In[Auth])(implicit ec: ExecutionContext, timeout: Duration) {
     println("[S] Server started, to terminate press CTRL+c")
     Client ? {
       case l @ Auth(_, _) =>
@@ -24,4 +25,21 @@ class Server(Client: In[Auth])(implicit ec: ExecutionContext, timeout: Duration)
     }
     println("[S] Server terminated")
   }
+}
+
+object MonitoredServer extends App {
+  def run() = main(Array())
+  val timeout = Duration.Inf
+
+  val (in, out) = LocalChannel.factory[Auth]()
+  val mon = new Mon(new ConnectionManager(1330), out, 300)(global, timeout)
+
+  val monThread = new Thread {
+    override def run(): Unit = {
+      mon.run()
+    }
+  }
+
+  monThread.start()
+  Server(in)(global, timeout)
 }

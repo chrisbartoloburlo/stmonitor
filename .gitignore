@@ -5,3 +5,6 @@ target
 newbenchmarks/
 /.profile
 test/
+/examples/src/main/scala/examples/execute/
+/examples/src/main/scala/examples/generate/
+scripts/local/

@@ -1,4 +1,4 @@
-package examples.execute.auth
+package examples.auth
 
 object util {
   def validateUname(uname: String): Boolean = {
