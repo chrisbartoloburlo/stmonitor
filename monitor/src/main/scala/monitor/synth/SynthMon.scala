@@ -76,6 +76,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     if(statement.condition != null){
       mon.append("\t\t\t\tdone() }\n")
     }
+    mon.append("\t\t\tcase _ => done()\n")
     mon.append("\t\t}\n\t}\n")
   }
 
@@ -265,6 +266,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         mon.append("\t\t\t\tdone() }\n")
       }
     }
+    mon.append("\t\t\tcase _ => done()\n")
     mon.append("\t\t}\n\t}\n")
   }
 

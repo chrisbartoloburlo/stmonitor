@@ -1,7 +1,7 @@
 # Session Types Monitor
 **Hybrid verification methodology for communication protocols in Scala built around the library [lchannels](https://github.com/alcestes/lchannels).** *(As seen in [FORTE 2020](https://link.springer.com/chapter/10.1007/978-3-030-50086-3_13) with [this](http://staff.um.edu.mt/afra1/papers/forte2020.pdf) paper.)*
 
-A tool ([Synth](https://github.com/chrisbartoloburlo/stmonitor/blob/master/monitor/src/main/scala/monitor/Synth.scala)) that, given a session type _S_, can synthesise the Scala code of a type-checked monitor that verifies at runtime whether an interaction abides by _S_, and signatures usable to implement a process that interacts according to _S_. The generated monitors are embedded with runtime data checks as specified in the session types. A presentation outlining our approach can be found [here](https://youtu.be/FL_teSjllSE).
+A tool that, given a session type _S_, can synthesise the Scala code of a type-checked monitor that verifies at runtime whether an interaction abides by _S_, and signatures usable to implement a process that interacts according to _S_. The generated monitors are embedded with runtime data checks as specified in the session types. A presentation outlining our approach can be found [here](https://youtu.be/FL_teSjllSE).
 
 These instructions are for recreating and executing the example found in the paper, namely, the login example. We assume a Unix-like operating system with Java 8 as default JRE/JDK which can be downloaded from [here](https://www.oracle.com/java/technologies/javase-jdk8-downloads.html).
 
@@ -14,30 +14,63 @@ This project uses the **`sbt`** build tool which can be downloaded from [here](h
 
 #### 1. Synthesising the monitor and CPSP classes.
 
-It is recommended that the generation of `mon.scala` and `CPSPc.scala` is done first thing, i.e. before implementing anything else. However, in order to be able to proceed to the next step to start the server together with the monitor, the implementation of the other components is required. Therefore, for the sake of this example, follow the below steps in the [generate](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/examples/generate) package, set up specifically for this demo containing only the files required to generate the monitor and the classes.
-
-Consider the Login example, in which the server must follow the type found in `login.st`:
+Consider the Login example, in which the server must follow the type found in `auth.st`:
 ```
-S_login = rec X.?Login(uname:Str, pwd:Str, token:Str)[validateAuth(uname, token)]. +{!Success(id:Str)[validateId(id,uname)].R , !Retry().X}
+S_auth=rec Y.( ?Auth(uname: String, pwd: String)[util.validateUname(uname)].+{!Succ(tok: String)[util.validateTok(tok, uname)], !Fail(Code: Int).Y} )
 ```
 
-The functions `validateAuth()` and `validateId()` are present in the `util.scala` file. The package declaration (first line) must be temporarily removed (or commented) from the file before proceeding.
+The functions `validateUname()` and `validateTok()` are present in the `util.scala` file. 
 
-To generate the monitor and the CPSP classes, run `Generate.scala` using the following command in a terminal inside the project root directory (replace `[root]` accordingly to represent the absolute path to the test directory):
+To generate the monitor and the CPSP classes, run `Generate.scala` using the following command in a terminal inside the project root directory:
+```shell
+sbt "project monitor" "runMain monitor.Generate $DIR $ST"
 ```
-sbt "project examples" "runMain monitor.examples.test.Generate [root]/stmonitor/examples/src/main/scala/examples/generate/login"
-```
-Once completed, the files `mon.scala` and `CPSPc.scala` should be present in the test directory. These files are the same as those found in the [login](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/examples/execute/login) directory, with the exception handling and logging added where violations are expected. Moreover, the package declarations are also added accordingly. These generated files will not compile due to the lack of other sources (such as the connection manager). For a demo proceed to the next step.
+Replace `$DIR` with the directory in which the monitor and classes will be generated in: `[root]/stmonitor/examples/src/main/scala/examples/auth`
 
-#### 2. Starting the setup.
-**Before proceeding, remove the files generated from the previous step to ensure that the project compiles.**
-1. Start the server together with the monitor using `Demo.scala` found in [`tcp/`](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/examples/execute/login/tcp) using the following command:
+Replace `$ST` with the absolute path to the file containing the session type: `[root]/stmonitor/examples/src/main/scala/examples/auth/auth.st`
+_(replace `[root]` to represent the absolute path to the directory containing the project)_
+
+Once completed, the files `Mon.scala` and `CPSPc.scala` should be present in the provided directory. 
+
+For a demo proceed to the next step.
+
+#### 2. Setting up.
+1. Add package declarations in the generated files `Mon.scala` and `CPSPc.scala`: `package examples.auth`
+
+2. Uncomment all lines within the files [ConnectionManager.Scala](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/auth/ConnectionManager.scala), [MonitoredServer.scala](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/auth/MonitoredServer.scala) and [MonWrapper.scala](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/auth/MonWrapper.scala).
+
+#### 3. Initialising a monitored setup.
+
+For the sake of this example, we consider two different setups:
+
+**SETUP 1** _Monitor and Scala server on the **same** JVM as **separate** threads._
+1. Start the server together with the monitor using the following command:
+    ```shell
+    sbt "project examples" "runMain examples.auth.MonitoredServer"
     ```
-    sbt "project examples" "runMain monitor.execute.login.tcp.Demo"
+   _The server listens on the TCP/IP socket 127.0.0.1:1330._
+
+2. In a separate terminal navigate to the scripts directory `stmonitor/scripts/` and execute the following command to start a client which connects to the server and sends multiple requests:
+   ```
+   python3 auth-client.py 
+   ```
+
+**SETUP 2** _Monitor and Python server separately._
+
+1. Navigate to the scripts directory `stmonitor/scripts/` and execute the following command to start a Python server using the following command:
+    ```shell
+    python3 auth-server.py
     ```
-   _Note: The server listens on the TCP/IP socket 127.0.0.1:1330._
-   
-2. In a separate terminal navigate to the scripts folder: `stmonitor/scripts/` and execute the following command to start a client which connects to the server and sends multiple requests:
+   The server listens on the TCP/IP socket 127.0.0.1:1335.
+
+2. In a separate terminal, execute the following command to start a monitor:
+   ```shell
+   sbt "project examples" "runMain examples.demo.MonWrapper $LISTEN_PORT $FORWARDING_PORT 
    ```
-   python login-client.py 
+   Replace `$LISTEN_PORT` with the port to expose for a client: _1330_, and `$FORWARDING_PORT` with the port for the monitor to connect to: _1335_. The monitor should connect to the Python server via the port _1335_ and wait for a connection from a client.
+
+3. In a separate terminal, navigate to the scripts directory `stmonitor/scripts/` and execute the following command to start a Python client:
+   ```shell
+   python3 auth-client.py
    ```
+   The client should send and receive messages via the port _1330_ which is handled by the monitor. In turn, the monitor analyses and forwards the messages to the server and client. 

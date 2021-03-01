@@ -38,6 +38,7 @@ class Mon(external: ConnectionManager, internal: In[InternalChoice1], max: Int)(
 			case msg @ Quit() =>
 				external.send(msg)
 				done()
+			case _ => done()
 		}
 	}
 	def receiveExternalChoice1(internal: Out[ExternalChoice1], external: ConnectionManager, count: Int): TailRec[Unit] = {
