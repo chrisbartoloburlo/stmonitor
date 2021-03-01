@@ -28,6 +28,7 @@ sbt "project monitor" "runMain monitor.Generate $DIR $ST"
 Replace `$DIR` with the directory in which the monitor and classes will be generated in: `[root]/stmonitor/examples/src/main/scala/examples/auth`
 
 Replace `$ST` with the absolute path to the file containing the session type: `[root]/stmonitor/examples/src/main/scala/examples/auth/auth.st`
+
 _(replace `[root]` to represent the absolute path to the directory containing the project)_
 
 Once completed, the files `Mon.scala` and `CPSPc.scala` should be present in the provided directory. 
