@@ -29,7 +29,7 @@ object MonWrapper extends App {
     }
   }
 
-  val serverPort = args(1).toInt
+  val serverPort = args(1).toInt //1335
   println("[Mon] Connecting to 127.0.0.1 " + serverPort)
 
   val serverConn = new Socket("127.0.0.1", serverPort)
@@ -37,7 +37,6 @@ object MonWrapper extends App {
   val sChoice = SocketOut[Auth](monSktm)
 
   val clientPort = args(0).toInt //1330
-  val zvalue = args(2).toFloat
   val clientConnectionManager = new ConnectionManager(clientPort)
   val Mon = new Mon(clientConnectionManager, sChoice, 300)(global, timeout)
   Mon.run()

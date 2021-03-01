@@ -10,7 +10,6 @@ class ConnectionManager(port: Int){
   val server = new ServerSocket(port)
 
   private val authR = """AUTH (.+) (.+)""".r
-  private val ackR = """ACK""".r
 
   def setup(): Unit = {
     val client = server.accept()
@@ -25,8 +24,8 @@ class ConnectionManager(port: Int){
   }
 
   def send(x: Any): Unit = x match {
-    case Succ(tok) => outB.write(f"SUCC%%${tok}"); outB.flush();
-    case Fail(code) => outB.write(f"FAIL%%${code}"); outB.flush();
+    case Succ(tok) => outB.write(f"SUCC ${tok}"); outB.flush();
+    case Fail(code) => outB.write(f"FAIL ${code}"); outB.flush();
     case _ => close(); throw new Exception("[CM] Error: Unexpected message by Mon");
   }
 
