@@ -42,7 +42,7 @@ object mailclient extends App {
               inB.readLine() match {
                 case msg @ M250R(_) =>
 //                  println(f"[MC] ↓ 250 ${m250_2.msg}")
-                  outB.write(f"RCPT TO: alceste@test.com\r\n"); outB.flush()
+                  outB.write(f"RCPT TO: discard@localhost\r\n"); outB.flush()
 //                  println(f"[MC] ↑ RCPT TO: alceste@test.com")
                   inB.readLine() match {
                     case msg @ M250R(_) =>

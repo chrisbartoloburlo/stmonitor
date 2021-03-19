@@ -6,7 +6,8 @@ import scala.language.postfixOps
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 class STParser extends StandardTokenParsers {
-  lexical.reserved += ("rec", "end", "String", "Int", "Boolean")
+  lexical.reserved += ("rec", "end")
+//  , "String", "Int", "Boolean"
 
   lexical.delimiters += ("?", "!", "&", "+", "(", ")", "{", "}", ",", ":", "=", ".", "[", "]")
 
@@ -90,14 +91,14 @@ class STParser extends StandardTokenParsers {
     _ toMap
   }
 
-  def typDef: Parser[(String, String)] = (ident <~ ":") ~ typ ^^ {
+  def typDef: Parser[(String, String)] = (ident <~ ":") ~ ident ^^ {
     case a ~ b =>
       (a, b)
   }
 
   def end: Parser[End] = ("" | "end") ^^ (_ => End())
 
-  def typ: Parser[String] = "String" | "Int" | "Bool" ^^ (t => t)
+//  def typ: Parser[String] = "String" | "Int" | "Boolean" ^^ (t => t)
 
   def parseAll[T](p: Parser[T], in: String): ParseResult[T] = {
     val assertionPattern = """\[(.*?)\]""".r
