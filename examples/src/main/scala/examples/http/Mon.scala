@@ -1,6 +1,5 @@
 package examples.http
 import lchannels.{In, Out}
-import monitor.util.ConnectionManager
 
 import java.time.ZonedDateTime
 import scala.concurrent.ExecutionContext
