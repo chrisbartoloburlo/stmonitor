@@ -26,7 +26,8 @@ lazy val lchannels = (project in file("lchannels")).
 
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-typed" % "2.5.0",
-      "com.typesafe.akka" %% "akka-remote" % "2.5.0"
+      "com.typesafe.akka" %% "akka-remote" % "2.5.0",
+      "com.athaydes.rawhttp" % "rawhttp-core" % "2.4.0"
     )
   )
 
@@ -51,6 +52,7 @@ lazy val examples = (project in file("examples")).
     name := "examples",
 
     libraryDependencies ++= Seq(
+      "com.athaydes.rawhttp" % "rawhttp-core" % "2.4.0"
     )
   )
 
