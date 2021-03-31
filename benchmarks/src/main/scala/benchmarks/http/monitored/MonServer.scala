@@ -1,14 +1,13 @@
-package examples.http
+package benchmarks.http.monitored
 
+import com.typesafe.scalalogging.StrictLogging
 import lchannels._
 
-import scala.concurrent.duration._
 import java.net.Socket
 import java.nio.file.{Path, Paths}
 import java.time.ZonedDateTime
-import com.typesafe.scalalogging.StrictLogging
-
 import scala.concurrent.ExecutionContext.global
+import scala.concurrent.duration._
 
 // Input message types for multiparty sessions
 case class MPIRequest(p: RequestLine, cont: MPRequestChoice)
