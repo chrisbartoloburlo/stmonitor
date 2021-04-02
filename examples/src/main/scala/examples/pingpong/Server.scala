@@ -10,12 +10,11 @@ class Server(pinger: In[ExternalChoice1])(implicit timeout: Duration) extends Ru
   override def run(): Unit = {
     var resp = pinger
     var exit = false
-    while(!exit) {
+    while (!exit) {
       resp ? {
         case ping @ Ping() =>
           resp = ping.cont !! Pong()
         case quit @ Quit() =>
-          println("Quitting")
           exit = true
       }
     }
@@ -31,9 +30,10 @@ object ServerWrapper {
 
   class PingPongManager(sessionId: String) extends HttpServerManager() {
     override def request(r: RawHttpRequest): Any = {
-      if (r.getUri().getPath().equals("/ping")) {
+      val path = r.getUri().getPath()
+      if (path.equals("/ping")) {
         Ping()(HttpServerOut[Pong](this))
-      } else if (r.getUri().getPath().equals("/quit")) {
+      } else if (path.equals("/quit")) {
         sendResponse("HTTP/1.1 200 OK\n" +
           "Content-Type: text/plain\n" +
           "Content-Length: 0" +
@@ -41,7 +41,7 @@ object ServerWrapper {
         finalize()
         Quit()
       } else {
-        throw new RuntimeException("Unsupported HTTP request to: ${request.getUri()}")
+        throw new RuntimeException(f"Invalid HTTP request to: ${r.getUri()}")
       }
     }
 

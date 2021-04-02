@@ -59,26 +59,29 @@ abstract class HttpServerManager() {
    */
   protected[lchannels] final def destreamer(atMost: Duration): Any = {
     val (req, client) = if (atMost.isFinite) {
-      val v = queue.poll(atMost.length, atMost.unit)
-      if (v == null) {
+      val ret = queue.poll(atMost.length, atMost.unit)
+      if (ret == null) {
         // NOTE: if a null value is received, we treat it as a timeout
         throw new java.util.concurrent.TimeoutException(f"Input timed out after ${atMost}") 
       }
-      v
+      ret
     } else {
       queue.take()
     }
+
+    this.socket = Some(client) // For later use in streamer()
+
     try {
-      val ret = request(req)
-      socket = Some(client)
-      ret
+      request(req)
     } catch {
       case e: Exception => {
+        val msg = e.getMessage()
         http.parseResponse("HTTP/1.1 500 Internal Server Error\n" +
                            "Content-Type: text/plain\n" +
-                           "Content-Length: 0\n" +
-                           "\n").writeTo(client.getOutputStream())
-        client.close()
+                           f"Content-Length: ${msg.getBytes.size}\n\n" +
+                           msg).writeTo(client.getOutputStream())
+        this.finalize()
+        throw e
       }
     }
   }
@@ -89,7 +92,7 @@ abstract class HttpServerManager() {
    */
   protected[lchannels] final def streamer(x: Any): Unit = {
     val res = response(x)
-    val s = socket.get // We assume the socket has been set by previous request
+    val s = this.socket.get // The socket should be set by previous request
     http.parseResponse(res).writeTo(s.getOutputStream)
     s.close()
   }
