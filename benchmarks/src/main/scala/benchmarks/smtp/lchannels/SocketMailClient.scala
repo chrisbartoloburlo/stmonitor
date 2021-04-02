@@ -75,7 +75,7 @@ object SocketClient extends App {
 
   implicit val timeout = Duration.Inf
 
-  class HelloSocketManager(socket: Socket)
+  class SMTPSocketManager(socket: Socket)
     extends SocketManager(socket) {
     private val outB = new BufferedWriter(new OutputStreamWriter(out))
 
@@ -122,7 +122,7 @@ object SocketClient extends App {
 
   println("[*] Connecting to 127.0.0.1:1025...")
   val conn = new Socket("127.0.0.1", 1025)
-  val sktm = new HelloSocketManager(conn)
+  val sktm = new SMTPSocketManager(conn)
   val c = SocketIn[M220](sktm)
   mailclient(c, args(0), args(1).toInt, args(2).toInt)(global, timeout)
 }

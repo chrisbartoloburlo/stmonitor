@@ -1,178 +1,179 @@
 package benchmarks.smtp.monitored
 
-import akka.actor._
 import lchannels.{In, Out}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
+import scala.util.control.TailCalls.{TailRec, done, tailcall}
 
-class Mon(Internal: Out[M220])(implicit ec: ExecutionContext, timeout: Duration) extends Actor {
-  object payloads {
-		object M220 {
+class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {
+	object payloads {
+		object M220_17 {
 			var msg: String = _
 		}
-		object Helo {
+		object Helo_14 {
 			var hostname: String = _
+		}
+		object M250_13 {
+			var msg: String = _
+		}
+		object MailFrom_10 {
+			var addr: String = _
+		}
+		object M250_9 {
+			var msg: String = _
+		}
+		object RcptTo_2 {
+			var addr: String = _
 		}
 		object M250_1 {
 			var msg: String = _
 		}
-		object MailFrom {
-			var addr: String = _
+		object Data_6 {
 		}
-		object M250_2 {
+		object M354_5 {
 			var msg: String = _
 		}
-		object RcptTo {
-			var addr: String = _
+		object Content_4 {
+			var txt: String = _
 		}
 		object M250_3 {
 			var msg: String = _
 		}
-		object Data {
+		object Quit_8 {
 		}
-		object M354 {
+		object M221_7 {
 			var msg: String = _
 		}
-		object Content {
-			var txt: String = _
+		object Quit_12 {
 		}
-		object M250_4 {
+		object M221_11 {
 			var msg: String = _
 		}
-		object Quit_1 {
+		object Quit_16 {
 		}
-		object M221_1 {
-			var msg: String = _
-		}
-		object Quit_2 {
-		}
-		object M221_2 {
-			var msg: String = _
-		}
-		object Quit_3 {
-		}
-		object M221_4 {
+		object M221_15 {
 			var msg: String = _
 		}
 	}
-  def receive: Receive = {
-    case MonStart =>
-      println("[Mon] Monitor started")
-      println("[Mon] Setting up connection manager")
-      val cm = new ConnectionManager()
-      cm.setup()
-      receiveM220(Internal, cm)
-      cm.close()
+	override def run(): Unit = {
+    println("[Mon] Monitor started")
+    println("[Mon] Setting up connection manager")
+		external.setup()
+		receiveM220_17(internal, external, 0).result
+    external.close()
   }
-  def receiveM220(internal: Out[M220], External: ConnectionManager): Any = {
-    External.receive() match {
-      case msg @ M220(_)=>
+  def receiveM220_17(internal: Out[M220], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		external.receive() match {
+			case msg @ M220(_)=>
 				val cont = internal !! M220(msg.msg)_
-				sendInternalChoice3(cont, External)
-      case _ =>
-    }
-  }
-  def sendInternalChoice3(internal: In[InternalChoice3], External: ConnectionManager): Any = {
-    internal ? {
-      case msg @ Helo(_) =>
-        External.send(msg)
-				receiveM250_1(msg.cont, External)
-      case msg @ Quit_3() =>
-        External.send(msg)
-        receiveM221_3(msg.cont, External)
-    }
-  }
-  def receiveM250_1(internal: Out[M250_1], External: ConnectionManager): Any = {
-    External.receive() match {
-      case msg @ M250(_)=>
+				tailcall(sendInternalChoice3(cont, external,0))
+			case _ => done()
+		}
+	}
+	def sendInternalChoice3(internal: In[InternalChoice3], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		internal ? {
+			case msg @ Helo(_) =>
+				external.send(msg)
+				tailcall(receiveM250_13(msg.cont, external, 0))
+			case msg @ Quit_16() =>
+				external.send(msg)
+				tailcall(receiveM221_15(msg.cont, external, 0))
+			case _ => done()
+		}
+	}
+  def receiveM250_13(internal: Out[M250_13], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		external.receive() match {
+			case msg @ M250_13(_)=>
+				val cont = internal !! M250_13(msg.msg)_
+				tailcall(sendInternalChoice2(cont, external,0))
+			case _ => done()
+		}
+	}
+	def sendInternalChoice2(internal: In[InternalChoice2], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		internal ? {
+			case msg @ MailFrom(_) =>
+				external.send(msg)
+				tailcall(receiveM250_9(msg.cont, external, 0))
+			case msg @ Quit_12() =>
+				external.send(msg)
+				tailcall(receiveM221_11(msg.cont, external, 0))
+			case _ => done()
+		}
+	}
+  def receiveM250_9(internal: Out[M250_9], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		external.receive() match {
+			case msg @ M250_9(_)=>
+				val cont = internal !! M250_9(msg.msg)_
+				tailcall(sendInternalChoice1(cont, external,0))
+			case _ => done()
+		}
+	}
+	def sendInternalChoice1(internal: In[InternalChoice1], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		internal ? {
+			case msg @ RcptTo(_) =>
+				external.send(msg)
+				tailcall(receiveM250_1(msg.cont, external, 0))
+			case msg @ Data() =>
+				external.send(msg)
+				tailcall(receiveM354_5(msg.cont, external, 0))
+			case msg @ Quit_8() =>
+				external.send(msg)
+				tailcall(receiveM221_7(msg.cont, external, 0))
+			case _ => done()
+		}
+	}
+  def receiveM250_1(internal: Out[M250_1], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		external.receive() match {
+			case msg @ M250_1(_)=>
 				val cont = internal !! M250_1(msg.msg)_
-				sendInternalChoice2(cont, External)
-      case err =>
-        println(f"[Mon] **VIOLATION** received: ${err}")
-    }
-  }
-  def sendInternalChoice2(internal: In[InternalChoice2], External: ConnectionManager): Any = {
-    internal ? {
-      case msg @ MailFrom(_) =>
-        External.send(msg)
-				receiveM250_2(msg.cont, External)
-      case msg @ Quit_2() =>
-        External.send(msg)
-				receiveM221_2(msg.cont, External)
-    }
-  }
-  def receiveM250_2(internal: Out[M250_2], External: ConnectionManager): Any = {
-    External.receive() match {
-      case msg @ M250(_)=>
-				val cont = internal !! M250_2(msg.msg)_
-				sendInternalChoice1(cont, External)
-      case _ =>
-    }
-  }
-  def sendInternalChoice1(internal: In[InternalChoice1], External: ConnectionManager): Any = {
-    internal ? {
-      case msg @ RcptTo(_) =>
-        External.send(msg)
-				receiveM250_3(msg.cont, External)
-      case msg @ Data() =>
-        External.send(msg)
-				receiveM354(msg.cont, External)
-      case msg @ Quit_1() =>
-        External.send(msg)
-				receiveM221_1(msg.cont, External)
-    }
-  }
-  def receiveM250_3(internal: Out[M250_3], External: ConnectionManager): Any = {
-    External.receive() match {
-      case msg @ M250(_)=>
-				val cont = internal !! M250_3(msg.msg)_
-				sendInternalChoice1(cont, External)
-      case _ =>
-    }
-  }
-  def receiveM354(internal: Out[M354], External: ConnectionManager): Any = {
-    External.receive() match {
-      case msg @ M354(_)=>
+				tailcall(sendInternalChoice1(cont, external,0))
+			case _ => done()
+		}
+	}
+  def receiveM354_5(internal: Out[M354], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		external.receive() match {
+			case msg @ M354(_)=>
 				val cont = internal !! M354(msg.msg)_
-				sendContent(cont, External)
-      case _ =>
-    }
-  }
-  def sendContent(internal: In[Content], External: ConnectionManager): Any = {
-    internal ? {
-      case msg @ Content(_) =>
-        External.send(msg)
-				receiveM250_4(msg.cont, External)
-    }
-  }
-  def receiveM250_4(internal: Out[M250_4], External: ConnectionManager): Any = {
-    External.receive() match {
-      case msg @ M250(_)=>  //FIXME change from M250_4(_) to M250
-				val cont = internal !! M250_4(msg.msg)_
-				sendInternalChoice2(cont, External)
-      case _ =>
-    }
-  }
-  def receiveM221_1(internal: Out[M221_1], External: ConnectionManager): Any = {
-    External.receive() match {
-      case msg @ M221(_)=>  //FIXME
-        internal ! M221_1(msg.msg)  //FIXME
-      case _ =>
-    }
-  }
-  def receiveM221_2(internal: Out[M221_2], External: ConnectionManager): Any = {
-    External.receive() match {
-      case msg @ M221(_)=>  //FIXME
-        internal ! M221_2(msg.msg) //FIXME
-      case _ =>
-    }
-  }
-  def receiveM221_3(internal: Out[M221_3], External: ConnectionManager): Any = {
-    External.receive() match {
-      case msg @ M221(_)=> //FIXME change from M221_3(_) to M221(_)
-        internal ! M221_3(msg.msg)  //FIXME change from msg.msg to M221_3(msg.msg)
-      case _ =>
-    }
-  }
+				tailcall(sendContent_4(cont, external, 0))
+			case _ => done()
+		}
+	}
+	def sendContent_4(internal: In[Content], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		internal ? {
+			case msg @ Content(_) =>
+				external.send(msg)
+				tailcall(receiveM250_3(msg.cont, external, 0))
+			case _ => done()
+		}
+	}
+  def receiveM250_3(internal: Out[M250_3], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		external.receive() match {
+			case msg @ M250_3(_)=>
+				val cont = internal !! M250_3(msg.msg)_
+				tailcall(sendInternalChoice2(cont, external,0))
+			case _ => done()
+		}
+	}
+  def receiveM221_7(internal: Out[M221_7], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		external.receive() match {
+			case msg @ M221_7(_)=>
+				internal ! msg; done()
+			case _ => done()
+		}
+	}
+  def receiveM221_11(internal: Out[M221_11], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		external.receive() match {
+			case msg @ M221_11(_)=>
+				internal ! msg; done()
+			case _ => done()
+		}
+	}
+  def receiveM221_15(internal: Out[M221_15], external: ConnectionManager, count: Int): TailRec[Unit] = {
+		external.receive() match {
+			case msg @ M221_15(_)=>
+				internal ! msg; done()
+			case _ => done()
+		}
+	}
 }
