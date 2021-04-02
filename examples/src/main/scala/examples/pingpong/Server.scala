@@ -1,9 +1,10 @@
 package examples.pingpong
 
-import lchannels.{In, HttpServerIn, HttpServerOut, HttpServerManager}
+import lchannels.{HttpServerIn, HttpServerManager, HttpServerOut, In}
 
 import scala.concurrent.duration.Duration
 import java.net.{ServerSocket, Socket}
+import scala.collection.mutable
 
 class Server(pinger: In[ExternalChoice1])(implicit timeout: Duration) extends Runnable {
   override def run(): Unit = {
@@ -61,24 +62,24 @@ object ServerWrapper {
     val s = new ServerSocket(8080)
     while (true) {
       val client = s.accept()
-      val t = new Thread { override def run = handler(client) }
+      val t = new Thread { override def run(): Unit = handler(client) }
       t.start()
     }
   }
 
-  val sessions = scala.collection.mutable.Map[String, HttpServerManager]()
+  val sessions: mutable.Map[String, HttpServerManager] = scala.collection.mutable.Map[String, HttpServerManager]()
 
   def handler(client: Socket): Unit = {
     println("Handler started")
     val http = new rawhttp.core.RawHttp()
-    val request = http.parseRequest(client.getInputStream())
-    val sessionIds = request.getHeaders().get("X-Session-Id")
+    val request = http.parseRequest(client.getInputStream)
+    val sessionIds = request.getHeaders.get("X-Session-Id")
     if (sessionIds.size() == 0) {
       http.parseResponse("HTTP/1.1 500 Internal Server Error\n" +
                           "Content-Type: text/plain\n" +
                           "Content-Length: 18\n" +
                           "\n" +
-                          "Invalid session id").writeTo(client.getOutputStream())
+                          "Invalid session id").writeTo(client.getOutputStream)
       client.close()
       return
     } else {
@@ -87,8 +88,8 @@ object ServerWrapper {
       sessions.synchronized {
         if (sessions.keySet.contains(sid)) {
           // A server for this session is already running
-          println(s"Updating running manager for session ${sid}")
-          sessions.get(sid).get.updatehttpRequestSocket(http, request, client)
+          println(f"Updating running manager for session ${sid}")
+          sessions(sid).updatehttpRequestSocket(http, request, client)
         } else {
           // There is no server for this session, we create one
           val mgr = new PingPongManager()
@@ -97,7 +98,7 @@ object ServerWrapper {
           sessions(sid) = mgr
         }
       }
-      if (!manager.isEmpty) {
+      if (manager.isDefined) {
         val sPinger = HttpServerIn[ExternalChoice1](manager.get)
         val server = new Server(sPinger)(timeout)
         server.run()
