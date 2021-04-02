@@ -87,7 +87,7 @@ object ServerWrapper {
       sessions.synchronized {
         if (sessions.keySet.contains(sid)) {
           // A server for this session is already running
-          println("Updating running manager for session ${sid}")
+          println(s"Updating running manager for session ${sid}")
           sessions.get(sid).get.updatehttpRequestSocket(http, request, client)
         } else {
           // There is no server for this session, we create one
