@@ -29,10 +29,9 @@ package lchannels
 import scala.concurrent.duration.Duration
 
 import java.net.{Socket => JSocket}
-import java.io.{InputStream, OutputStream}
+import java.util.concurrent.{LinkedTransferQueue => Fifo}
 
-import rawhttp.core.{RawHttp, RawHttpRequest, RawHttpResponse}
-import java.util.concurrent.locks.ReentrantLock
+import rawhttp.core.{RawHttp, RawHttpRequest}
 
 /** The medium of socket-based channel endpoints. */
 case class Http()
@@ -43,17 +42,15 @@ case class Http()
  *  underlying socket may be updated as needed.
  */
 abstract class HttpServerManager() {
-  private val lock = new ReentrantLock();
-  private var httpRequestSocket: Option[(RawHttp, RawHttpRequest, JSocket)] = None
+  private val http = new RawHttp()
+  private var queue = new Fifo[(RawHttpRequest, JSocket)]()
+  private var socket: Option[JSocket] = None
 
-  def updatehttpRequestSocket(h: RawHttp, r: RawHttpRequest, s: JSocket): Unit = {
-    lock.synchronized {
-      httpRequestSocket = Some((h,r,s))
-      lock.notifyAll()
-    }
+  def queueRequest(r: RawHttpRequest, s: JSocket): Unit = {
+    queue.add((r,s))
   }
   
-  /** Turn the current HTTP request into an object and return it.
+  /** Turn the current HTTP request into a message object and return it.
    *  
    *  @param atMost Maximum wait time
    *  
@@ -61,24 +58,27 @@ abstract class HttpServerManager() {
    *  @throws Exception if a deserialization error occurs.
    */
   protected[lchannels] final def destreamer(atMost: Duration): Any = {
-    // TODO: do something with atMost, e.g. via Lock.tryLock()
-    lock.synchronized {
-      if (httpRequestSocket.isEmpty) {
-        lock.wait()
+    val (req, client) = if (atMost.isFinite) {
+      val v = queue.poll(atMost.length, atMost.unit)
+      if (v == null) {
+        // NOTE: if a null value is received, we treat it as a timeout
+        throw new java.util.concurrent.TimeoutException(f"Input timed out after ${atMost}") 
       }
-      try {
-        request(httpRequestSocket.get._2)
-      } catch {
-        case e: Exception => {
-          val hrs = httpRequestSocket.get
-          hrs._1.parseResponse("HTTP/1.1 500 Internal Server Error\n" +
-                                 "Content-Type: text/plain\n" +
-                                 "Content-Length: 0\n" +
-                                 "\n").writeTo(hrs._3.getOutputStream())
-          close()
-          httpRequestSocket = None
-          throw e
-        }
+      v
+    } else {
+      queue.take()
+    }
+    try {
+      val ret = request(req)
+      socket = Some(client)
+      ret
+    } catch {
+      case e: Exception => {
+        http.parseResponse("HTTP/1.1 500 Internal Server Error\n" +
+                           "Content-Type: text/plain\n" +
+                           "Content-Length: 0\n" +
+                           "\n").writeTo(client.getOutputStream())
+        client.close()
       }
     }
   }
@@ -88,16 +88,10 @@ abstract class HttpServerManager() {
    *  @throws Exception if a serialization error occurs.
    */
   protected[lchannels] final def streamer(x: Any): Unit = {
-    lock.synchronized {
-      if (httpRequestSocket.isEmpty) {
-        lock.wait()
-      }
-      val r = response(x)
-      val hrs = httpRequestSocket.get
-      hrs._1.parseResponse(r).writeTo(hrs._3.getOutputStream)
-      close()
-      httpRequestSocket = None
-    }
+    val res = response(x)
+    val s = socket.get // We assume the socket has been set by previous request
+    http.parseResponse(res).writeTo(s.getOutputStream)
+    s.close()
   }
   
   /** Read the given HTTP request and return a corresponding object.
@@ -117,25 +111,17 @@ abstract class HttpServerManager() {
    * 
    *  @param resp The response to be sent.
    */
-  def sendResponse(resp: String): Unit = lock.synchronized {
-    val hrs = httpRequestSocket.get
-    hrs._1.parseResponse(resp).writeTo(hrs._3.getOutputStream)
-    close()
+  def sendResponse(resp: String): Unit = {
+    val s = socket.get // We assume the socket has been set by previous request
+    http.parseResponse(resp).writeTo(s.getOutputStream)
+    s.close()
   }
 
-  /** Close the socket.
-   *  
-   *  You could derive this method to perform additional cleanup
-   *  when closing the HTTP manager.
-   */
-  def close(): Unit = lock.synchronized {
-    if (!httpRequestSocket.isEmpty) {
-      httpRequestSocket.get._3.close()
-    }
+  /** Finalize the HTTP manager, closing any open socket. */
+  override def finalize() = socket match {
+    case Some(s) => s.close(); socket = None
+    case None => ()
   }
-  
-  /** Alias for [[close]]. */
-  final override def finalize() = close()
   
   /** Create a pair of I/O socket-based channel endpoints,
    *  reading from `in` and writing to `out`.
