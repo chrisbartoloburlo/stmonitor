@@ -120,8 +120,8 @@ object SocketClient extends App {
     }
   }
 
-  println("[*] Connecting to 127.0.0.1:1025...")
-  val conn = new Socket("127.0.0.1", 1025)
+  println(f"[*] Connecting to 127.0.0.1 ${args(3).toInt}")
+  val conn = new Socket("127.0.0.1", args(3).toInt)
   val sktm = new SMTPSocketManager(conn)
   val c = SocketIn[M220](sktm)
   mailclient(c, args(0), args(1).toInt, args(2).toInt)(global, timeout)
