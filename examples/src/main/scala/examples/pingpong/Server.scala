@@ -66,46 +66,51 @@ object ServerWrapper {
   }
 
   def main(args: Array[String]): Unit = {
+    import java.util.concurrent.{Executors, ExecutorService}
+    val nproc = Runtime.getRuntime().availableProcessors()
+    val pool: ExecutorService = Executors.newFixedThreadPool(nproc)
+
     val s = new ServerSocket(8080)
-    println("[Ponger] Ponger started; to terminate press CTRL+c")
+    println(s"[Ponger] Ponger started with ${nproc} handler threads; to terminate press CTRL+C")
     while (true) {
       val client = s.accept()
-      val t = new Thread { override def run(): Unit = handler(client) }
-      t.start()
+      pool.execute(new Handler(client))
     }
   }
 
-  def handler(client: Socket): Unit = {
-    val http = new rawhttp.core.RawHttp()
-    val request = http.parseRequest(client.getInputStream)
-    val sessionIds = request.getHeaders.get("X-Session-Id")
-    if (sessionIds.size() == 0) {
-      http.parseResponse("HTTP/1.1 500 Internal Server Error\n" +
-                          "Content-Type: text/plain\n" +
-                          "Content-Length: 18\n" +
-                          "\n" +
-                          "Invalid session id").writeTo(client.getOutputStream)
-      client.close()
-      return
-    } else {
-      val sid = sessionIds.get(0)
-      var manager: Option[PingPongManager] = None
-      sessions.synchronized {
-        if (sessions.keySet.contains(sid)) {
-          // A server for this session is already running
-          sessions(sid).queueRequest(request, client)
-        } else {
-          // There is no server for this session, we create one
-          val mgr = new PingPongManager(sid)
-          manager = Some(mgr)
-          mgr.queueRequest(request, client)
-          sessions(sid) = mgr
+  class Handler(client: Socket) extends Runnable {
+    override def run(): Unit = {
+      val http = new rawhttp.core.RawHttp()
+      val request = http.parseRequest(client.getInputStream)
+      val sessionIds = request.getHeaders.get("X-Session-Id")
+      if (sessionIds.size() == 0) {
+        http.parseResponse("HTTP/1.1 500 Internal Server Error\n" +
+                            "Content-Type: text/plain\n" +
+                            "Content-Length: 18\n" +
+                            "\n" +
+                            "Invalid session id").writeTo(client.getOutputStream)
+        client.close()
+        return
+      } else {
+        val sid = sessionIds.get(0)
+        var manager: Option[PingPongManager] = None
+        sessions.synchronized {
+          if (sessions.keySet.contains(sid)) {
+            // A server for this session is already running
+            sessions(sid).queueRequest(request, client)
+          } else {
+            // There is no server for this session, we create one
+            val mgr = new PingPongManager(sid)
+            manager = Some(mgr)
+            mgr.queueRequest(request, client)
+            sessions(sid) = mgr
+          }
         }
-      }
-      if (manager.isDefined) {
-        val sPinger = HttpServerIn[ExternalChoice1](manager.get)
-        val server = new Server(sPinger)(timeout)
-        server.run()
+        if (manager.isDefined) {
+          val sPinger = HttpServerIn[ExternalChoice1](manager.get)
+          val server = new Server(sPinger)(timeout)
+          server.run()
+        }
       }
     }
   }
