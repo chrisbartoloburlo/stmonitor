@@ -16,7 +16,15 @@ This project uses the **`sbt`** build tool which can be downloaded from [here](h
 
 Consider the Login example, in which the server must follow the type found in `auth.st`:
 ```
-S_auth=rec Y.( ?Auth(uname: String, pwd: String)[util.validateUname(uname)].+{!Succ(tok: String)[util.validateTok(tok, uname)], !Fail(Code: Int).Y} )
+S_auth=rec Y.(?Auth(uname: String, pwd: String)[util.validateUname(uname)].+{
+	!Succ(origTok: String)[util.validateTok(origTok, uname)].rec X.(&{
+		?Get(resource: String, reqTok: String).+{
+			!Res(content: String)[origTok==reqTok].X,
+			!Timeout().Y
+		},
+		?Rvk(rvkTok: String)[origTok==rvkTok].end}),
+	!Fail(code: Int).end
+})
 ```
 
 The functions `validateUname()` and `validateTok()` are present in the `util.scala` file. 
@@ -74,4 +82,4 @@ For the sake of this example, we consider two different setups:
    ```shell
    python3 auth-client.py
    ```
-   The client should send and receive messages via the port _1330_ which is handled by the monitor. In turn, the monitor analyses and forwards the messages to the server and client. 
+   The client should send and receive messages via the port _1330_ which is handled by the monitor. In turn, the monitor analyses and forwards the messages to the server and client. Alternatively, one can also interact with the monitored server using `telnet 127.0.0.1 1335` and follow a text based protocol. 
