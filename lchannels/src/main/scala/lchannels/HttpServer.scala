@@ -46,6 +46,11 @@ abstract class HttpServerManager() {
   private var queue = new Fifo[(RawHttpRequest, JSocket)]()
   private var socket: Option[JSocket] = None
 
+  /** Add a new HTTP request and socket to be processed.
+   * 
+   * @param r HTTP request to process
+   * @param s Socket connected to the HTTP client that sent `r`.
+   */
   def queueRequest(r: RawHttpRequest, s: JSocket): Unit = {
     queue.add((r,s))
   }
