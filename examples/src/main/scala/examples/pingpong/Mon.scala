@@ -15,8 +15,6 @@ class Mon(external: ConnectionManager, internal: Out[ExternalChoice1], max: Int)
 		}
 	}
 	override def run(): Unit = {
-    println("[Mon] Monitor started")
-    println("[Mon] Setting up connection manager")
 		external.setup()
 		receiveExternalChoice1(internal, external, 0).result
     external.close()

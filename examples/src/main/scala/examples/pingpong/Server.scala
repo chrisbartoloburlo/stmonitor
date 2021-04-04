@@ -71,7 +71,7 @@ object ServerWrapper {
     val pool: ExecutorService = Executors.newFixedThreadPool(nproc)
 
     val s = new ServerSocket(8080)
-    println(s"[Ponger] Ponger started with ${nproc} handler threads; to terminate press CTRL+C")
+    println(s"[Ponger] Ponger started ${nproc} max threads; to terminate press CTRL+C")
     while (true) {
       val client = s.accept()
       pool.execute(new Handler(client))
