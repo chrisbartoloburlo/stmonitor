@@ -12,11 +12,15 @@ object MonWrapper extends App {
   class MonSocketManager(socket: Socket) extends SocketManager(socket) {
     private val inB = new BufferedReader(new InputStreamReader(in))
     private val SUCCR = """SUCC (.*)""".r
+    private val RESR = """RES (.*)""".r
+    private val TIMEOUTR = """TIMEOUT""".r
     private val FAILR = """FAIL (.*)""".r
 
     override def destreamer(): Any = inB.readLine() match {
-//      case SUCCR(tok) => Succ(tok);
-//      case FAILR(code) => Fail(code.toInt)(SocketOut[Auth](this));
+//      case SUCCR(origTok) => Succ(origTok)(SocketOut[ExternalChoice1](this));
+//      case RESR(content) => Res(content)(SocketOut[ExternalChoice1](this));
+//      case TIMEOUTR() => Timeout()(SocketOut[Auth](this));
+//      case FAILR(code) => Fail(code.toInt);
       case _ =>
     }
 
@@ -24,6 +28,8 @@ object MonWrapper extends App {
 
     override def streamer(x: Any): Unit = x match {
 //      case Auth(uname, pwd) => outB.write(f"AUTH $uname $pwd\r\n"); outB.flush();
+//      case Get(resource, reqTok) => outB.write(f"GET $resource $reqTok\r\n"); outB.flush();
+//      case Rvk(rvkTok) => outB.write(f"RVK $rvkTok\r\n"); outB.flush();
       case _ =>
     }
   }

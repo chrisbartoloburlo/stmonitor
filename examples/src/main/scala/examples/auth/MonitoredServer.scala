@@ -5,25 +5,40 @@ import lchannels.{In, LocalChannel}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.global
 import scala.concurrent.duration.Duration
+import scala.util.Random
 
 //object Server {
 //  def apply(Client: In[Auth])(implicit ec: ExecutionContext, timeout: Duration) {
+//    var authChn = Client
 //    println("[S] Server started, to terminate press CTRL+c")
-//    Client ? {
-//      case l @ Auth(_, _) =>
-//        println(f"[S] Received Auth(${l.uname}, ${l.pwd})")
-//        val count = 1
-//        println(f"[S] Sending Fail(${count})")
-//        val resp = l.cont !! Fail(count)_
-//        resp ? {
-//          case l @ Auth(_, _) =>
-//            println(f"[S] Received Auth(${l.uname}, ${l.pwd})")
-//            val tok = "tok123"
-//            println(f"[S] Sending Succ(${tok})")
-//            l.cont ! Succ(tok)
-//        }
+//    var notAuth = true
+//    while(notAuth){
+//      authChn ? {
+//        case msg @ Auth(_, _) =>
+//          println(f"[S] Received Auth(${msg.uname}, ${msg.pwd})")
+//          val token = Random.alphanumeric.filter(_.isLetter).take(10).mkString
+//          println(f"[S] Sending Succ($token)")
+//          var reqChn = msg.cont !! Succ(token)_
+//          notAuth = false
+//          while(!notAuth){
+//            reqChn ? {
+//              case msg @ Get(_, _) =>
+//                println(f"[S] Received Get(${msg.resource}, ${msg.reqTok})")
+//                if(token!=msg.reqTok){
+//                  println("[S] Tokens do not match: sending Timeout()")
+//                  authChn = msg.cont !! Timeout()
+//                  notAuth = true
+//                } else {
+//                  println(f"[S] Sending Res(content)")
+//                  reqChn = msg.cont !! Res("content")
+//                }
+//              case msg @ Rvk(_) =>
+//                println(f"[S] Received Rvk(${msg.rvkTok}): terminating")
+//                sys.exit(0)
+//            }
+//          }
+//      }
 //    }
-//    println("[S] Server terminated")
 //  }
 //}
 
