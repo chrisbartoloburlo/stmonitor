@@ -18,7 +18,7 @@ object mailclient extends App {
     val iterations: Int = args(1).toInt
     val run: Int = args(2).toInt
 
-    val s = new Socket(InetAddress.getByName("localhost"), 1025)
+    val s = new Socket(InetAddress.getByName("localhost"), args(0).toInt)
     val outB: BufferedWriter = new BufferedWriter(new OutputStreamWriter(s.getOutputStream))
     val inB: BufferedReader = new BufferedReader(new InputStreamReader(s.getInputStream))
 

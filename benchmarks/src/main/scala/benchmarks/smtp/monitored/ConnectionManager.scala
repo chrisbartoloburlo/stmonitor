@@ -3,11 +3,11 @@ package benchmarks.smtp.monitored
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 import java.net.{InetAddress, Socket}
 
-class ConnectionManager(){
+class ConnectionManager(port: Int){
   var outB: BufferedWriter = _
   var inB: BufferedReader = _
 
-  val s = new Socket(InetAddress.getByName("localhost"), 1025)
+  val s = new Socket(InetAddress.getByName("localhost"), port)
 
   private val M220R = """220 ([\S]+) .*""".r
   private val M250R = """250 (.*)""".r
@@ -20,12 +20,26 @@ class ConnectionManager(){
     inB = new BufferedReader(new InputStreamReader(s.getInputStream))
   }
 
+  var m250counter = 1
   def receive(): Any = inB.readLine() match {
     case M220R(msg) => M220(msg)(null);
-    case M250R(msg) => M250(msg);
+    case M250R(msg) =>
+      if(m250counter == 1){
+        m250counter += 1
+        M250_13(msg)(null)
+      } else if (m250counter == 2) {
+        m250counter += 1
+        M250_9(msg)(null)
+      } else if (m250counter == 3) {
+        m250counter += 1
+        M250_1(msg)(null)
+      } else if (m250counter == 4) {
+        m250counter = 2
+        M250_3(msg)(null)
+      }
     case M354R(msg) => M354(msg)(null);
-    case M221R(msg) => close(); M221(msg);
-    case e => e
+    case M221R(msg) => close(); M221_11(msg);
+    case e => println(f"$e")
   }
 
   def send(x: Any): Unit = x match {
@@ -34,8 +48,8 @@ class ConnectionManager(){
     case RcptTo(addr) => outB.write(f"RCPT TO: ${addr}\r\n"); outB.flush();
     case Data() => outB.write(f"DATA\r\n"); outB.flush();
     case Content(txt) => outB.write(f"${txt}\r\n.\r\n"); outB.flush();
-    case Quit_1() | Quit_2() | Quit_3() => outB.write(f"QUIT\r\n"); outB.flush();
-    case _ => close(); throw new Exception("[CM] Error: Unexpected message by Mon");
+    case Quit_8() | Quit_12() | Quit_16() => outB.write(f"QUIT\r\n"); outB.flush();
+    case e => print(f"$e"); close(); throw new Exception("[CM] Error: Unexpected message by Mon");
   }
 
   def close(): Unit = {

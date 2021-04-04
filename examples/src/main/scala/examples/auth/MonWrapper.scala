@@ -1,7 +1,6 @@
 package examples.auth
 
 import lchannels.{SocketManager, SocketOut}
-
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 import java.net.Socket
 import scala.concurrent.ExecutionContext.Implicits.global
