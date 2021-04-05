@@ -67,8 +67,7 @@ object ServerWrapper {
 
   def main(args: Array[String]): Unit = {
     import java.util.concurrent.{Executors, ExecutorService}
-    var nproc = Runtime.getRuntime().availableProcessors()
-    if (nproc < 4) nproc = 4
+    val nproc = Math.max(Runtime.getRuntime().availableProcessors(), 4)
     val pool: ExecutorService = Executors.newFixedThreadPool(nproc)
 
     val s = new ServerSocket(8080)

@@ -14,8 +14,7 @@ object MonWrapper {
   val sessions = mutable.Map[String, ClientConnectionManager]()
 
   def main(args: Array[String]): Unit = {
-    var nproc = Runtime.getRuntime().availableProcessors()
-    if (nproc < 4) nproc = 4
+    val nproc = Math.max(Runtime.getRuntime().availableProcessors(), 4)
     val pool: ExecutorService = Executors.newFixedThreadPool(nproc)
 
     val s = new ServerSocket(8080)
