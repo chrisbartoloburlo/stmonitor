@@ -9,3 +9,4 @@ test/
 /examples/src/main/scala/examples/generate/
 scripts/local/
 benchmarks/
+*.jar

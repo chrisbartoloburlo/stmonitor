@@ -67,18 +67,24 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 		external.receive() match {
 			case msg @ M220(_)=>
 				val cont = internal !! M220(msg.msg)_
-				tailcall(sendInternalChoice3(cont, external,0))
+				if (count < max) {
+					sendExternalChoice3(cont, external, count+1)
+				} else { tailcall(sendExternalChoice3(cont, external,0)) }
 			case _ => done()
 		}
 	}
-	def sendInternalChoice3(internal: In[InternalChoice3], external: ConnectionManager, count: Int): TailRec[Unit] = {
+	def sendExternalChoice3(internal: In[ExternalChoice3], external: ConnectionManager, count: Int): TailRec[Unit] = {
 		internal ? {
 			case msg @ Helo(_) =>
 				external.send(msg)
-				tailcall(receiveM250_13(msg.cont, external, 0))
+				if (count < max) {
+					receiveM250_13(msg.cont, external, count+1)
+				} else { tailcall(receiveM250_13(msg.cont, external, 0)) }
 			case msg @ Quit_16() =>
 				external.send(msg)
-				tailcall(receiveM221_15(msg.cont, external, 0))
+				if (count < max) {
+					receiveM221_15(msg.cont, external, count+1)
+				} else { tailcall(receiveM221_15(msg.cont, external, 0)) }
 			case _ => done()
 		}
 	}
@@ -86,18 +92,24 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 		external.receive() match {
 			case msg @ M250_13(_)=>
 				val cont = internal !! M250_13(msg.msg)_
-				tailcall(sendInternalChoice2(cont, external,0))
+				if (count < max) {
+					sendExternalChoice2(cont, external, count+1)
+				} else { tailcall(sendExternalChoice2(cont, external,0)) }
 			case _ => done()
 		}
 	}
-	def sendInternalChoice2(internal: In[InternalChoice2], external: ConnectionManager, count: Int): TailRec[Unit] = {
+	def sendExternalChoice2(internal: In[ExternalChoice2], external: ConnectionManager, count: Int): TailRec[Unit] = {
 		internal ? {
 			case msg @ MailFrom(_) =>
 				external.send(msg)
-				tailcall(receiveM250_9(msg.cont, external, 0))
+				if (count < max) {
+					receiveM250_9(msg.cont, external, count+1)
+				} else { tailcall(receiveM250_9(msg.cont, external, 0)) }
 			case msg @ Quit_12() =>
 				external.send(msg)
-				tailcall(receiveM221_11(msg.cont, external, 0))
+				if (count < max) {
+					receiveM221_11(msg.cont, external, count+1)
+				} else { tailcall(receiveM221_11(msg.cont, external, 0)) }
 			case _ => done()
 		}
 	}
@@ -105,21 +117,29 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 		external.receive() match {
 			case msg @ M250_9(_)=>
 				val cont = internal !! M250_9(msg.msg)_
-				tailcall(sendInternalChoice1(cont, external,0))
+				if (count < max) {
+					sendExternalChoice1(cont, external, count+1)
+				} else { tailcall(sendExternalChoice1(cont, external,0)) }
 			case _ => done()
 		}
 	}
-	def sendInternalChoice1(internal: In[InternalChoice1], external: ConnectionManager, count: Int): TailRec[Unit] = {
+	def sendExternalChoice1(internal: In[ExternalChoice1], external: ConnectionManager, count: Int): TailRec[Unit] = {
 		internal ? {
 			case msg @ RcptTo(_) =>
 				external.send(msg)
-				tailcall(receiveM250_1(msg.cont, external, 0))
+				if (count < max) {
+					receiveM250_1(msg.cont, external, count+1)
+				} else { tailcall(receiveM250_1(msg.cont, external, 0)) }
 			case msg @ Data() =>
 				external.send(msg)
-				tailcall(receiveM354_5(msg.cont, external, 0))
+				if (count < max) {
+					receiveM354_5(msg.cont, external, count+1)
+				} else { tailcall(receiveM354_5(msg.cont, external, 0)) }
 			case msg @ Quit_8() =>
 				external.send(msg)
-				tailcall(receiveM221_7(msg.cont, external, 0))
+				if (count < max) {
+					receiveM221_7(msg.cont, external, count+1)
+				} else { tailcall(receiveM221_7(msg.cont, external, 0)) }
 			case _ => done()
 		}
 	}
@@ -127,7 +147,9 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 		external.receive() match {
 			case msg @ M250_1(_)=>
 				val cont = internal !! M250_1(msg.msg)_
-				tailcall(sendInternalChoice1(cont, external,0))
+				if (count < max) {
+					sendExternalChoice1(cont, external, count+1)
+				} else { tailcall(sendExternalChoice1(cont, external,0)) }
 			case _ => done()
 		}
 	}
@@ -135,7 +157,9 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 		external.receive() match {
 			case msg @ M354(_)=>
 				val cont = internal !! M354(msg.msg)_
-				tailcall(sendContent_4(cont, external, 0))
+				if (count < max) {
+					sendContent_4(cont, external, count+1)
+				} else { tailcall(sendContent_4(cont, external, 0)) }
 			case _ => done()
 		}
 	}
@@ -143,7 +167,9 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 		internal ? {
 			case msg @ Content(_) =>
 				external.send(msg)
-				tailcall(receiveM250_3(msg.cont, external, 0))
+				if (count < max) {
+					receiveM250_3(msg.cont, external, count+1)
+				} else { tailcall(receiveM250_3(msg.cont, external, 0)) }
 			case _ => done()
 		}
 	}
@@ -151,7 +177,9 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 		external.receive() match {
 			case msg @ M250_3(_)=>
 				val cont = internal !! M250_3(msg.msg)_
-				tailcall(sendInternalChoice2(cont, external,0))
+				if (count < max) {
+					sendExternalChoice2(cont, external, count+1)
+				} else { tailcall(sendExternalChoice2(cont, external,0)) }
 			case _ => done()
 		}
 	}

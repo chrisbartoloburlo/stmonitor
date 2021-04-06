@@ -105,7 +105,7 @@ object Client extends App {
     }
 
     private val inB = new BufferedReader(new InputStreamReader(in))
-    private val M220R = """220 ([\S]+)""".r
+    private val M220R = """220 ([\S]+) .*""".r
     private val M250R = """250 (.*)""".r
     private val M354R = """354 (.*)""".r
     private val M221R = """221 (.*)""".r
@@ -113,20 +113,20 @@ object Client extends App {
     var m250counter = 1
 
     override def destreamer(): Any = inB.readLine() match {
-      case m @ M220R(msg) => println(f"received $m"); M220(msg)(SocketOut[InternalChoice3](this));
+      case m @ M220R(msg) => println(f"received $m"); M220(msg)(SocketOut[ExternalChoice3](this));
       case M250R(msg) =>
         if(m250counter == 1){
           m250counter += 1
-          M250_13(msg)(SocketOut[InternalChoice2](this))
+          M250_13(msg)(SocketOut[ExternalChoice2](this))
         } else if (m250counter == 2) {
           m250counter += 1
-          M250_9(msg)(SocketOut[InternalChoice1](this))
+          M250_9(msg)(SocketOut[ExternalChoice1](this))
         } else if (m250counter == 3) {
           m250counter += 1
-          M250_1(msg)(SocketOut[InternalChoice1](this))
+          M250_1(msg)(SocketOut[ExternalChoice1](this))
         } else if (m250counter == 4) {
           m250counter = 2
-          M250_3(msg)(SocketOut[InternalChoice2](this))
+          M250_3(msg)(SocketOut[ExternalChoice2](this))
         }
       case M354R(msg) => M354(msg)(SocketOut[Content](this));
       case M221R(msg) => close(); M221_11(msg);
