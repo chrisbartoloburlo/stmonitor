@@ -16,14 +16,14 @@ This project uses the **`sbt`** build tool which can be downloaded from [here](h
 
 Consider the Login example, in which the server must follow the type found in `auth.st`:
 ```
-S_auth=rec Y.(?Auth(uname: String, pwd: String)[util.validateUname(uname)].+{
-	!Succ(origTok: String)[util.validateTok(origTok, uname)].rec X.(&{
-		?Get(resource: String, reqTok: String).+{
-			!Res(content: String)[origTok==reqTok].X,
-			!Timeout().Y
+S_auth=rec Y.(!Auth(uname: String, pwd: String)[util.validateUname(uname)].&{
+	?Succ(origTok: String)[util.validateTok(origTok, uname)].rec X.(+{
+		!Get(resource: String, reqTok: String).&{
+			?Res(content: String)[origTok==reqTok].X,
+			?Timeout().Y
 		},
-		?Rvk(rvkTok: String)[origTok==rvkTok].end}),
-	!Fail(code: Int).end
+		!Rvk(rvkTok: String)[origTok==rvkTok].end}),
+	?Fail(code: Int).end
 })
 ```
 
