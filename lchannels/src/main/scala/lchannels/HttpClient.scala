@@ -29,33 +29,34 @@ package lchannels
 import scala.concurrent.duration.Duration
 
 import java.net.{Socket => JSocket}
-import java.util.concurrent.{LinkedTransferQueue => Fifo}
 
-import rawhttp.core.{RawHttp, RawHttpRequest}
-
-/** The medium of socket-based channel endpoints. */
-case class Http()
+import rawhttp.core.{RawHttp, RawHttpResponse}
 
 /** Base class for HTTP session management and (de)serialization of messages.
  *  
  *  A "session" may span across multiple client-server connections, so the
  *  underlying socket may be updated as needed.
  */
-abstract class HttpServerManager() {
+abstract class HttpClientManager(hostname: String, port: Int) {
   private val http = new RawHttp()
-  private var queue = new Fifo[(RawHttpRequest, JSocket)]()
   private var socket: Option[JSocket] = None
 
-  /** Add a new HTTP request and socket to be processed.
-   * 
-   * @param r HTTP request to process
-   * @param s Socket connected to the HTTP client that sent `r`.
+  /** Convert an object into an HTTP request and send it.
+   *  
+   *  @throws Exception if a serialization error occurs.
    */
-  def queueRequest(r: RawHttpRequest, s: JSocket): Unit = {
-    queue.add((r,s))
+  protected[lchannels] final def streamer(x: Any): Unit = {
+    val s = new JSocket(hostname, port)
+    val (req, respHandler) = request(x)
+    http.parseRequest(req).writeTo(s.getOutputStream)
+    respHandler match {
+      case Some(h) => h(getResponse())
+      case None => ()
+    }
+    this.socket = Some(s)
   }
   
-  /** Turn the current HTTP request into a message object and return it.
+  /** Get an HTTP response and turn it into a message object and return it.
    *  
    *  @param atMost Maximum wait time
    *  
@@ -63,71 +64,57 @@ abstract class HttpServerManager() {
    *  @throws Exception if a deserialization error occurs.
    */
   protected[lchannels] final def destreamer(atMost: Duration): Any = {
-    val (req, client) = if (atMost.isFinite) {
-      val ret = queue.poll(atMost.length, atMost.unit)
-      if (ret == null) {
-        // NOTE: if a null value is received, we treat it as a timeout
-        throw new java.util.concurrent.TimeoutException(f"Input timed out after ${atMost}") 
-      }
-      ret
-    } else {
-      queue.take()
+    val s = this.socket.get // Assuming that streamer() has set the socket
+    if (atMost.isFinite) {
+      s.setSoTimeout(java.lang.Math.toIntExact(atMost.toMillis))
     }
 
-    this.socket = Some(client) // For later use in streamer()
-
     try {
-      request(req)
+      val resp = http.parseResponse(s.getInputStream()).eagerly()
+      val ret = response(resp)
+      this.finalize()
+      ret
     } catch {
       case e: Exception => {
         val msg = e.getMessage()
         http.parseResponse("HTTP/1.1 500 Internal Server Error\n" +
                            "Content-Type: text/plain\n" +
                            f"Content-Length: ${msg.getBytes.size}\n\n" +
-                           msg).writeTo(client.getOutputStream())
+                           msg).writeTo(s.getOutputStream())
         this.finalize()
         throw e
       }
     }
   }
 
-  /** Convert an object into an HTTP response and send it on the current socket.
+  /** Convert the given object into an HTTP request (as a string),
+   *  with an optional function that handles the server response.
    *  
-   *  @throws Exception if a serialization error occurs.
+   *  @param x Object to convert
    */
-  protected[lchannels] final def streamer(x: Any): Unit = {
-    val res = response(x)
-    val s = this.socket.get // The socket should be set by previous request
-    http.parseResponse(res).writeTo(s.getOutputStream)
-    s.close()
-  }
+  def request(x: Any): (String, Option[RawHttpResponse[_] => Unit])
   
-  /** Read the given HTTP request and return a corresponding object.
+  /** Convert the given HTTP response into an object
    *  
-   *  @param r HTTP session to convert
-   *  @throws Exception if the given request cannot be converted error occurs.
+   *  @param r HTTP response to convert
+   *  @throws Exception if the given response cannot be converted error occurs.
    */
-  def request(r: RawHttpRequest): Any
-  
-  /** Convert the given object into an HTTP response (as a string)
-   *  
-   *  @param x Object to convert.
-   */
-  def response(x: Any): String
+  def response(r: RawHttpResponse[_]): Any
   
   /** Send a response and close the socket.
    * 
    *  @param resp The response to be sent.
    */
-  def sendResponse(resp: String): Unit = {
-    val s = socket.get // We assume the socket has been set by previous request
-    http.parseResponse(resp).writeTo(s.getOutputStream)
-    s.close()
+  def getResponse(): RawHttpResponse[_] = {
+    val s = this.socket.get // Assume the socket was set by previous request
+    val res = http.parseResponse(s.getInputStream())
+    finalize()
+    res
   }
 
   /** Finalize the HTTP manager, closing any open socket. */
-  override def finalize() = socket match {
-    case Some(s) => s.close(); socket = None
+  override def finalize() = this.socket match {
+    case Some(s) => s.close(); this.socket = None
     case None => ()
   }
   
@@ -136,16 +123,16 @@ abstract class HttpServerManager() {
    *  
    *  @param ec Execution context for internal `Promise`/`Future` handling
    */
-  def factory[T](): (HttpServerIn[T], HttpServerOut[T]) = {
-    (HttpServerIn[T](this), HttpServerOut[T](this))
+  def factory[T](): (HttpClientIn[T], HttpClientOut[T]) = {
+    (HttpClientIn[T](this), HttpClientOut[T](this))
   }
 }
 
-/** HTTP-based input channel endpoint (server side), usually created
- *  through the [[[HttpServerIn$.apply* companion object]]]
- *  or via [[HttpServerManager.factory]].
+/** HTTP-based input channel endpoint (client side), usually created
+ *  through the [[[HttpClientIn$.apply* companion object]]]
+ *  or via [[HttpClientManager.factory]].
  */
-protected[lchannels] class HttpServerIn[T](hm: HttpServerManager)
+protected[lchannels] class HttpClientIn[T](hm: HttpClientManager)
     extends medium.In[Http, T] {
   override def receive() =  {
     hm.destreamer(Duration.Inf).asInstanceOf[T]
@@ -162,22 +149,22 @@ protected[lchannels] class HttpServerIn[T](hm: HttpServerManager)
   }
 }
 
-/** HTTP-based input channel endpoint (server side). */
-object HttpServerIn {
-  /** Return a HTTP-based input channel endpoint (server side)
+/** HTTP-based input channel endpoint (client side). */
+object HttpClientIn {
+  /** Return a HTTP-based input channel endpoint (client side)
    * 
-   * @param hm HTTP server manager handling the session
+   * @param hm HTTP client manager handling the session
    */
-  def apply[T](hm: HttpServerManager) = {
-    new HttpServerIn[T](hm)
+  def apply[T](hm: HttpClientManager) = {
+    new HttpClientIn[T](hm)
   }
 }
 
-/** HTTP-based output channel endpoint (server side), usually created
- *  through the [[[HttpServerOut$.apply* companion object]]]
- *  or via [[HttpServerManager.factory]].
+/** HTTP-based output channel endpoint (client side), usually created
+ *  through the [[[HttpClientOut$.apply* companion object]]]
+ *  or via [[HttpClientManager.factory]].
  */
-class HttpServerOut[-T](hm: HttpServerManager)
+class HttpClientOut[-T](hm: HttpClientManager)
     extends medium.Out[Http, T] {
   override def send(x: T) = hm.streamer(x)
 
@@ -185,12 +172,12 @@ class HttpServerOut[-T](hm: HttpServerManager)
 }
 
 /** Stream-based output channel endpoint. */
-object HttpServerOut {
-  /** Return a HTTP-based output channel endpoint (server side).
+object HttpClientOut {
+  /** Return a HTTP-based output channel endpoint (client side).
    * 
-   * @param hm HTTP server manager handling the session
+   * @param hm HTTP client manager handling the session
    */
-  def apply[T](hm: HttpServerManager) = {
-    new HttpServerOut[T](hm)
+  def apply[T](hm: HttpClientManager) = {
+    new HttpClientOut[T](hm)
   }
 }
