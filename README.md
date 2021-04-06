@@ -74,7 +74,7 @@ For the sake of this example, we consider two different setups:
 
 2. In a separate terminal, execute the following command to start a monitor:
    ```shell
-   sbt "project examples" "runMain examples.demo.MonWrapper $LISTEN_PORT $FORWARDING_PORT 
+   sbt "project examples" "runMain examples.auth.MonWrapper $LISTEN_PORT $FORWARDING_PORT"
    ```
    Replace `$LISTEN_PORT` with the port to expose for a client: _1330_, and `$FORWARDING_PORT` with the port for the monitor to connect to: _1335_. The monitor should connect to the Python server via the port _1335_ and wait for a connection from a client.
 
