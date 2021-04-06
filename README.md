@@ -14,16 +14,16 @@ This project uses the **`sbt`** build tool which can be downloaded from [here](h
 
 #### 1. Synthesising the monitor and CPSP classes.
 
-Consider the Login example, in which the server must follow the type found in `auth.st`:
+Consider the Auth example, in which the server must follow the type found in `auth.st`:
 ```
-S_auth=rec Y.(?Auth(uname: String, pwd: String)[util.validateUname(uname)].+{
-	!Succ(origTok: String)[util.validateTok(origTok, uname)].rec X.(&{
-		?Get(resource: String, reqTok: String).+{
-			!Res(content: String)[origTok==reqTok].X,
-			!Timeout().Y
+S_auth=rec Y.(!Auth(uname: String, pwd: String)[util.validateUname(uname)].&{
+	?Succ(origTok: String)[util.validateTok(origTok, uname)].rec X.(+{
+		!Get(resource: String, reqTok: String).&{
+			?Res(content: String)[origTok==reqTok].X,
+			?Timeout().Y
 		},
-		?Rvk(rvkTok: String)[origTok==rvkTok].end}),
-	!Fail(code: Int).end
+		!Rvk(rvkTok: String)[origTok==rvkTok].end}),
+	?Fail(code: Int).end
 })
 ```
 
@@ -74,7 +74,7 @@ For the sake of this example, we consider two different setups:
 
 2. In a separate terminal, execute the following command to start a monitor:
    ```shell
-   sbt "project examples" "runMain examples.demo.MonWrapper $LISTEN_PORT $FORWARDING_PORT 
+   sbt "project examples" "runMain examples.auth.MonWrapper $LISTEN_PORT $FORWARDING_PORT"
    ```
    Replace `$LISTEN_PORT` with the port to expose for a client: _1330_, and `$FORWARDING_PORT` with the port for the monitor to connect to: _1335_. The monitor should connect to the Python server via the port _1335_ and wait for a connection from a client.
 

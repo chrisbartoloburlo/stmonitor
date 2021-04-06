@@ -34,7 +34,7 @@ import scala.util.Random
 //                }
 //              case msg @ Rvk(_) =>
 //                println(f"[S] Received Rvk(${msg.rvkTok}): terminating")
-//                sys.exit(0)
+//                return
 //            }
 //          }
 //      }
