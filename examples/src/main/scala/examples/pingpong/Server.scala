@@ -69,8 +69,9 @@ object ServerWrapper {
     import java.util.concurrent.{Executors, ExecutorService}
     val nproc = Math.max(Runtime.getRuntime().availableProcessors(), 4)
     val pool: ExecutorService = Executors.newFixedThreadPool(nproc)
+    val listenPort = if (args.length == 0) 8080 else args(0).toInt
 
-    val s = new ServerSocket(8080)
+    val s = new ServerSocket(listenPort)
     println(s"[Ponger] Ponger started ${nproc} max threads; to terminate press CTRL+C")
     while (true) {
       val client = s.accept()
