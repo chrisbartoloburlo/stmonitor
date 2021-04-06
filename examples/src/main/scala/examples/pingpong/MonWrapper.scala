@@ -1,12 +1,51 @@
 package examples.pingpong
 
-import lchannels.{LocalChannel}
+import lchannels.{LocalChannel, HttpClientManager, HttpClientOut}
 
 import java.net.{Socket, ServerSocket}
 import java.util.concurrent.{Executors, ExecutorService}
 
+import rawhttp.core.RawHttpResponse
+
 import scala.concurrent.duration.Duration
 import scala.collection.mutable
+
+class PingPongManager(sessionId: String, host: String, port: Int) extends HttpClientManager(host, port) {
+  override def response(r: RawHttpResponse[_]): Any = {
+    if ((r.getStatusCode() == 200) &&
+        (r.eagerly().getBody().map[String](_.toString)
+         .orElseThrow(() => new RuntimeException("No response body")) == "pong")) {
+      Pong()(HttpClientOut(this))
+    } else {
+      throw new RuntimeException(f"Invalid HTTP response: ${r.toString()}")
+    }
+  }
+
+  override def request(x: Any): (String, Option[RawHttpResponse[_] => Unit]) = x match {
+    case _: Ping => {
+      ("GET /ping HTTP/1.1\r\n" +
+       f"Host: ${host}\r\n" +
+       f"X-Session-Id: ${sessionId}",
+       None)
+    }
+    case _: Quit => {
+      ("GET /quit HTTP/1.1\r\n" +
+       f"Host: ${host}\r\n" +
+       f"X-Session-Id: ${sessionId}",
+       Some((resp: RawHttpResponse[_]) => {
+         if (resp.getStatusCode() == 200) {
+           // Nothing to do here
+         } else {
+           throw new RuntimeException(f"Invalid HTTP response to /quit: ${resp}}")
+         }
+       }))
+    }
+    case _ => {
+      finalize()
+      throw new IllegalArgumentException("Unsupported message: ${x}")
+    }
+  }
+}
 
 object MonWrapper {
   val timeout = Duration.Inf
@@ -16,17 +55,27 @@ object MonWrapper {
   def main(args: Array[String]): Unit = {
     val nproc = Math.max(Runtime.getRuntime().availableProcessors(), 4)
     val pool: ExecutorService = Executors.newFixedThreadPool(nproc)
+    val listenPort = args(0).toInt
 
-    val s = new ServerSocket(8080)
-    println(s"[Ponger] Ponger started with ${nproc} handler threads; to terminate press CTRL+C")
+    def onNewSession(sessionId: String, mgr: ClientConnectionManager): Unit = {
+      if (args.length == 1) {
+        onNewSessionLocalServer(sessionId, mgr)(pool)
+      } else {
+        onNewSessionRemoteServer(sessionId, mgr)(args(1), args(2).toInt, pool)
+      }
+    }
+
+    val s = new ServerSocket(listenPort)
+    println(s"Monitor started with ${nproc} handler threads; to terminate press CTRL+C")
     while (true) {
       val client = s.accept()
-      pool.execute(new Handler(client, onNewSessionLocalServer(_)(pool)))
+      pool.execute(new Handler(client, onNewSession))
     }
   }
 
   // Intantiate a server thread together with the new manager and monitor
-  def onNewSessionLocalServer(mgr: ClientConnectionManager)(pool: ExecutorService): Unit = {
+  def onNewSessionLocalServer(sessionId: String, mgr: ClientConnectionManager)
+                             (pool: ExecutorService): Unit = {
     // A manager has been created, let's instantiate the monitor too
     val ec =  scala.concurrent.ExecutionContext.global
     val timeout = Duration.Inf
@@ -37,8 +86,20 @@ object MonWrapper {
     mon.run()
   }
 
+  // At each new session, connect to a remote server
+  def onNewSessionRemoteServer(sessionId: String, mgr: ClientConnectionManager)
+                              (host: String, port: Int, pool: ExecutorService): Unit = {
+    // A manager has been created, let's instantiate the monitor too
+    val ec =  scala.concurrent.ExecutionContext.global
+    val timeout = Duration.Inf
+    val httpClientMgr = new PingPongManager(sessionId, host, port)
+    val out = HttpClientOut[ExternalChoice1](httpClientMgr)
+    val mon = new Mon(mgr, out, 300)(ec, timeout)
+    mon.run()
+  }
+
   class Handler(client: Socket,
-                onNewSession: (ClientConnectionManager) => Unit) extends Runnable {
+                onNewSession: (String, ClientConnectionManager) => Unit) extends Runnable {
     override def run(): Unit = {
       val http = new rawhttp.core.RawHttp()
       val request = http.parseRequest(client.getInputStream)
@@ -67,7 +128,7 @@ object MonWrapper {
           }
         }
         if (manager.isDefined) {
-          onNewSession(manager.get)
+          onNewSession(sid, manager.get)
         }
       }
     }
