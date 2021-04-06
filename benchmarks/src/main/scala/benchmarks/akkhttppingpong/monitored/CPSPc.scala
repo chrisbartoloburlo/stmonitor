@@ -1,4 +1,4 @@
-package benchmarks.pingpong.monitored
+package benchmarks.akkhttppingpong.monitored
 
 import lchannels.Out
 sealed abstract class ExternalChoice1

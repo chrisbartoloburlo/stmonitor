@@ -52,7 +52,8 @@ lazy val examples = (project in file("examples")).
     name := "examples",
 
     libraryDependencies ++= Seq(
-      "com.athaydes.rawhttp" % "rawhttp-core" % "2.4.0"
+      "com.athaydes.rawhttp" % "rawhttp-core" % "2.4.0",
+      "com.github.tototoshi" %% "scala-csv" % "1.3.6"
     )
   )
 

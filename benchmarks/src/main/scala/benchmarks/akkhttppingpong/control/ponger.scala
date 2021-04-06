@@ -1,4 +1,4 @@
-package benchmarks.pingpong.control
+package benchmarks.akkhttppingpong.control
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
