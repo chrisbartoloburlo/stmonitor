@@ -17,8 +17,8 @@ object MonWrapper extends App {
     private val FAILR = """FAIL (.*)""".r
 
     override def destreamer(): Any = inB.readLine() match {
-//      case SUCCR(origTok) => Succ(origTok)(SocketOut[ExternalChoice1](this));
-//      case RESR(content) => Res(content)(SocketOut[ExternalChoice1](this));
+//      case SUCCR(origTok) => Succ(origTok)(SocketOut[InternalChoice1](this));
+//      case RESR(content) => Res(content)(SocketOut[InternalChoice1](this));
 //      case TIMEOUTR() => Timeout()(SocketOut[Auth](this));
 //      case FAILR(code) => Fail(code.toInt);
       case _ =>
