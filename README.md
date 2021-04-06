@@ -14,7 +14,7 @@ This project uses the **`sbt`** build tool which can be downloaded from [here](h
 
 #### 1. Synthesising the monitor and CPSP classes.
 
-Consider the Login example, in which the server must follow the type found in `auth.st`:
+Consider the Auth example, in which the server must follow the type found in `auth.st`:
 ```
 S_auth=rec Y.(!Auth(uname: String, pwd: String)[util.validateUname(uname)].&{
 	?Succ(origTok: String)[util.validateTok(origTok, uname)].rec X.(+{
