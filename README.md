@@ -3,16 +3,6 @@
 
 A tool that, given a session type _S_, can synthesise the Scala code of a type-checked monitor that verifies at runtime whether an interaction abides by _S_, and signatures usable to implement a process that interacts according to _S_. The generated monitors are embedded with runtime data checks as specified in the session types. A presentation outlining our approach can be found [here](https://youtu.be/FL_teSjllSE).
 
-
-
-### Dependencies
-
-Java 8 <!---`apt install openjdk-8-jre-headless`--->
-Scala
-SBT
-Jmeter <!---`apt install jmeter`--->
-Python 3
-
 These instructions are for recreating and executing the example found in the paper, namely, the login example. We assume a Unix-like operating system with Java 8 as default JRE/JDK which can be downloaded from [here](https://www.oracle.com/java/technologies/javase-jdk8-downloads.html).
 
 ### Compile the sources
