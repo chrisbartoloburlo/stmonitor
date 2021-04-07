@@ -12,3 +12,6 @@ benchmarks/
 *.jar
 results/control/*
 results/monitored/*
+results/detached_monitored/*
+plots/*
+venv/

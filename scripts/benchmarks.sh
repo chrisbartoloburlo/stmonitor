@@ -1,3 +1,15 @@
-sbt examples/assembly
+# Usage: sh benchmarks.sh <number of experiments> <list of benchmarks>
 
-mv ../examples/target/scala-2.12/examples-assembly-0.0.3.jar ./
+#sbt examples/assembly
+
+for n in $(seq 2 $#); do
+  if [[ "$2" == "smtp-python" ]]; then
+    echo "Running SMTP benchmarks with $1 iterations per experiment"
+    #sh smtp-benchmarks/smtp-experiments.sh $1
+  elif [[ "$2" == "pingpong" ]]; then
+    echo "Running Ping Pong benchmarks with $1 iterations per experiment"
+  else
+    echo "*** Unknown benchmark: $2 *** Available benchmarks: smtp-python pingpong"
+  fi
+  shift
+done
