@@ -1,4 +1,4 @@
-package benchmarks.smtp.monitored
+package examples.smtp
 
 import lchannels.{SocketManager, SocketOut}
 

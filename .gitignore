@@ -8,4 +8,7 @@ test/
 /examples/src/main/scala/examples/execute/
 /examples/src/main/scala/examples/generate/
 scripts/local/
-benchmarks/auth/
+benchmarks/
+*.jar
+results/control/*
+results/monitored/*

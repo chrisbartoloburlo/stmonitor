@@ -1,4 +1,4 @@
-package benchmarks.util
+package examples.util
 
 import scala.collection.mutable
 

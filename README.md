@@ -10,7 +10,7 @@ This project uses the **`sbt`** build tool which can be downloaded from [here](h
 
 \* _All commands from this point forward must be executed from this location._
 
-### The login example
+### The auth example
 
 #### 1. Synthesising the monitor and CPSP classes.
 

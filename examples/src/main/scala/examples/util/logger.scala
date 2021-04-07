@@ -1,7 +1,6 @@
-package benchmarks.util
+package examples.util
 
 import com.github.tototoshi.csv._
-
 import java.io.File
 
 class logger(pathname: String) {
