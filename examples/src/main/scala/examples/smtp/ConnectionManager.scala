@@ -15,7 +15,7 @@ class ConnectionManager(port: Int){
   private val M221R = """221 (.*)""".r
 
   def setup(): Unit = {
-    println("[CM] Connecting with SMTP server")
+    println("[CM] Initialising sockets with SMTP Server")
     outB = new BufferedWriter(new OutputStreamWriter(s.getOutputStream))
     inB = new BufferedReader(new InputStreamReader(s.getInputStream))
   }

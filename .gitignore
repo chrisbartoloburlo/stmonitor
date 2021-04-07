@@ -10,3 +10,5 @@ test/
 scripts/local/
 benchmarks/
 *.jar
+results/control/*
+results/monitored/*

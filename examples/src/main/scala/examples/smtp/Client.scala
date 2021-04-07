@@ -105,7 +105,8 @@ object Client extends App {
     }
 
     private val inB = new BufferedReader(new InputStreamReader(in))
-    private val M220R = """220 ([\S]+) .*""".r
+    private val M220_1_R = """220 ([\S]+)""".r
+    private val M220_2_R = """220 ([\S]+) .*""".r
     private val M250R = """250 (.*)""".r
     private val M354R = """354 (.*)""".r
     private val M221R = """221 (.*)""".r
@@ -113,7 +114,8 @@ object Client extends App {
     var m250counter = 1
 
     override def destreamer(): Any = inB.readLine() match {
-      case m @ M220R(msg) => println(f"received $m"); M220(msg)(SocketOut[ExternalChoice3](this));
+      case M220_1_R(msg) => M220(msg)(SocketOut[ExternalChoice3](this));
+      case M220_2_R(msg) => M220(msg)(SocketOut[ExternalChoice3](this));
       case M250R(msg) =>
         if(m250counter == 1){
           m250counter += 1
