@@ -125,7 +125,7 @@ def convert_kb_mb(lst):
 if __name__ == '__main__':
     plt.style.use('seaborn-deep')
 
-    path = sys.argv[1]
+    path = sys.argv[1]+'/scripts/smtp-benchmarks'
     runs = int(sys.argv[2])
 
     control_times = []
@@ -163,11 +163,11 @@ if __name__ == '__main__':
 
     for iterations in range(100, 2001, 100):
         control_collective_avg_time, control_collective_avg_total_time, control_collective_avg_resp_time, control_collective_avg_cpu, control_collective_avg_mem, control_total_time_variance, control_resp_time_variance, control_cpu_variance, control_mem_variance = individual_experiment(
-            path+"/scripts/smtp-benchmarks/results/control", runs, iterations)
+            path+"/results/control", runs, iterations)
         monitored_collective_avg_time, monitored_collective_avg_total_time, monitored_collective_avg_resp_time, monitored_collective_avg_cpu, monitored_collective_avg_mem, monitored_total_time_variance, monitored_resp_time_variance, monitored_cpu_variance, monitored_mem_variance = individual_experiment(
-            path+"/scripts/smtp-benchmarks/results/monitored", runs, iterations)
+            path+"/results/monitored", runs, iterations)
         detached_mon_collective_avg_time, detached_mon_collective_avg_total_time, detached_mon_collective_avg_resp_time, detached_mon_collective_avg_cpu, detached_mon_collective_avg_mem, detached_mon_total_time_variance, detached_mon_resp_time_variance, detached_mon_cpu_variance, detached_mon_mem_variance = individual_experiment(
-            path+"/scripts/smtp-benchmarks/results/detached_monitored", runs, iterations)
+            path+"/results/detached_monitored", runs, iterations)
 
         control_times.append(average(control_collective_avg_time))
         control_total_times.append(control_collective_avg_total_time)
