@@ -125,7 +125,8 @@ def convert_kb_mb(lst):
 if __name__ == '__main__':
     plt.style.use('seaborn-deep')
 
-    runs = int(sys.argv[1])
+    path = sys.argv[1]
+    runs = int(sys.argv[2])
 
     control_times = []
     control_total_times = []
@@ -162,11 +163,11 @@ if __name__ == '__main__':
 
     for iterations in range(100, 2001, 100):
         control_collective_avg_time, control_collective_avg_total_time, control_collective_avg_resp_time, control_collective_avg_cpu, control_collective_avg_mem, control_total_time_variance, control_resp_time_variance, control_cpu_variance, control_mem_variance = individual_experiment(
-            "./results/control", runs, iterations)
+            path+"/results/control", runs, iterations)
         monitored_collective_avg_time, monitored_collective_avg_total_time, monitored_collective_avg_resp_time, monitored_collective_avg_cpu, monitored_collective_avg_mem, monitored_total_time_variance, monitored_resp_time_variance, monitored_cpu_variance, monitored_mem_variance = individual_experiment(
-            "./results/monitored", runs, iterations)
+            path+"/results/monitored", runs, iterations)
         detached_mon_collective_avg_time, detached_mon_collective_avg_total_time, detached_mon_collective_avg_resp_time, detached_mon_collective_avg_cpu, detached_mon_collective_avg_mem, detached_mon_total_time_variance, detached_mon_resp_time_variance, detached_mon_cpu_variance, detached_mon_mem_variance = individual_experiment(
-            "./results/detached_monitored", runs, iterations)
+            path+"/results/detached_monitored", runs, iterations)
 
         control_times.append(average(control_collective_avg_time))
         control_total_times.append(control_collective_avg_total_time)
@@ -204,7 +205,7 @@ if __name__ == '__main__':
     x = range(100, 2001, 100)
     # plot(x, control_times, monitored_times, lchannels_times, "control", "monitored", "lchannels", "Time/ns", "Experiments", "Average Execution Times", "")
 
-    path = "./plots/"
+    plots_path = path+"/plots/"
 
     # print("exec times percentage increase unsafe -> monitored",
     #       percentage_inc(average(control_total_times), average(monitored_total_times)))
@@ -228,12 +229,12 @@ if __name__ == '__main__':
     plot(x, control_cpus, monitored_cpus, detached_mon_cpus,
          control_cpus_variance, monitored_cpus_variance, detached_mon_cpus_variance,
          "unsafe", "monitored", "detached_mon", "CPU Utilisation (%)", "Emails sent", "CPU Utilisation",
-         path + "smtp_cpu_consumption")
+         plots_path + "smtp_cpu_consumption")
 
     plot(x, control_mems, monitored_mems, detached_mon_mems,
          control_mems_variance, monitored_mems_variance, detached_mon_mems_variance,
          "unsafe", "monitored", "detached_mon", "Memory Consumption (MB)", "Emails sent", "Memory Consumption",
-         path + "smtp_mem_consumption")
+         plots_path + "smtp_mem_consumption")
 
     print("memory percentage increase control -> monitored",
           percentage_inc(average(control_mems), average(monitored_mems)))
@@ -245,7 +246,7 @@ if __name__ == '__main__':
     plot(x, control_resp_times, monitored_resp_times, detached_mon_resp_times,
          control_resp_times_variance, monitored_resp_times_variance, detached_mon_resp_times_variance,
          "unsafe", "monitored", "detached_mon", "Response Time (ms)", "Emails sent", "Response Times",
-         path + "smtp_resp_time")
+         plots_path + "smtp_resp_time")
 
     print("resp times percentage increase control -> monitored",
           percentage_inc(average(control_resp_times), average(monitored_resp_times)))

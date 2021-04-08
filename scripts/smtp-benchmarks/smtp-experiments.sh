@@ -19,4 +19,4 @@ done
 
 screen -S smtpserver -X quit
 
-python3 $wd/scripts/smtp-benchmarks/smtp-plots.py 5
+python3 $wd/scripts/smtp-benchmarks/smtp-plots.py $wd/scripts/smtp-benchmarks $experiments
