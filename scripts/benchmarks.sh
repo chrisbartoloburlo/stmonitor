@@ -1,9 +1,14 @@
 #!/bin/bash
 # Usage: sh benchmarks.sh <number of experiments> <list of benchmarks>
 
-#sbt examples/assembly
-
 wd=`pwd`
+
+python -c "import csv"
+python -c "import matplotlib.pyplot"
+python -c "import statistics"
+python -c "import sys"
+
+sbt examples/assembly
 
 for n in $(seq 2 $#); do
   if [ "$2" = "smtp-python" ]; then
