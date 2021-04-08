@@ -3,10 +3,10 @@
 
 wd=`pwd`
 
-python -c "import csv"
-python -c "import matplotlib.pyplot"
-python -c "import statistics"
-python -c "import sys"
+python3 -c "import csv"
+python3 -c "import matplotlib.pyplot"
+python3 -c "import statistics"
+python3 -c "import sys"
 
 sbt examples/assembly
 
