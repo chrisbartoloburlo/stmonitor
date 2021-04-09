@@ -9,9 +9,9 @@ iterations=100
 wd=`pwd`
 
 echo "Removing contents of results directory"
-rm -r $wd/smtp-benchmarks/results/control/*
-rm -r $wd/smtp-benchmarks/results/monitored/*
-rm -r $wd/smtp-benchmarks/results/detached_monitored/*
+rm -r $wd/scripts/smtp-benchmarks/results/control/*
+rm -r $wd/scripts/smtp-benchmarks/results/monitored/*
+rm -r $wd/scripts/smtp-benchmarks/results/detached_monitored/*
 
 while [ "$increments" -ne 0 ] ; do
 
