@@ -71,7 +71,7 @@ def individual_experiment(path, runs, requests):
     return collective_avg_time, collective_avg_total_time, collective_avg_response_time, collective_avg_cpu, collective_avg_mem, total_time_variance, response_time_variance, cpu_variance, mem_variance
 
 
-def plot(x, y1, y2, y3, y1err, y2err, y3err, y1_label, y2_label, y3_label, ylabel, xlabel, title, path):
+def plot(x, y1, y2, y3, y1err, y2err, y3err, y1_label, y2_label, y3_label, ylabel, xlabel, title, path, type):
     fig, ax1 = plt.subplots()
 
     plt.grid(linestyle=':', linewidth=0.8)
@@ -80,9 +80,10 @@ def plot(x, y1, y2, y3, y1err, y2err, y3err, y1_label, y2_label, y3_label, ylabe
 
     lns1 = ax1.plot(x, y1, label=f'{y1_label}', linestyle="solid", linewidth=1, marker="s", markersize=2,
                     markeredgewidth=1)
-    lns1 += ax1.plot(x, y3, label=f'{y3_label}', linestyle="dashed", linewidth=1, marker="x", markersize=3,
+    if(type=="resp_time"):
+        lns1 += ax1.plot(x, y3, label=f'{y3_label}', linestyle="dashed", linewidth=1, marker="x", markersize=3,
                      markeredgewidth=0.8)
-    lns1 += ax1.plot(x, y2, label=f'{y2_label}', linestyle="dotted", linewidth=1, marker=".", markersize=4,
+    lns1 += ax1.plot(x, y2, label=f'{y2_label}', linestyle="dotted", linewidth=1, color="C2", marker=".", markersize=4,
                      markeredgewidth=0.8)
 
     # lns1 = ax1.errorbar(x, y1, label=f'{y1_label}', linestyle="solid", linewidth=1, marker="s", markersize=2, markeredgewidth=1, yerr=y1err, fmt='-')
@@ -105,10 +106,7 @@ def plot(x, y1, y2, y3, y1err, y2err, y3err, y1_label, y2_label, y3_label, ylabe
     plt.title(f'{title}')
 
     plt.savefig(f'{path}.pdf', dpi=300)
-    # if path != "":
-    #     plt.savefig(f'{path}.pgf', bbox_inches = 'tight', pad_inches = 0.01)
-    # else
-    plt.show()
+    # plt.show()
 
 def convert_ns_s(lst):
     return [i / 1000000000 for i in lst]
@@ -216,7 +214,7 @@ if __name__ == '__main__':
 
     # plot(x, control_total_times, monitored_total_times, detached_mon_total_times,
     #      control_total_times_variance, monitored_total_times_variance, detached_mon_total_times_variance,
-    #      "unsafe", "monitored", "detached_mon", "Time (s)", "Emails sent", "Execution Times", path + "smtp_total_times")
+    #      "unsafe", "monitored", "detached_mon", "Time (s)", "Emails sent", "Execution Times", path + "smtp_total_times", "total_times")
 
 
     print("cpu percentage increase control -> monitored",
@@ -229,12 +227,12 @@ if __name__ == '__main__':
     plot(x, control_cpus, monitored_cpus, detached_mon_cpus,
          control_cpus_variance, monitored_cpus_variance, detached_mon_cpus_variance,
          "unsafe", "monitored", "detached_mon", "CPU Utilisation (%)", "Emails sent", "CPU Utilisation",
-         plots_path + "smtp_cpu_consumption")
+         plots_path + "smtp_cpu_consumption", "cpu_consumption")
 
     plot(x, control_mems, monitored_mems, detached_mon_mems,
          control_mems_variance, monitored_mems_variance, detached_mon_mems_variance,
          "unsafe", "monitored", "detached_mon", "Memory Consumption (MB)", "Emails sent", "Memory Consumption",
-         plots_path + "smtp_mem_consumption")
+         plots_path + "smtp_mem_consumption", "memory_consumption")
 
     print("memory percentage increase control -> monitored",
           percentage_inc(average(control_mems), average(monitored_mems)))
@@ -246,7 +244,7 @@ if __name__ == '__main__':
     plot(x, control_resp_times, monitored_resp_times, detached_mon_resp_times,
          control_resp_times_variance, monitored_resp_times_variance, detached_mon_resp_times_variance,
          "unsafe", "monitored", "detached_mon", "Response Time (ms)", "Emails sent", "Response Times",
-         plots_path + "smtp_resp_time")
+         plots_path + "smtp_resp_time", "resp_time")
 
     print("resp times percentage increase control -> monitored",
           percentage_inc(average(control_resp_times), average(monitored_resp_times)))
