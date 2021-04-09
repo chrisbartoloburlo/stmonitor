@@ -51,17 +51,17 @@ object MonitoredServer extends App {
   }
 
   val CM = new ConnectionManager(1330)
-  while(true) {
-    val (in, out) = LocalChannel.factory[Auth]()
-    val Monitor = new Monitor(CM, out, 300, report)(global, timeout)
-
-    val ServerThread = new Thread {
-      override def run(): Unit = {
-        Server(in)(global, timeout)
-      }
-    }
-
-    ServerThread.start()
-    Monitor.run()
+//  while(true) {
+//    val (in, out) = LocalChannel.factory[Auth]()
+//    val Monitor = new Monitor(CM, out, 300, report)(global, timeout)
+//
+//    val ServerThread = new Thread {
+//      override def run(): Unit = {
+//        Server(in)(global, timeout)
+//      }
+//    }
+//
+//    ServerThread.start()
+//    Monitor.run()
   }
 }
