@@ -14,7 +14,7 @@ sbt examples/assembly
 for n in $(seq 2 $#); do
   if [ "$2" = "smtp-python" ]; then
     echo "Running SMTP benchmarks with $1 iterations per experiment"
-    sh $wd/scripts/smtp-benchmarks/smtp-experiments.sh $1
+    sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh $1
   elif [ "$2" == "pingpong" ]; then
     echo "Running Ping Pong benchmarks with $1 iterations per experiment"
   else
