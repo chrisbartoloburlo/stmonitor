@@ -23,6 +23,6 @@ while [ "$increments" -ne 0 ] ; do
   increments=$((increments-1))
 done
 
-screen -S smtpserver -X quit
+screen -S smtpserver -X quit > /dev/null 2>&1
 
 python3 $wd/scripts/smtp-benchmarks/smtp-plots.py $wd $experiments
