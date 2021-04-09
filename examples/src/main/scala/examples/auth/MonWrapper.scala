@@ -43,6 +43,6 @@ object MonWrapper extends App {
   val clientPort = args(0).toInt //1330
   val clientConnectionManager = new ConnectionManager(clientPort)
 //  val sChoice = SocketOut[Auth](monSktm)
-//  val Mon = new Mon(clientConnectionManager, sChoice, 300)(global, timeout)
-//  Mon.run()
+//  val Monitor = new Monitor(clientConnectionManager, sChoice, 300)(global, timeout)
+//  Monitor.run()
 }

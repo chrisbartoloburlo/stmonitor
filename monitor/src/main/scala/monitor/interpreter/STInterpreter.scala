@@ -10,7 +10,7 @@ import scala.reflect.runtime._
 import scala.reflect.runtime.universe._
 import scala.tools.reflect.ToolBox
 
-class STInterpreter(sessionType: SessionType, path: String) {
+class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
   private val toolbox = currentMirror.mkToolBox()
 
   private var scopes = new mutable.HashMap[String, Scope]()
@@ -47,22 +47,23 @@ class STInterpreter(sessionType: SessionType, path: String) {
    *         the monitor and cpsp classes is found.
    */
   def run(): (StringBuilder, StringBuilder) = {
-    sessionType.statement match {
-      case recursiveStatement: RecursiveStatement =>
-        var tmpStatement: Statement = recursiveStatement.body
-        while(tmpStatement.isInstanceOf[RecursiveStatement]){
-          tmpStatement = recursiveStatement.body
-        }
-        synthMon.startInit(tmpStatement)
-      case _ =>
-        synthMon.startInit(sessionType.statement)
-    }
+//    sessionType.statement match {
+//      case recursiveStatement: RecursiveStatement =>
+//        var tmpStatement: Statement = recursiveStatement.body
+//        while(tmpStatement.isInstanceOf[RecursiveStatement]){
+//          tmpStatement = recursiveStatement.body
+//        }
+//        synthMon.startInit()
+//      case _ =>
+//        synthMon.startInit()
+//    }
+    synthMon.startInit(preamble)
 
     initialWalk(sessionType.statement)
     curScope = "global"
     synthMon.endInit()
 
-    synthProtocol.init()
+    synthProtocol.init(preamble)
     walk(sessionType.statement)
     synthMon.end()
     synthProtocol.end()

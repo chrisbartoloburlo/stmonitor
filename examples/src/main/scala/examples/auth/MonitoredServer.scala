@@ -47,11 +47,11 @@ import scala.util.Random
 //  val timeout = Duration.Inf
 //
 //  val (in, out) = LocalChannel.factory[Auth]()
-//  val mon = new Mon(new ConnectionManager(1330), out, 300)(global, timeout)
+//  val Monitor = new Monitor(new ConnectionManager(1330), out, 300)(global, timeout)
 //
 //  val monThread = new Thread {
 //    override def run(): Unit = {
-//      mon.run()
+//      Monitor.run()
 //    }
 //  }
 //

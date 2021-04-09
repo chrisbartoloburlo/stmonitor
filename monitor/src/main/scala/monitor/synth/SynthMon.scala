@@ -12,8 +12,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   private var first = true
 
-  def startInit(statement: Statement): Unit = {
-    mon.append("import lchannels.{In, Out}\nimport monitor.util.ConnectionManager\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.util.control.TailCalls.{TailRec, done, tailcall}\nclass Mon(external: ConnectionManager, internal: ")
+  def startInit(preamble: String): Unit = {
+    if (preamble!="") mon.append(preamble+"\n")
+    mon.append("import lchannels.{In, Out}\nimport monitor.util.ConnectionManager\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.util.control.TailCalls.{TailRec, done, tailcall}\nclass Monitor(external: ConnectionManager, internal: ")
 
     mon.append("$, max: Int)")
 

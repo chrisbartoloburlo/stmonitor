@@ -11,7 +11,8 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
     protocol
   }
 
-  def init(): Unit = {
+  def init(preamble: String): Unit = {
+    if (preamble!="") protocol.append(preamble+"\n")
     protocol.append("import lchannels.{In, Out}\n")
 //    CODE FOR GENERATING UNIQUE PROTOCOL CLASSES
 //    var nonUniqueScopes = new ListBuffer[String]
