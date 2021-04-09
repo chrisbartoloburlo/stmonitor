@@ -16,7 +16,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     if (preamble!="") mon.append(preamble+"\n")
     mon.append("import lchannels.{In, Out}\nimport monitor.util.ConnectionManager\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.util.control.TailCalls.{TailRec, done, tailcall}\nclass Monitor(external: ConnectionManager, internal: ")
 
-    mon.append("$, max: Int)")
+    mon.append("$, max: Int, report: String => Unit)")
 
     mon.append("(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {\n")
     mon.append("\tobject payloads {\n")
@@ -38,7 +38,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def endInit(): Unit = {
     mon.append("\t}\n")
-    mon.append("\toverride def run(): Unit = {\n    println(\"[Mon] Monitor started\")\n    println(\"[Mon] Setting up connection manager\")\n")
+    mon.append("\toverride def run(): Unit = {\n\t\treport(\"[MONITOR] Monitor started, setting up connection manager\")\n")
     mon.append("\t\texternal.setup()\n")
   }
 
@@ -70,14 +70,12 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       mon.append("\t\t\t\t\texternal.send(msg)\n")
       handleSendNextCase(statement, isUnique, nextStatement)
       mon.append("\t\t\t\t} else {\n")
+      mon.append("\t\t\t\treport(\"[MONITOR] VIOLATION in Assertion: "+statement.condition+"\"); done() }\n")
     } else {
       mon.append("\t\t\t\texternal.send(msg)\n")
       handleSendNextCase(statement, isUnique, nextStatement)
     }
-    if(statement.condition != null){
-      mon.append("\t\t\t\tdone() }\n")
-    }
-    mon.append("\t\t\tcase _ => done()\n")
+    mon.append("\t\t\tcase msg @ _ => report(f\"[MONITOR] VIOLATION unknown message: $msg\"); done()\n")
     mon.append("\t\t}\n\t}\n")
   }
 
@@ -152,13 +150,11 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       handleCondition(statement.condition, statement.statementID)
       handleReceiveNextCase(statement, isUnique, nextStatement)
       mon.append("\t\t\t\t} else {\n")
+      mon.append("\t\t\t\treport(\"[MONITOR] VIOLATION in Assertion: "+statement.condition+"\"); done() }\n")
     } else {
       handleReceiveNextCase(statement, isUnique, nextStatement)
     }
-    if(statement.condition != null){
-      mon.append("\t\t\t\tdone() }\n")
-    }
-    mon.append("\t\t\tcase _ => done()\n")
+    mon.append("\t\t\tcase msg @ _ => report(f\"[MONITOR] VIOLATION unknown message: $msg\"); done()\n")
     mon.append("\t\t}\n\t}\n")
   }
 
@@ -259,15 +255,13 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         mon.append("\t\t\t\t\texternal.send(msg)\n")
         handleSendNextCase(choice.asInstanceOf[SendStatement], true, choice.asInstanceOf[SendStatement].continuation)
         mon.append("\t\t\t\t} else {\n")
+        mon.append("\t\t\t\treport(\"[MONITOR] VIOLATION in Assertion: "+choice.asInstanceOf[SendStatement].condition+"\"); done() }\n")
       } else {
         mon.append("\t\t\t\texternal.send(msg)\n")
         handleSendNextCase(choice.asInstanceOf[SendStatement], true, choice.asInstanceOf[SendStatement].continuation)
       }
-      if(choice.asInstanceOf[SendStatement].condition != null) {
-        mon.append("\t\t\t\tdone() }\n")
-      }
     }
-    mon.append("\t\t\tcase _ => done()\n")
+    mon.append("\t\t\tcase msg @ _ => report(f\"[MONITOR] VIOLATION unknown message: $msg\"); done()\n")
     mon.append("\t\t}\n\t}\n")
   }
 
@@ -293,14 +287,12 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         handleCondition(choice.asInstanceOf[ReceiveStatement].condition, choice.asInstanceOf[ReceiveStatement].statementID)
         handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], true, choice.asInstanceOf[ReceiveStatement].continuation)
         mon.append("\t\t\t\t} else {\n")
+        mon.append("\t\t\t\treport(\"[MONITOR] VIOLATION in Assertion: "+choice.asInstanceOf[ReceiveStatement].condition+"\"); done() }\n")
       } else {
         handleReceiveNextCase(choice.asInstanceOf[ReceiveStatement], true, choice.asInstanceOf[ReceiveStatement].continuation)
       }
-      if(choice.asInstanceOf[ReceiveStatement].condition != null) {
-        mon.append("\t\t\t\tdone() }\n")
-      }
     }
-    mon.append("\t\t\tcase _ => done()\n")
+    mon.append("\t\t\tcase msg @ _ => report(f\"[MONITOR] VIOLATION unknown message: $msg\"); done()\n")
     mon.append("\t\t}\n\t}\n")
   }
 
