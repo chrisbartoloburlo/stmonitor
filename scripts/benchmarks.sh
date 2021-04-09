@@ -3,10 +3,11 @@
 
 wd=`pwd`
 
-python3 -c "import csv"
 python3 -c "import matplotlib.pyplot"
-python3 -c "import statistics"
-python3 -c "import sys"
+if [ "$?" = "1" ]; then
+  echo "Python module matplotlib not found, cannot run benchmarks: terminating"
+  exit
+fi
 
 sbt examples/assembly
 
