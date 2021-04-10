@@ -15,3 +15,4 @@ scripts/smtp-benchmarks/results/monitored/*
 scripts/smtp-benchmarks/results/detached_monitored/*
 scripts/smtp-benchmarks/plots/*
 venv/
+*.log

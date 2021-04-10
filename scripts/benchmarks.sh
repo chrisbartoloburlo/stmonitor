@@ -15,13 +15,14 @@ for n in $(seq 2 $#); do
   if [ "$2" = "smtp-python" ]; then
     echo "Running SMTP benchmarks with $1 iterations per experiment"
     sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh $1
-  elif [ "$2" == "pingpong" ]; then
+  elif [ "$2" = "pingpong" ]; then
     jmeter -v > /dev/null 2>&1
-    if [ $? -eq 1 ]; then
+    if [ "$?" = "1" ]; then
       echo "Jmeter not found, cannot run ping pong benchmarks: terminating"
+    else
+      echo "Running Ping Pong benchmarks with $1 iterations per experiment"
+      sh $wd/scripts/pingpong-benchmarks/pingpong_experiments.sh $1
     fi
-    echo "Running Ping Pong benchmarks with $1 iterations per experiment"
-    sh $wd/scripts/pingpong-benchmarks/pingpong_experiments.sh $1
   else
     echo "*** Unknown benchmark: $2 *** Available benchmarks: smtp-python pingpong"
   fi

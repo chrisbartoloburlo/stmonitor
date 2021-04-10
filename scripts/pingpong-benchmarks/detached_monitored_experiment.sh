@@ -18,7 +18,7 @@ while [ "$experiments" -ne 0 ] ; do
 
   startTime=$(($(date +%s%N)/1000000))
 
-  jmeter -n -t test-plan.jmx -Jpath=$wd/scripts/pingpong-benchmarks/results/detached_monitored/${requests}_resp_time_run${run}.csv -Jrequests=${requests} -Jrampup=${rampup}
+  jmeter -n -t $wd/scripts/pingpong-benchmarks/test-plan.jmx -Jpath=$wd/scripts/pingpong-benchmarks/results/detached_monitored/${requests}_resp_time_run${run}.csv -Jrequests=${requests} -Jrampup=${rampup}
 
   endTime=$(($(date +%s%N)/1000000))
   executionTime=$((endTime-startTime)) #in ms

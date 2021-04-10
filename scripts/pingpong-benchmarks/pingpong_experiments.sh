@@ -8,9 +8,9 @@ rampup=2
 wd=`pwd`
 
 echo "Removing contents of results directory"
-rm -r $wd/scripts/pingpong-benchmarks/results/control/*
-rm -r $wd/scripts/pingpong-benchmarks/results/monitored/*
-rm -r $wd/scripts/pingpong-benchmarks/results/detached_monitored/*
+rm -r $wd/scripts/pingpong-benchmarks/results/control/* > /dev/null 2>&1
+rm -r $wd/scripts/pingpong-benchmarks/results/monitored/* > /dev/null 2>&1
+rm -r $wd/scripts/pingpong-benchmarks/results/detached_monitored/* > /dev/null 2>&1
 
 while [ "$increments" -ne 0 ] ; do
 
