@@ -5,6 +5,7 @@ import java.time.ZonedDateTime
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.util.control.TailCalls.{TailRec, done, tailcall}
+
 class Mon(external: ConnectionManager, internal: Out[Request], max: Int)(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {
 	object payloads {
 		object Request_35 {
@@ -207,55 +208,55 @@ class Mon(external: ConnectionManager, internal: Out[Request], max: Int)(implici
 	}
 	def sendInternalChoice1(internal: In[InternalChoice1], external: ConnectionManager, count: Int): TailRec[Unit] = {
 		internal ? {
-			case msg @ ETag_9(_) =>
+			case msg @ ETag(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice1(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice1(msg.cont, external, 0)) }
-			case msg @ Server_10(_) =>
+			case msg @ Server(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice1(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice1(msg.cont, external, 0)) }
-			case msg @ ContentLength_11(_) =>
+			case msg @ ContentLength(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice1(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice1(msg.cont, external, 0)) }
-			case msg @ ContentType_12(_) =>
+			case msg @ ContentType(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice1(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice1(msg.cont, external, 0)) }
-			case msg @ Vary_13(_) =>
+			case msg @ Vary(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice1(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice1(msg.cont, external, 0)) }
-			case msg @ Via_14(_) =>
+			case msg @ Via(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice1(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice1(msg.cont, external, 0)) }
-			case msg @ StrictTS_15(_) =>
+			case msg @ StrictTS(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice1(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice1(msg.cont, external, 0)) }
-			case msg @ ResponseBody_16(_) =>
+			case msg @ ResponseBody(_) =>
 				external.send(msg)
 				done()
-			case msg @ AcceptRanges_17(_) =>
+			case msg @ AcceptRanges(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice1(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice1(msg.cont, external, 0)) }
-			case msg @ LastModified_18(_) =>
+			case msg @ LastModified(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice1(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice1(msg.cont, external, 0)) }
-			case msg @ Date_19(_) =>
+			case msg @ Date(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice1(msg.cont, external, count+1)
@@ -265,55 +266,55 @@ class Mon(external: ConnectionManager, internal: Out[Request], max: Int)(implici
 	}
 	def sendInternalChoice2(internal: In[InternalChoice2], external: ConnectionManager, count: Int): TailRec[Unit] = {
 		internal ? {
-			case msg @ ETag_21(_) =>
+			case msg @ ETag2(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice2(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice2(msg.cont, external, 0)) }
-			case msg @ Server_22(_) =>
+			case msg @ Server2(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice2(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice2(msg.cont, external, 0)) }
-			case msg @ ContentLength_23(_) =>
+			case msg @ ContentLength2(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice2(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice2(msg.cont, external, 0)) }
-			case msg @ ContentType_24(_) =>
+			case msg @ ContentType2(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice2(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice2(msg.cont, external, 0)) }
-			case msg @ Vary_25(_) =>
+			case msg @ Vary2(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice2(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice2(msg.cont, external, 0)) }
-			case msg @ Via_26(_) =>
+			case msg @ Via2(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice2(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice2(msg.cont, external, 0)) }
-			case msg @ StrictTS_27(_) =>
+			case msg @ StrictTS2(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice2(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice2(msg.cont, external, 0)) }
-			case msg @ ResponseBody_28(_) =>
+			case msg @ ResponseBody2(_) =>
 				external.send(msg)
 				done()
-			case msg @ AcceptRanges_29(_) =>
+			case msg @ AcceptRanges2(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice2(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice2(msg.cont, external, 0)) }
-			case msg @ LastModified_30(_) =>
+			case msg @ LastModified2(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice2(msg.cont, external, count+1)
 				} else { tailcall(sendInternalChoice2(msg.cont, external, 0)) }
-			case msg @ Date_31(_) =>
+			case msg @ Date2(_) =>
 				external.send(msg)
 				if (count < max) {
 					sendInternalChoice2(msg.cont, external, count+1)
