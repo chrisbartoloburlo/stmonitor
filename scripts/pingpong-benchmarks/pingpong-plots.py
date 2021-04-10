@@ -29,6 +29,7 @@ def extract_cpu_mem_info(path, requests):
                 cpu.append(int(row[0].strip("%")))
                 mem.append(float(row[1]))
             except:
+                None
         return cpu, mem
 
 
