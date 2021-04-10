@@ -18,7 +18,7 @@ for n in $(seq 2 $#); do
   elif [ "$2" = "pingpong" ]; then
     jmeter -v > /dev/null 2>&1
     if [ "$?" = "1" ]; then
-      echo "Jmeter not found, cannot run ping pong benchmarks: terminating"
+      echo "Jmeter not found, skipping ping pong benchmarks"
     else
       echo "Running Ping Pong benchmarks with $1 iterations per experiment"
       sh $wd/scripts/pingpong-benchmarks/pingpong_experiments.sh $1

@@ -12,7 +12,7 @@ while [ "$experiments" -ne 0 ] ; do
 
   sleep 1
 
-  screen -dm -S stmonbench bash -c "/usr/bin/time --format=\"%P,%M,%K\" java -cp./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.pingpong.MonWrapper 8080 127.0.0.1 8081 2>> $wd/scripts/pingpong-benchmarks/results/monitored/${requests}_cpu_mem.txt"
+  screen -dm -S stmonbench bash -c "/usr/bin/time --format=\"%P,%M,%K\" java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.pingpong.MonWrapper 8080 127.0.0.1 8081 2>> $wd/scripts/pingpong-benchmarks/results/detached_monitored/${requests}_cpu_mem.txt"
 
   sleep 1
 

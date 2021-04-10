@@ -1,7 +1,6 @@
 import csv
 import matplotlib.pyplot as plt
 import statistics
-import pandas as pd
 import sys
 
 def extract_resp_time_info(path):
@@ -46,13 +45,6 @@ def extract_exec_time_info(path):
         return exectime
 
 
-def get_moving_average(lst, window):
-    numbers_series = pd.Series(lst)
-    windows = numbers_series.rolling(window, min_periods=1)
-    moving_averages = windows.mean()
-    return moving_averages.tolist()
-
-
 def collective_res(path, runs, requests):
     collective_time = []
     collective_err = []
@@ -79,9 +71,7 @@ def individual_experiment(path, runs, requests):
     collective_avg_time = get_average(collective_time, runs)
     collective_avg_err = get_average(collective_err, runs)
     collective_avg_cpu = average(collective_cpu)
-    print(f'collective_avg_cpu: {collective_avg_cpu}')
     collective_avg_mem = average(collective_mem)
-    print(f'average(collective_mem) {average(collective_mem)}')
 
     collective_avg_exec_times = average(collective_exec_times)
     return collective_avg_time, collective_avg_err, collective_avg_cpu, collective_avg_mem, collective_avg_exec_times
