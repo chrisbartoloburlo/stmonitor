@@ -26,11 +26,9 @@ def extract_cpu_mem_info(path, requests):
         mem = []
         for row in plots:
             try:
-                print(f'CPU: {int(row[0].strip("%"))} MEM: {float(row[1])}')
                 cpu.append(int(row[0].strip("%")))
                 mem.append(float(row[1]))
             except:
-                print("line ignored")
         return cpu, mem
 
 
@@ -128,7 +126,7 @@ def plot(x, y1, y2, y3, y1_label, y2_label, y3_label, ylabel, xlabel, title, pat
     if(type=="resp_time"):
         lns1 += ax1.plot(x, y3, label=f'{y3_label}', linestyle="dashed", linewidth=1, marker="x", markersize=3, markeredgewidth=0.8)
 
-    lns1 += ax1.plot(x, y2, label=f'{y2_label}', linestyle="dotted", linewidth=1, marker=".", markersize=4, markeredgewidth=0.8)
+    lns1 += ax1.plot(x, y2, label=f'{y2_label}', linestyle="dotted", linewidth=1, color="C2", marker=".", markersize=4, markeredgewidth=0.8)
 
     ax1.set_xlabel(f'{xlabel}')
     ax1.set_ylabel(f'{ylabel}')
@@ -218,24 +216,13 @@ if __name__ == '__main__':
 
     plot(x, control_cpus, monitored_cpus, detached_mon_cpus,
          "control", "monitored", "detached_mon", "CPU Utilisation (%)", "Requests sent", "CPU Utilisation", plots_path +"cpu_consumption", "cpu_consumption")
-
-    print("control_cpus average", average(control_cpus))
-    print("monitored_cpus average", average(monitored_cpus))
     print("cpu percentage increase control -> monitored", percentage_inc(average(control_cpus), average(monitored_cpus)))
 
-    print(control_mems)
-    print(monitored_mems)
     plot(x, control_mems, monitored_mems, detached_mon_mems,
          "control", "monitored", "detached_mon", "Memory Consumption (MB)", "Requests sent", "Memory Consumption", plots_path +"mem_consumption", "mem_consumption")
-
-    print("control_mems average", average(control_mems))
-    print("monitored_mems average", average(monitored_mems))
     print("memory percentage increase control -> monitored", percentage_inc(average(control_mems), average(monitored_mems)))
 
     plot(x, control_resp_times, monitored_resp_times, detached_mon_resp_times,
          "control", "monitored", "detached_mon", "Response Time (ms)", "Requests sent", "Response Times", plots_path +"resp_time", "resp_time")
-
-    print("control_resp_times average", average(control_resp_times))
-    print("monitored_resp_times average", average(monitored_resp_times))
     print("resp times percentage increase control -> monitored", percentage_inc(average(control_resp_times), average(monitored_resp_times)))
 
