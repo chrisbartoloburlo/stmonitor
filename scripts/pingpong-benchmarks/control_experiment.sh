@@ -3,24 +3,25 @@ run=1
 requests=$1
 rampup=$2
 experiments=$3
+wd=`pwd`
 
 while [ "$experiments" -ne 0 ] ; do
-  echo Running Control lchannels Experiment ${run} with ${requests} requests and ${rampup} seconds rampup time.
+  echo Running Ping Pong Control Experiment ${run} with ${requests} requests and ${rampup} seconds rampup time.
 
-  screen -dm -S stmonbench bash -c "/usr/bin/time --format=\"%P,%M,%K\" java -cp ../../examples-assembly-0.0.3.jar examples.pingpong.ServerWrapper 2>> results/control_lchannels/${requests}_cpu_mem.txt"
+  screen -dm -S stmonbench bash -c "/usr/bin/time --format=\"%P,%M,%K\" java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.pingpong.ServerWrapper 2>> $wd/scripts/pingpong-benchmarks/results/control/${requests}_cpu_mem.txt"
 
   sleep 1
 
   startTime=$(($(date +%s%N)/1000000))
 
-  jmeter -n -t test-plan.jmx -Jpath=/root/documents/experiments/pingpong-separate/results/control_lchannels/${requests}_resp_time_run${run}.csv -Jrequests=${requests} -Jrampup=${rampup}
+  jmeter -n -t test-plan.jmx -Jpath=$wd/scripts/pingpong-benchmarks/results/control/${requests}_resp_time_run${run}.csv -Jrequests=${requests} -Jrampup=${rampup}
 
   endTime=$(($(date +%s%N)/1000000))
   executionTime=$((endTime-startTime)) #in ms
-  echo ${run},${executionTime} >> results/control_lchannels/${requests}_exec_times.txt
+  echo ${run},${executionTime} >> $wd/scripts/pingpong-benchmarks/results/control/${requests}_exec_times.txt
 
   screen -S stmonbench -p 0 -X stuff "^C"
-  echo End of Control lchannels Experiment ${run} with ${requests} requests.
+  echo End of Ping Pong Control Experiment ${run} with ${requests} requests.
   sleep 1
 
   run=$((run+1))

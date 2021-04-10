@@ -81,10 +81,8 @@ def plot(x, y1, y2, y3, y1err, y2err, y3err, y1_label, y2_label, y3_label, ylabe
     lns1 = ax1.plot(x, y1, label=f'{y1_label}', linestyle="solid", linewidth=1, marker="s", markersize=2,
                     markeredgewidth=1)
     if(type=="resp_time"):
-        lns1 += ax1.plot(x, y3, label=f'{y3_label}', linestyle="dashed", linewidth=1, marker="x", markersize=3,
-                     markeredgewidth=0.8)
-    lns1 += ax1.plot(x, y2, label=f'{y2_label}', linestyle="dotted", linewidth=1, color="C2", marker=".", markersize=4,
-                     markeredgewidth=0.8)
+        lns1 += ax1.plot(x, y3, label=f'{y3_label}', linestyle="dashed", linewidth=1, marker="x", markersize=3, markeredgewidth=0.8)
+    lns1 += ax1.plot(x, y2, label=f'{y2_label}', linestyle="dotted", linewidth=1, color="C2", marker=".", markersize=4, markeredgewidth=0.8)
 
     # lns1 = ax1.errorbar(x, y1, label=f'{y1_label}', linestyle="solid", linewidth=1, marker="s", markersize=2, markeredgewidth=1, yerr=y1err, fmt='-')
     # lns1 += ax1.errorbar(x, y2, label=f'{y2_label}', linestyle="dashed", linewidth=1, marker="x", markersize=3, markeredgewidth=0.8, yerr=y2err, fmt='-')

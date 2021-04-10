@@ -9,14 +9,19 @@ if [ "$?" = "1" ]; then
   exit
 fi
 
-sbt examples/assembly
+#sbt examples/assembly
 
 for n in $(seq 2 $#); do
   if [ "$2" = "smtp-python" ]; then
     echo "Running SMTP benchmarks with $1 iterations per experiment"
     sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh $1
   elif [ "$2" == "pingpong" ]; then
+    jmeter -v > /dev/null 2>&1
+    if [ $? -eq 1 ]; then
+      echo "Jmeter not found, cannot run ping pong benchmarks: terminating"
+    fi
     echo "Running Ping Pong benchmarks with $1 iterations per experiment"
+    sh $wd/scripts/pingpong-benchmarks/pingpong_experiments.sh $1
   else
     echo "*** Unknown benchmark: $2 *** Available benchmarks: smtp-python pingpong"
   fi
