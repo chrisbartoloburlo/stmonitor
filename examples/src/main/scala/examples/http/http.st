@@ -22,17 +22,17 @@ S_http=?Request(msg: RequestLine).rec X.(&{
 			!Date(msg: ZonedDateTime).Y
 		}),
 		!Code200(msg: String).rec Z.(+{
-			!ETag(msg: String).Z,
-			!Server(msg: String).Z,
-			!ContentLength(msg: Int).Z,
-			!ContentType(msg: String).Z,
-			!Vary(msg: String).Z,
-			!Via(msg: String).Z,
-			!StrictTS(msg: String).Z,
-			!ResponseBody(msg: Body).end,
-			!AcceptRanges(msg: String).Z,
-			!LastModified(msg: ZonedDateTime).Z,
-			!Date(msg: ZonedDateTime).Z
+			!ETag2(msg: String).Z,
+			!Server2(msg: String).Z,
+			!ContentLength2(msg: Int).Z,
+			!ContentType2(msg: String).Z,
+			!Vary2(msg: String).Z,
+			!Via2(msg: String).Z,
+			!StrictTS2(msg: String).Z,
+			!ResponseBody2(msg: Body).end,
+			!AcceptRanges2(msg: String).Z,
+			!LastModified2(msg: ZonedDateTime).Z,
+			!Date2(msg: ZonedDateTime).Z
 		})
 	}
 })

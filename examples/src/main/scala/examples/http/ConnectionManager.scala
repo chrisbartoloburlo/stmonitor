@@ -4,6 +4,7 @@ import java.net.Socket
 import java.io.{
   BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter
 }
+
 import java.time.format.DateTimeFormatter.{RFC_1123_DATE_TIME => RFCDate}
 
 /** Socket manager for the HTTP protocol.
@@ -36,18 +37,18 @@ class ConnectionManager(socket: Socket, relaxHeaders: Boolean, logger: (String) 
     case Code200(msg) => outb.write(f"200 ${msg}${crlf}"); outb.flush()
     case Code404(msg) => outb.write(f"404 ${msg}${crlf}"); outb.flush()
 
-    case Date_19(date) => outb.write(f"Date: ${date.format(RFCDate)}${crlf}"); outb.flush()
-    case Date_31(date) => outb.write(f"Date: ${date.format(RFCDate)}${crlf}"); outb.flush()
-    case Server_10(srv) => outb.write(f"Server: ${srv}${crlf}"); outb.flush()
-    case Server_22(srv) => outb.write(f"Server: ${srv}${crlf}"); outb.flush()
-    case ResponseBody_16(body) =>
+    case Date(date) => outb.write(f"Date: ${date.format(RFCDate)}${crlf}"); outb.flush()
+    case Date2(date) => outb.write(f"Date: ${date.format(RFCDate)}${crlf}"); outb.flush()
+    case Server(srv) => outb.write(f"Server: ${srv}${crlf}"); outb.flush()
+    case Server2(srv) => outb.write(f"Server: ${srv}${crlf}"); outb.flush()
+    case ResponseBody(body) =>
       outb.write(f"Content-Type: ${body.contentType}${crlf}");
       outb.flush()
       outb.write(f"Content-Length: ${body.contents.size}${crlf}${crlf}");
       outb.flush()
       out.write(body.contents) // NOTE: bypass outb, to preserve encoding
       outb.close()
-    case ResponseBody_28(body) =>
+    case ResponseBody2(body) =>
       outb.write(f"Content-Type: ${body.contentType}${crlf}");
       outb.flush()
       outb.write(f"Content-Length: ${body.contents.size}${crlf}${crlf}");

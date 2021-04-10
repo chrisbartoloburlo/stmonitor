@@ -3,7 +3,6 @@ package examples.http
 import lchannels._
 
 import scala.concurrent.duration._
-import java.net.Socket
 import java.nio.file.{Path, Paths}
 import java.time.ZonedDateTime
 import com.typesafe.scalalogging.StrictLogging
@@ -94,124 +93,160 @@ case class MPCode200OrCode404(c: Out[InternalChoice3]) {
 
 case class MPResponseChoice200(c: Out[InternalChoice2]) {
   def send(v: MPAcceptRanges): MPResponseChoice200 = {
-    val cnt = c !! AcceptRanges_29(v.p)_
+    val cnt = c !! AcceptRanges2(v.p)_
     MPResponseChoice200(cnt)
   }
   def send(v: MPContentLength): MPResponseChoice200 = {
-    val cnt = c !! ContentLength_23(v.p)_
+    val cnt = c !! ContentLength2(v.p)_
     MPResponseChoice200(cnt)
   }
   def send(v: MPContentType): MPResponseChoice200 = {
-    val cnt = c !! ContentType_24(v.p)_
+    val cnt = c !! ContentType2(v.p)_
     MPResponseChoice200(cnt)
   }
   def send(v: MPDate): MPResponseChoice200 = {
-    val cnt = c !! Date_31(v.p)_
+    val cnt = c !! Date2(v.p)_
     MPResponseChoice200(cnt)
   }
   def send(v: MPETag): MPResponseChoice200 = {
-    val cnt = c !! ETag_21(v.p)_
+    val cnt = c !! ETag2(v.p)_
     MPResponseChoice200(cnt)
   }
   def send(v: MPLastModified): MPResponseChoice200 = {
-    val cnt = c !! LastModified_30(v.p)_
+    val cnt = c !! LastModified2(v.p)_
     MPResponseChoice200(cnt)
   }
   def send(v: MPResponseBody): Unit = {
-    c ! ResponseBody_28(v.p)
+    c ! ResponseBody2(v.p)
   }
   def send(v: MPServer): MPResponseChoice200 = {
-    val cnt = c !! Server_22(v.p)_
+    val cnt = c !! Server2(v.p)_
     MPResponseChoice200(cnt)
   }
   def send(v: MPStrictTS): MPResponseChoice200 = {
-    val cnt = c !! StrictTS_27(v.p)_
+    val cnt = c !! StrictTS2(v.p)_
     MPResponseChoice200(cnt)
   }
   def send(v: MPVary): MPResponseChoice200 = {
-    val cnt = c !! Vary_25(v.p)_
+    val cnt = c !! Vary2(v.p)_
     MPResponseChoice200(cnt)
   }
   def send(v: MPVia): MPResponseChoice200 = {
-    val cnt = c !! Via_26(v.p)_
+    val cnt = c !! Via2(v.p)_
     MPResponseChoice200(cnt)
   }
 }
 
 case class MPResponseChoice404(c: Out[InternalChoice1]) {
   def send(v: MPAcceptRanges): MPResponseChoice404 = {
-    val cnt = c !! AcceptRanges_17(v.p)_
+    val cnt = c !! AcceptRanges(v.p)_
     MPResponseChoice404(cnt)
   }
   def send(v: MPContentLength): MPResponseChoice404 = {
-    val cnt = c !! ContentLength_11(v.p)_
+    val cnt = c !! ContentLength(v.p)_
     MPResponseChoice404(cnt)
   }
   def send(v: MPContentType): MPResponseChoice404 = {
-    val cnt = c !! ContentType_12(v.p)_
+    val cnt = c !! ContentType(v.p)_
     MPResponseChoice404(cnt)
   }
   def send(v: MPDate): MPResponseChoice404 = {
-    val cnt = c !! Date_19(v.p)_
+    val cnt = c !! Date(v.p)_
     MPResponseChoice404(cnt)
   }
   def send(v: MPETag): MPResponseChoice404 = {
-    val cnt = c !! ETag_9(v.p)_
+    val cnt = c !! ETag(v.p)_
     MPResponseChoice404(cnt)
   }
   def send(v: MPLastModified): MPResponseChoice404 = {
-    val cnt = c !! LastModified_18(v.p)_
+    val cnt = c !! LastModified(v.p)_
     MPResponseChoice404(cnt)
   }
   def send(v: MPResponseBody): Unit = {
-    c ! ResponseBody_16(v.p)
+    c ! ResponseBody(v.p)
   }
   def send(v: MPServer): MPResponseChoice404 = {
-    val cnt = c !! Server_10(v.p)_
+    val cnt = c !! Server(v.p)_
     MPResponseChoice404(cnt)
   }
   def send(v: MPStrictTS): MPResponseChoice404 = {
-    val cnt = c !! StrictTS_15(v.p)_
+    val cnt = c !! StrictTS(v.p)_
     MPResponseChoice404(cnt)
   }
   def send(v: MPVary): MPResponseChoice404 = {
-    val cnt = c !! Vary_13(v.p)_
+    val cnt = c !! Vary(v.p)_
     MPResponseChoice404(cnt)
   }
   def send(v: MPVia): MPResponseChoice404 = {
-    val cnt = c !! Via_14(v.p)_
+    val cnt = c !! Via(v.p)_
     MPResponseChoice404(cnt)
   }
 }
 
-
-object Server extends App {
+object UnsafeServer {
   def run(): Unit = main(Array())
 
-  import java.net.{InetAddress, ServerSocket}
-  val root = java.nio.file.FileSystems.getDefault.getPath("").toAbsolutePath
+  def main(args: Array[String]) {
+    import java.net.{InetAddress, ServerSocket}
+    import java.util.concurrent.{Executors, ExecutorService}
 
-  val address = InetAddress.getByName(null)
-  val port = 8080
-  val ssocket = new ServerSocket(port, 0, address)
+    val root = java.nio.file.FileSystems.getDefault.getPath("").toAbsolutePath
 
-  println(f"[*] HTTP server listening on: http://${address.getHostAddress}:${port}/")
-  println(f"[*] Root directory: ${root}")
-  println(f"[*] Press Ctrl+C to terminate")
+    val address = InetAddress.getByName(null)
+    val port = 8080
+    val ssocket = new ServerSocket(port, 1, address)
 
-  implicit val timeout: FiniteDuration = 30.seconds
-  accept(1)
+    println(f"[*] HTTP server listening on: http://${address.getHostAddress}:${port}/")
+    println(f"[*] Root directory: ${root}")
+    println(f"[*] Press Ctrl+C to terminate")
 
-  @scala.annotation.tailrec
-  def accept(nextWorkerId: Int) {
-    val client = ssocket.accept()
-    println(f"[*] Connection from ${client.getInetAddress}, spawning worker")
-    new Worker(nextWorkerId, client, root)
-    accept(nextWorkerId + 1)
+    implicit val timeout: FiniteDuration = 30.seconds
+    val nproc = math.max(Runtime.getRuntime().availableProcessors(), 4)
+    val pool: ExecutorService = Executors.newFixedThreadPool(nproc)
+
+    while (true) {
+      val client = ssocket.accept()
+
+      val mgr = new HttpServerSocketManager(client, true, println(_))
+      val in = SocketIn[Request](mgr)
+      pool.execute(new Worker(in, root))
+    }
   }
 }
 
-class Worker(id: Int, socket: Socket, root: Path)(implicit timeout: Duration)
+object ServerWithMonitor {
+  def run(): Unit = main(Array())
+
+  def main(args: Array[String]) {
+    import java.net.{InetAddress, ServerSocket}
+    import java.util.concurrent.{Executors, ExecutorService}
+
+    val root = java.nio.file.FileSystems.getDefault.getPath("").toAbsolutePath
+
+    val address = InetAddress.getByName(null)
+    val port = 8080
+    val ssocket = new ServerSocket(port, 1, address)
+
+    println(f"[*] HTTP server with client monitor listening on: http://${address.getHostAddress}:${port}/")
+    println(f"[*] Root directory: ${root}")
+    println(f"[*] Press Ctrl+C to terminate")
+
+    implicit val timeout: FiniteDuration = 30.seconds
+    val nproc = math.max(Runtime.getRuntime().availableProcessors(), 4)
+    val pool: ExecutorService = Executors.newFixedThreadPool(nproc)
+
+    while (true) {
+      val client = ssocket.accept()
+
+      val cm = new ConnectionManager(client, true, println(_))
+      val (in, out) = LocalChannel.factory[Request]()
+      pool.execute(new Worker(in, root))
+      pool.execute(new Mon(cm, out, 300)(global, timeout))   
+    }
+  }
+}
+
+class Worker(in: In[Request], root: Path)(implicit timeout: Duration)
   extends Runnable with StrictLogging {
   private def logTrace(msg: String): Unit = logger.trace(msg)
   private def logDebug(msg: String): Unit = logger.debug(msg)
@@ -222,35 +257,16 @@ class Worker(id: Int, socket: Socket, root: Path)(implicit timeout: Duration)
   private val serverName = "lchannels HTTP server"
   private val pslash = Paths.get("/") // Used to relativize request paths
 
-  // Own thread
-  private val thread = { val t = new Thread(this); t.start(); t }
-  def join(): Unit = thread.join()
-
   override def run(): Unit = {
     logInfo("Started.")
 
-    val cm = new ConnectionManager(socket, true, logInfo)
-    val (in, out) = LocalChannel.factory[Request]()
-    val mon = new Mon(cm, out, 300)(global, timeout)
-    val monThread = new Thread {
-      override def run(): Unit = {
-        mon.run()
-      }
-    }
-
     val r = MPRequest(in)
-
-    monThread.start()
 
     val (rpath, cont) = {
       try getRequest(r)
       catch {
-        case cm.ConnectionClosed(msg) =>
-          logInfo(msg)
-          return
         case e: java.util.concurrent.TimeoutException =>
           logInfo(f"Timeout error: ${e.getMessage}")
-          cm.close()
           logInfo("Terminating.")
           return
       }
