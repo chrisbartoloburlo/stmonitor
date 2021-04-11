@@ -1,6 +1,7 @@
 import csv
 import matplotlib.pyplot as plt
 import statistics
+import pandas as pd
 import sys
 
 def extract_resp_time_info(path):
@@ -26,10 +27,11 @@ def extract_cpu_mem_info(path, requests):
         mem = []
         for row in plots:
             try:
+                print(f'CPU: {int(row[0].strip("%"))} MEM: {float(row[1])}')
                 cpu.append(int(row[0].strip("%")))
                 mem.append(float(row[1]))
             except:
-                None
+                print("line ignored")
         return cpu, mem
 
 
@@ -42,6 +44,13 @@ def extract_exec_time_info(path):
         for row in plots:
             exectime.append(int(row[1]))
         return exectime
+
+
+def get_moving_average(lst, window):
+    numbers_series = pd.Series(lst)
+    windows = numbers_series.rolling(window, min_periods=1)
+    moving_averages = windows.mean()
+    return moving_averages.tolist()
 
 
 def collective_res(path, runs, requests):
@@ -70,7 +79,9 @@ def individual_experiment(path, runs, requests):
     collective_avg_time = get_average(collective_time, runs)
     collective_avg_err = get_average(collective_err, runs)
     collective_avg_cpu = average(collective_cpu)
+    print(f'collective_avg_cpu: {collective_avg_cpu}')
     collective_avg_mem = average(collective_mem)
+    print(f'average(collective_mem) {average(collective_mem)}')
 
     collective_avg_exec_times = average(collective_exec_times)
     return collective_avg_time, collective_avg_err, collective_avg_cpu, collective_avg_mem, collective_avg_exec_times
@@ -99,7 +110,7 @@ def plot_response_time_err_individual(x, plot_err, control_time, monitored_time,
     plt.show()
 
 
-def plot(x, y1, y2, y3, y1_label, y2_label, y3_label, ylabel, xlabel, title, path, type):
+def plot(x, y1, y2, y1_label, y2_label, ylabel, xlabel, title, path):
     # plt.rcParams.update({
     #     "figure.figsize": (2.8, 2),
     #     "pgf.texsystem": "pdflatex",
@@ -123,10 +134,7 @@ def plot(x, y1, y2, y3, y1_label, y2_label, y3_label, ylabel, xlabel, title, pat
     ax1.tick_params(axis="y", direction="in")
     ax1.tick_params(axis="x", direction="in")
 
-    lns1 = ax1.plot(x, y1, label=f'{y1_label}', linestyle="solid", linewidth=1, marker="s", markersize=2, markeredgewidth=1)
-    if(type=="resp_time"):
-        lns1 += ax1.plot(x, y3, label=f'{y3_label}', linestyle="dashed", linewidth=1, marker="x", markersize=3, markeredgewidth=0.8)
-
+    lns1 = ax1.plot(x, y1, label=f'{y1_label}', linestyle="solid", linewidth=1, color="C0", marker="s", markersize=2, markeredgewidth=1)
     lns1 += ax1.plot(x, y2, label=f'{y2_label}', linestyle="dotted", linewidth=1, color="C2", marker=".", markersize=4, markeredgewidth=0.8)
 
     ax1.set_xlabel(f'{xlabel}')
@@ -136,6 +144,7 @@ def plot(x, y1, y2, y3, y1_label, y2_label, y3_label, ylabel, xlabel, title, pat
 
     plt.savefig(f'{path}.pdf', dpi=300)
     # plt.show()
+
 
 def plot_cpu_mem_individual(cpu, cpu_mem_sizes, control_cpu_mem, monitored_cpu_mem, requests):
     x_2 = range(0, min(cpu_mem_sizes))
@@ -166,8 +175,9 @@ def percentage_inc(original, new):
 
 if __name__ == '__main__':
     plt.style.use('seaborn-deep')
+    print(plt.style.available)
 
-    path = sys.argv[1]+'/scripts/pingpong-benchmarks'
+    path = sys.argv[1]+'/scripts/http-benchmarks'
     runs = int(sys.argv[2])
 
     control_resp_times = []
@@ -182,16 +192,9 @@ if __name__ == '__main__':
     monitored_mems = []
     monitored_exec_times = []
 
-    detached_mon_resp_times = []
-    detached_mon_errs = []
-    detached_mon_cpus = []
-    detached_mon_mems = []
-    detached_mon_exec_times = []
-
     for iterations in range(100, 2001, 100):
-        control_collective_avg_time, control_collective_avg_err, control_collective_avg_cpu, control_collective_avg_mem, control_collective_avg_total_time = individual_experiment(path+'/results/control', runs, iterations)
-        monitored_collective_avg_time, monitored_collective_avg_err, monitored_collective_avg_cpu, monitored_collective_avg_mem, monitored_avg_total_time = individual_experiment(path+'/results/monitored', runs, iterations)
-        detached_mon_collective_avg_time, detached_mon_collective_avg_err, detached_mon_collective_avg_cpu, detached_mon_collective_avg_mem, detached_mon_collective_avg_total_time = individual_experiment(path+'/results/detached_monitored', runs, iterations)
+        control_collective_avg_time, control_collective_avg_err, control_collective_avg_cpu, control_collective_avg_mem, control_collective_avg_total_time = individual_experiment(path+"/results/control", runs, iterations)
+        monitored_collective_avg_time, monitored_collective_avg_err, monitored_collective_avg_cpu, monitored_collective_avg_mem, monitored_avg_total_time = individual_experiment(path+"/results/monitored", runs, iterations)
 
         control_resp_times.append(average(control_collective_avg_time))
         control_errs.append(average(control_collective_avg_err))
@@ -205,25 +208,18 @@ if __name__ == '__main__':
         monitored_mems.append(monitored_collective_avg_mem)
         monitored_exec_times.append(monitored_avg_total_time)
 
-        detached_mon_resp_times.append(average(detached_mon_collective_avg_time))
-        detached_mon_errs.append(average(detached_mon_collective_avg_err))
-        detached_mon_cpus.append(detached_mon_collective_avg_cpu)
-        detached_mon_mems.append(detached_mon_collective_avg_mem)
-        detached_mon_exec_times.append(detached_mon_collective_avg_total_time)
-
     x = range(100, 2001, 100)
 
     plots_path = path+"/plots/"
 
-    plot(x, control_cpus, monitored_cpus, detached_mon_cpus,
-         "unsafe", "monitored", "detached_mon", "CPU Utilisation (%)", "Requests sent", "CPU Utilisation", plots_path +"cpu_consumption", "cpu_consumption")
     print("cpu percentage increase control -> monitored", percentage_inc(average(control_cpus), average(monitored_cpus)))
+    plot(x, control_cpus, monitored_cpus,
+         "control", "monitored", "CPU Utilisation (%)", "Requests sent", "CPU Utilisation", plots_path+"cpu_consumption")
 
-    plot(x, control_mems, monitored_mems, detached_mon_mems,
-         "unsafe", "monitored", "detached_mon", "Memory Consumption (MB)", "Requests sent", "Memory Consumption", plots_path +"mem_consumption", "mem_consumption")
     print("memory percentage increase control -> monitored", percentage_inc(average(control_mems), average(monitored_mems)))
+    plot(x, control_mems, monitored_mems,
+         "unsafe", "monitored", "Memory Consumption (MB)", "Requests sent", "Memory Consumption", plots_path+"mem_consumption")
 
-    plot(x, control_resp_times, monitored_resp_times, detached_mon_resp_times,
-         "unsafe", "monitored", "detached_mon", "Response Time (ms)", "Requests sent", "Response Times", plots_path +"resp_time", "resp_time")
     print("resp times percentage increase control -> monitored", percentage_inc(average(control_resp_times), average(monitored_resp_times)))
-
+    plot(x, control_resp_times, monitored_resp_times,
+         "unsafe", "monitored", "Response Time (ms)", "Requests sent", "Response Times", plots_path+"resp_time")
