@@ -23,6 +23,14 @@ for n in $(seq 2 $#); do
       echo "Running Ping Pong benchmarks with $1 iterations per experiment"
       sh $wd/scripts/pingpong-benchmarks/pingpong_experiments.sh $1
     fi
+  elif [ "$2" = "http" ]; then
+    jmeter -v > /dev/null 2>&1
+    if [ "$?" = "1" ]; then
+      echo "Jmeter not found, skipping HTTP benchmarks"
+    else
+      echo "Running HTTP benchmarks with $1 iterations per experiment"
+      sh $wd/scripts/http-benchmarks/http_experiments.sh $1
+    fi
   else
     echo "*** Unknown benchmark: $2 *** Available benchmarks: smtp-python pingpong"
   fi
