@@ -9,7 +9,7 @@ if [ "$?" = "1" ]; then
   exit
 fi
 
-#sbt examples/assembly
+sbt examples/assembly
 
 for n in $(seq 2 $#); do
   if [ "$2" = "smtp-python" ]; then

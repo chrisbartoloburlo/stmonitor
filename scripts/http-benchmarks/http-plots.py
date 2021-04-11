@@ -1,7 +1,6 @@
 import csv
 import matplotlib.pyplot as plt
 import statistics
-import pandas as pd
 import sys
 
 def extract_resp_time_info(path):
@@ -27,11 +26,10 @@ def extract_cpu_mem_info(path, requests):
         mem = []
         for row in plots:
             try:
-                print(f'CPU: {int(row[0].strip("%"))} MEM: {float(row[1])}')
                 cpu.append(int(row[0].strip("%")))
                 mem.append(float(row[1]))
             except:
-                print("line ignored")
+                None
         return cpu, mem
 
 
@@ -44,14 +42,6 @@ def extract_exec_time_info(path):
         for row in plots:
             exectime.append(int(row[1]))
         return exectime
-
-
-def get_moving_average(lst, window):
-    numbers_series = pd.Series(lst)
-    windows = numbers_series.rolling(window, min_periods=1)
-    moving_averages = windows.mean()
-    return moving_averages.tolist()
-
 
 def collective_res(path, runs, requests):
     collective_time = []
@@ -79,9 +69,7 @@ def individual_experiment(path, runs, requests):
     collective_avg_time = get_average(collective_time, runs)
     collective_avg_err = get_average(collective_err, runs)
     collective_avg_cpu = average(collective_cpu)
-    print(f'collective_avg_cpu: {collective_avg_cpu}')
     collective_avg_mem = average(collective_mem)
-    print(f'average(collective_mem) {average(collective_mem)}')
 
     collective_avg_exec_times = average(collective_exec_times)
     return collective_avg_time, collective_avg_err, collective_avg_cpu, collective_avg_mem, collective_avg_exec_times
@@ -175,7 +163,6 @@ def percentage_inc(original, new):
 
 if __name__ == '__main__':
     plt.style.use('seaborn-deep')
-    print(plt.style.available)
 
     path = sys.argv[1]+'/scripts/http-benchmarks'
     runs = int(sys.argv[2])
