@@ -1,9 +1,9 @@
 // Kludge to avoid building an empty .jar for the root project
 Keys.`package` := {
-  (Keys.`package` in (lchannels, Compile)).value
-  (Keys.`package` in (monitor, Compile)).value
-  (Keys.`package` in (examples, Compile)).value
-  (Keys.`package` in (benchmarks, Compile)).value
+  (lchannels / Compile / Keys.`package`).value
+  (monitor / Compile / Keys.`package`).value
+  (examples / Compile / Keys.`package`).value
+  (benchmarks / Compile / Keys.`package`).value
 }
 
 lazy val commonSettings = Seq(
@@ -14,7 +14,7 @@ lazy val commonSettings = Seq(
   ),
   // ScalaDoc setup
   autoAPIMappings := true,
-  scalacOptions in (Compile,doc) ++= Seq(
+  Compile / doc / scalacOptions ++= Seq(
     "-no-link-warnings" // Workaround for ScalaDoc @throws links issues
   )
 )
