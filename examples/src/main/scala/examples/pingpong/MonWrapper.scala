@@ -81,7 +81,7 @@ object MonWrapper {
     val timeout = Duration.Inf
     val (in, out) = LocalChannel.factory[ExternalChoice1]
     val mon = new Mon(mgr, out, 300)(ec, timeout)
-    val server = new Server(in)(timeout)
+    val server = new ServerLogic(in)(timeout)
     pool.execute(server)
     mon.run()
   }

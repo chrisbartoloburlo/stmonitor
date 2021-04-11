@@ -1,26 +1,10 @@
 package examples.pingpong
 
-import lchannels.{HttpServerIn, HttpServerManager, HttpServerOut, In}
+import lchannels.{HttpServerIn, HttpServerManager, HttpServerOut}
 
 import scala.concurrent.duration.Duration
 import java.net.{ServerSocket, Socket}
 import scala.collection.mutable
-
-class Server(pinger: In[ExternalChoice1])(implicit timeout: Duration) extends Runnable {
-  override def run(): Unit = {
-    var resp = pinger
-    var exit = false
-    while (!exit) {
-      resp ? {
-        case ping @ Ping() =>
-          resp = ping.cont !! Pong()
-        case quit @ Quit() =>
-          exit = true
-      }
-    }
-  }
-}
-
 
 object ServerWrapper {
   import rawhttp.core.RawHttpRequest
@@ -109,7 +93,7 @@ object ServerWrapper {
         }
         if (manager.isDefined) {
           val sPinger = HttpServerIn[ExternalChoice1](manager.get)
-          val server = new Server(sPinger)(timeout)
+          val server = new ServerLogic(sPinger)(timeout)
           server.run()
         }
       }
