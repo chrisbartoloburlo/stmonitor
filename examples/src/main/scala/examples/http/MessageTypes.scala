@@ -45,7 +45,7 @@ case class MPRequest(c: In[Request]) {
   }
 }
 
-case class MPRequestChoice(c: In[ExternalChoice1]) {
+case class MPRequestChoice(c: In[InternalChoice1]) {
   def receive(implicit timeout: Duration = Duration.Inf): MsgMPRequestChoice = {
     c.receive(timeout) match {
       case m @ Accept(p) =>
@@ -77,7 +77,7 @@ case class MPHttpVersion(c: Out[HttpVersion]) {
   }
 }
 
-case class MPCode200OrCode404(c: Out[InternalChoice3]) {
+case class MPCode200OrCode404(c: Out[ExternalChoice3]) {
   def send(v: MPCode200): MPResponseChoice200 = {
     val cnt = c !! Code200(v.p)_
     MPResponseChoice200(cnt)
@@ -88,7 +88,7 @@ case class MPCode200OrCode404(c: Out[InternalChoice3]) {
   }
 }
 
-case class MPResponseChoice200(c: Out[InternalChoice2]) {
+case class MPResponseChoice200(c: Out[ExternalChoice2]) {
   def send(v: MPAcceptRanges): MPResponseChoice200 = {
     val cnt = c !! AcceptRanges2(v.p)_
     MPResponseChoice200(cnt)
@@ -134,7 +134,7 @@ case class MPResponseChoice200(c: Out[InternalChoice2]) {
   }
 }
 
-case class MPResponseChoice404(c: Out[InternalChoice1]) {
+case class MPResponseChoice404(c: Out[ExternalChoice1]) {
   def send(v: MPAcceptRanges): MPResponseChoice404 = {
     val cnt = c !! AcceptRanges(v.p)_
     MPResponseChoice404(cnt)

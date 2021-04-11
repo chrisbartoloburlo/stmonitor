@@ -74,7 +74,7 @@ class HttpServerSocketManager(socket: Socket,
           val m = Method(method)
           val path = new URI(uri).getPath
           val v = Version(version)
-          return Request(RequestLine(m, path, v))(SocketIn[ExternalChoice1](this))
+          return Request(RequestLine(m, path, v))(SocketIn[InternalChoice1](this))
         }
         
         case null => {
@@ -90,14 +90,14 @@ class HttpServerSocketManager(socket: Socket,
     
     // If we are here, then requestStarted was false
     line match {
-      case acceptR(fmts) => Accept(fmts)(SocketIn[ExternalChoice1](this))
-      case acceptEncR(encs) => AcceptEncodings(encs)(SocketIn[ExternalChoice1](this))
-      case acceptLangR(langs) => AcceptLanguage(langs)(SocketIn[ExternalChoice1](this))
-      case connectionR(conn) => Connection(conn)(SocketIn[ExternalChoice1](this))
-      case dntR(dnt) => DoNotTrack(dnt == 1)(SocketIn[ExternalChoice1](this))
-      case hostR(host) => Host(host)(SocketIn[ExternalChoice1](this))
-      case upgradeirR(up) => UpgradeIR(up == 1)(SocketIn[ExternalChoice1](this))
-      case useragentR(ua) => UserAgent(ua)(SocketIn[ExternalChoice1](this))
+      case acceptR(fmts) => Accept(fmts)(SocketIn[InternalChoice1](this))
+      case acceptEncR(encs) => AcceptEncodings(encs)(SocketIn[InternalChoice1](this))
+      case acceptLangR(langs) => AcceptLanguage(langs)(SocketIn[InternalChoice1](this))
+      case connectionR(conn) => Connection(conn)(SocketIn[InternalChoice1](this))
+      case dntR(dnt) => DoNotTrack(dnt == 1)(SocketIn[InternalChoice1](this))
+      case hostR(host) => Host(host)(SocketIn[InternalChoice1](this))
+      case upgradeirR(up) => UpgradeIR(up == 1)(SocketIn[InternalChoice1](this))
+      case useragentR(ua) => UserAgent(ua)(SocketIn[InternalChoice1](this))
       
       case genericHeaderR(h, _) if relaxHeaders => {
         // Ignore this header, and keep looking for something supported

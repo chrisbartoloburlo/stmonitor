@@ -1,12 +1,10 @@
 package examples.smtp
-
 import lchannels.{In, Out}
-
+import monitor.util.ConnectionManager
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.util.control.TailCalls.{TailRec, done, tailcall}
-
-class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {
+class Monitor(external: ConnectionManager, internal: Out[M220], max: Int, report: String => Unit)(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {
 	object payloads {
 		object M220_17 {
 			var msg: String = _
@@ -57,8 +55,7 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 		}
 	}
 	override def run(): Unit = {
-    println("[Mon] Monitor started")
-    println("[Mon] Setting up connection manager")
+		report("[MONITOR] Monitor started, setting up connection manager")
 		external.setup()
 		receiveM220_17(internal, external, 0).result
     external.close()
@@ -70,7 +67,7 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 				if (count < max) {
 					sendExternalChoice3(cont, external, count+1)
 				} else { tailcall(sendExternalChoice3(cont, external,0)) }
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
 	def sendExternalChoice3(internal: In[ExternalChoice3], external: ConnectionManager, count: Int): TailRec[Unit] = {
@@ -85,7 +82,7 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 				if (count < max) {
 					receiveM221_15(msg.cont, external, count+1)
 				} else { tailcall(receiveM221_15(msg.cont, external, 0)) }
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
   def receiveM250_13(internal: Out[M250_13], external: ConnectionManager, count: Int): TailRec[Unit] = {
@@ -95,7 +92,7 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 				if (count < max) {
 					sendExternalChoice2(cont, external, count+1)
 				} else { tailcall(sendExternalChoice2(cont, external,0)) }
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
 	def sendExternalChoice2(internal: In[ExternalChoice2], external: ConnectionManager, count: Int): TailRec[Unit] = {
@@ -110,7 +107,7 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 				if (count < max) {
 					receiveM221_11(msg.cont, external, count+1)
 				} else { tailcall(receiveM221_11(msg.cont, external, 0)) }
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
   def receiveM250_9(internal: Out[M250_9], external: ConnectionManager, count: Int): TailRec[Unit] = {
@@ -120,7 +117,7 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 				if (count < max) {
 					sendExternalChoice1(cont, external, count+1)
 				} else { tailcall(sendExternalChoice1(cont, external,0)) }
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
 	def sendExternalChoice1(internal: In[ExternalChoice1], external: ConnectionManager, count: Int): TailRec[Unit] = {
@@ -140,7 +137,7 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 				if (count < max) {
 					receiveM221_7(msg.cont, external, count+1)
 				} else { tailcall(receiveM221_7(msg.cont, external, 0)) }
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
   def receiveM250_1(internal: Out[M250_1], external: ConnectionManager, count: Int): TailRec[Unit] = {
@@ -150,7 +147,7 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 				if (count < max) {
 					sendExternalChoice1(cont, external, count+1)
 				} else { tailcall(sendExternalChoice1(cont, external,0)) }
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
   def receiveM354_5(internal: Out[M354], external: ConnectionManager, count: Int): TailRec[Unit] = {
@@ -160,7 +157,7 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 				if (count < max) {
 					sendContent_4(cont, external, count+1)
 				} else { tailcall(sendContent_4(cont, external, 0)) }
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
 	def sendContent_4(internal: In[Content], external: ConnectionManager, count: Int): TailRec[Unit] = {
@@ -170,7 +167,7 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 				if (count < max) {
 					receiveM250_3(msg.cont, external, count+1)
 				} else { tailcall(receiveM250_3(msg.cont, external, 0)) }
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
   def receiveM250_3(internal: Out[M250_3], external: ConnectionManager, count: Int): TailRec[Unit] = {
@@ -180,28 +177,28 @@ class Mon(external: ConnectionManager, internal: Out[M220], max: Int)(implicit e
 				if (count < max) {
 					sendExternalChoice2(cont, external, count+1)
 				} else { tailcall(sendExternalChoice2(cont, external,0)) }
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
   def receiveM221_7(internal: Out[M221_7], external: ConnectionManager, count: Int): TailRec[Unit] = {
 		external.receive() match {
 			case msg @ M221_7(_)=>
 				internal ! msg; done()
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
   def receiveM221_11(internal: Out[M221_11], external: ConnectionManager, count: Int): TailRec[Unit] = {
 		external.receive() match {
 			case msg @ M221_11(_)=>
 				internal ! msg; done()
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
   def receiveM221_15(internal: Out[M221_15], external: ConnectionManager, count: Int): TailRec[Unit] = {
 		external.receive() match {
 			case msg @ M221_15(_)=>
 				internal ! msg; done()
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
 }

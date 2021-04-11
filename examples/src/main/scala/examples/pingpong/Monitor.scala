@@ -1,11 +1,10 @@
 package examples.pingpong
-
 import lchannels.{In, Out}
 import monitor.util.ConnectionManager
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.util.control.TailCalls.{TailRec, done, tailcall}
-class Mon(external: ConnectionManager, internal: Out[ExternalChoice1], max: Int)(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {
+class Monitor(external: ConnectionManager, internal: Out[InternalChoice1], max: Int, report: String => Unit)(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {
 	object payloads {
 		object Ping_2 {
 		}
@@ -15,11 +14,12 @@ class Mon(external: ConnectionManager, internal: Out[ExternalChoice1], max: Int)
 		}
 	}
 	override def run(): Unit = {
+		report("[MONITOR] Monitor started, setting up connection manager")
 		external.setup()
-		receiveExternalChoice1(internal, external, 0).result
+		receiveInternalChoice1(internal, external, 0).result
     external.close()
   }
-	def receiveExternalChoice1(internal: Out[ExternalChoice1], external: ConnectionManager, count: Int): TailRec[Unit] = {
+	def receiveInternalChoice1(internal: Out[InternalChoice1], external: ConnectionManager, count: Int): TailRec[Unit] = {
 		external.receive() match {
 			case msg @ Ping()=>
 				val cont = internal !! Ping()_
@@ -28,7 +28,7 @@ class Mon(external: ConnectionManager, internal: Out[ExternalChoice1], max: Int)
 				} else { tailcall(sendPong_1(cont, external, 0)) }
 			case msg @ Quit()=>
 				internal ! msg; done()
-			case _ => done()
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
 	def sendPong_1(internal: In[Pong], external: ConnectionManager, count: Int): TailRec[Unit] = {
@@ -36,9 +36,9 @@ class Mon(external: ConnectionManager, internal: Out[ExternalChoice1], max: Int)
 			case msg @ Pong() =>
 				external.send(msg)
 				if (count < max) {
-					receiveExternalChoice1(msg.cont, external, count+1)
-				} else { tailcall(receiveExternalChoice1(msg.cont, external, 0)) }
-			case _ => done()
+					receiveInternalChoice1(msg.cont, external, count+1)
+				} else { tailcall(receiveInternalChoice1(msg.cont, external, 0)) }
+			case msg @ _ => report(f"[MONITOR] VIOLATION unknown message: $msg"); done()
 		}
 	}
 }

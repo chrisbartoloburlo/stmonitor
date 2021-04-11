@@ -79,8 +79,11 @@ object MonWrapper {
     // A manager has been created, let's instantiate the monitor too
     val ec =  scala.concurrent.ExecutionContext.global
     val timeout = Duration.Inf
-    val (in, out) = LocalChannel.factory[ExternalChoice1]
-    val mon = new Mon(mgr, out, 300)(ec, timeout)
+    val (in, out) = LocalChannel.factory[InternalChoice1]
+    def report(msg: String): Unit = {
+      println(msg)
+    }
+    val mon = new Monitor(mgr, out, 300, report)(ec, timeout)
     val server = new ServerLogic(in)(timeout)
     pool.execute(server)
     mon.run()
@@ -93,8 +96,11 @@ object MonWrapper {
     val ec =  scala.concurrent.ExecutionContext.global
     val timeout = Duration.Inf
     val httpClientMgr = new PingPongManager(sessionId, host, port)
-    val out = HttpClientOut[ExternalChoice1](httpClientMgr)
-    val mon = new Mon(mgr, out, 300)(ec, timeout)
+    val out = HttpClientOut[InternalChoice1](httpClientMgr)
+    def report(msg: String): Unit = {
+      println(msg)
+    }
+    val mon = new Monitor(mgr, out, 300, report)(ec, timeout)
     mon.run()
   }
 

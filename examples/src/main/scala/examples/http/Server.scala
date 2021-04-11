@@ -40,6 +40,10 @@ object UnsafeServer {
 object ServerWithMonitor {
   def run(): Unit = main(Array())
 
+  def report(msg: String): Unit = {
+    println(msg)
+  }
+
   def main(args: Array[String]) {
     import java.net.{InetAddress, ServerSocket}
     import java.util.concurrent.{Executors, ExecutorService}
@@ -64,7 +68,7 @@ object ServerWithMonitor {
       val cm = new ConnectionManager(client, true, println(_))
       val (in, out) = LocalChannel.factory[Request]()
       pool.execute(new Worker(in, root))
-      pool.execute(new Mon(cm, out, 300)(global, timeout))
+      pool.execute(new Monitor(cm, out, 300, report)(global, timeout))
     }
   }
 }

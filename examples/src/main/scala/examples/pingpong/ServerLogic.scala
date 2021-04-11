@@ -4,7 +4,7 @@ import scala.concurrent.duration.Duration
 
 import lchannels.In
 
-class ServerLogic(pinger: In[ExternalChoice1])(implicit timeout: Duration) extends Runnable {
+class ServerLogic(pinger: In[InternalChoice1])(implicit timeout: Duration) extends Runnable {
   override def run(): Unit = {
     var resp = pinger
     var exit = false

@@ -12,7 +12,10 @@ object MonitoredClient  {
 
   def main(args: Array[String]): Unit = { 
     val (in, out) = LocalChannel.factory[M220]()
-    val mon = new Mon(new ConnectionManager(args(3).toInt), out, 300)(global, timeout) //25
+    def report(msg: String): Unit = {
+      println(msg)
+    }
+    val mon = new Monitor(new ConnectionManager(args(3).toInt), out, 300, report)(global, timeout) //25
 
     val monThread = new Thread {
       override def run(): Unit = {

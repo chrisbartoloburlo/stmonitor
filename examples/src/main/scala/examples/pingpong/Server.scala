@@ -92,7 +92,7 @@ object ServerWrapper {
           }
         }
         if (manager.isDefined) {
-          val sPinger = HttpServerIn[ExternalChoice1](manager.get)
+          val sPinger = HttpServerIn[InternalChoice1](manager.get)
           val server = new ServerLogic(sPinger)(timeout)
           server.run()
         }
