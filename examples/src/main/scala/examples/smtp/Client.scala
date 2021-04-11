@@ -9,10 +9,10 @@ import scala.concurrent.duration.Duration
 import examples.util.{logger, timer}
 
 object ClientLogic {
-  def apply(Server: In[M220], pathname: String, iterations: Int, run: Int)(implicit ec: ExecutionContext, timeout: Duration) {
+  def apply(server: In[M220], pathname: String, iterations: Int, run: Int)(implicit ec: ExecutionContext, timeout: Duration) {
     val l = new logger(f"${pathname}/${iterations}_exec_time_run${run}.csv")
     println("[MC] Mail Client started")
-    Server ? {
+    server ? {
       case m220 @ M220(_) =>
         println(f"[MC] ↓ 220 ${m220.msg}")
         val resp = m220.cont !! Helo(m220.msg)_

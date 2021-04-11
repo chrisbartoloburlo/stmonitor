@@ -9,8 +9,8 @@ import scala.io.StdIn
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Client {
-  def apply(Server: Out[InternalChoice1])(implicit ec: ExecutionContext, timeout: Duration) {
-    var s = Server
+  def apply(server: Out[InternalChoice1])(implicit ec: ExecutionContext, timeout: Duration) {
+    var s = server
     var quit = false
     while (!quit) {
       print("Enter guess (-1 to quit): ")
