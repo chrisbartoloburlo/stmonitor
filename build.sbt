@@ -51,11 +51,31 @@ lazy val examples = (project in file("examples")).
   settings(
     name := "examples",
 
+    generateMonitors := (Def.taskDyn {
+      val baseDir = sourceDirectory.value / "main" / "scala" / "examples"
+      Def.task {
+        generateMonitor(baseDir, "http").value
+        generateMonitor(baseDir, "pingpong").value
+        generateMonitor(baseDir, "smtp").value
+      }
+    }).value,
+
+    (Compile / compile) := ((Compile / compile) dependsOn generateMonitors).value,
+
     libraryDependencies ++= Seq(
       "com.athaydes.rawhttp" % "rawhttp-core" % "2.4.0",
       "com.github.tototoshi" %% "scala-csv" % "1.3.6"
     )
   )
+
+val generateMonitors = taskKey[Unit]("Generate session monitors.")
+
+def generateMonitor(baseDir: File, name: String) = {
+  val exampleDir = baseDir / name
+  val stFile = exampleDir / (name ++ ".st")
+  val preamble = exampleDir / "preamble.txt"
+  (monitor / Compile / runMain).toTask(f" monitor.Generate ${exampleDir} ${stFile} ${preamble}")
+}
 
 lazy val benchmarks = (project in file("benchmarks")).
   dependsOn(lchannels, monitor).
