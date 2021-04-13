@@ -11,6 +11,20 @@ fi
 
 sbt examples/assembly
 
+if [ "$1" = "kickthetires" ]; then
+  jmeter -v > /dev/null 2>&1
+  if [ "$?" = "1" ]; then
+    echo "Jmeter not found, cannot run benchmarks: terminating"
+  else
+    echo "Running a limited set of the experiments for the SMTP, Ping Pong and HTTP benchmarks for the Kick-the-Tires phase"
+    sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh 2 true
+    # sh $wd/scripts/pingpong-benchmarks/pingpong_experiments.sh $1 true
+    # sh $wd/scripts/http-benchmarks/http_experiments.sh $1 true
+    echo "The experiments completed successfully if the respective directories contain the generated plots"
+    exit
+  fi
+fi
+
 for n in $(seq 2 $#); do
   if [ "$2" = "smtp-python" ]; then
     echo "Running SMTP benchmarks with $1 iterations per experiment"
