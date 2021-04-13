@@ -123,6 +123,7 @@ if __name__ == '__main__':
 
     path = sys.argv[1]+'/scripts/smtp-benchmarks'
     runs = int(sys.argv[2])
+    kickthetires = bool(sys.argv[3])
 
     control_times = []
     control_total_times = []
@@ -157,7 +158,13 @@ if __name__ == '__main__':
     detached_mon_cpus_variance = []
     detached_mon_mems_variance = []
 
-    for iterations in range(100, 2001, 100):
+    if(kickthetires):
+        x = [100,500,1000]
+    else:
+        x = range(100, 2001, 100)
+
+
+    for iterations in x:
         control_collective_avg_time, control_collective_avg_total_time, control_collective_avg_resp_time, control_collective_avg_cpu, control_collective_avg_mem, control_total_time_variance, control_resp_time_variance, control_cpu_variance, control_mem_variance = individual_experiment(
             path+"/results/control", runs, iterations)
         monitored_collective_avg_time, monitored_collective_avg_total_time, monitored_collective_avg_resp_time, monitored_collective_avg_cpu, monitored_collective_avg_mem, monitored_total_time_variance, monitored_resp_time_variance, monitored_cpu_variance, monitored_mem_variance = individual_experiment(
@@ -198,7 +205,7 @@ if __name__ == '__main__':
         detached_mon_cpus_variance.append(detached_mon_cpu_variance)
         detached_mon_mems_variance.append(detached_mon_mem_variance)
 
-    x = range(100, 2001, 100)
+
     # plot(x, control_times, monitored_times, lchannels_times, "control", "monitored", "lchannels", "Time/ns", "Experiments", "Average Execution Times", "")
 
     plots_path = path+"/plots/"
