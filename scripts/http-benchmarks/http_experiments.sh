@@ -12,7 +12,7 @@ echo "Removing contents of results directory"
 rm -r $wd/scripts/http-benchmarks/results/control/* > /dev/null 2>&1
 rm -r $wd/scripts/http-benchmarks/results/monitored/* > /dev/null 2>&1
 
-if [ "$limited" ]; then
+if [ "$limited" = "true" ]; then
   echo "Running a limited number of experiments for the HTTP benchmark"
 
   sh $wd/scripts/http-benchmarks/control_experiment.sh 200 4 $experiments

@@ -38,7 +38,7 @@ object Client {
   def run(): Unit = main(Array())
 
   def main(args: Array[String]): Unit = {
-    println("[*] Connecting to 127.0.0.1:1025...")
+    println(f"[*] Connecting to 127.0.0.1:${args(3).toInt}...")
     val conn = new Socket("127.0.0.1", args(3).toInt)
     val sktm = new SMTPSocketManager(conn)
     val c = SocketIn[M220](sktm)

@@ -19,7 +19,7 @@ rm -r $wd/scripts/smtp-benchmarks/$type/results/control/* > /dev/null 2>&1
 rm -r $wd/scripts/smtp-benchmarks/$type/results/monitored/* > /dev/null 2>&1
 rm -r $wd/scripts/smtp-benchmarks/$type/results/detached_monitored/* > /dev/null 2>&1
 
-if [ "$limited" ]; then
+if [ "$limited" = "true" ]; then
   echo "Running a limited number of experiments for the SMTP Python benchmark"
 
   sh $wd/scripts/smtp-benchmarks/control_experiment.sh 200 $experiments $type
@@ -49,7 +49,7 @@ while [ "$increments" -ne 0 ] ; do
 #  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh $iterations $experiments
 #  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh $iterations $experiments
 
-  iterations=$((iterations+100))
+  iterations=$((iterations+200))
   increments=$((increments-1))
 done
 
