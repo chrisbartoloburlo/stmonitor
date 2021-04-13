@@ -26,9 +26,9 @@ if [ "$limited" ]; then
   sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 200 $experiments
   sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 200 $experiments
 
-  sh $wd/scripts/smtp-benchmarks/control_experiment.sh 400 $experiments $type
-  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 400 $experiments
-  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 400 $experiments
+  sh $wd/scripts/smtp-benchmarks/control_experiment.sh 600 $experiments $type
+  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 600 $experiments
+  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 600 $experiments
 
   sh $wd/scripts/smtp-benchmarks/control_experiment.sh 1000 $experiments $type
   sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 1000 $experiments
