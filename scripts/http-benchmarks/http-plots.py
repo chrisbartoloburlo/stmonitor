@@ -183,7 +183,7 @@ if __name__ == '__main__':
     if(kickthetires):
         x = [100,500]
     else:
-        x = range(100, 2001, 100)
+        x = range(200, 2001, 200)
 
     for iterations in x:
         control_collective_avg_time, control_collective_avg_err, control_collective_avg_cpu, control_collective_avg_mem, control_collective_avg_total_time = individual_experiment(path+"/results/control", runs, iterations)

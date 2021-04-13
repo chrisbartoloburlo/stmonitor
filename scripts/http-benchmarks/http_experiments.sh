@@ -1,10 +1,10 @@
 #!/bin/bash
 experiments=$1
 limited=$2
-increments=20
+increments=10
 
-requests=100
-rampup=2
+requests=200
+rampup=4
 
 wd=`pwd`
 
@@ -15,11 +15,11 @@ rm -r $wd/scripts/http-benchmarks/results/monitored/* > /dev/null 2>&1
 if [ "$limited" ]; then
   echo "Running a limited number of experiments for the HTTP benchmark"
 
-  sh $wd/scripts/http-benchmarks/control_experiment.sh 100 2 $experiments
-  sh $wd/scripts/http-benchmarks/monitored_experiment.sh 100 2 $experiments
+  sh $wd/scripts/http-benchmarks/control_experiment.sh 200 4 $experiments
+  sh $wd/scripts/http-benchmarks/monitored_experiment.sh 200 4 $experiments
 
-  sh $wd/scripts/http-benchmarks/control_experiment.sh 500 10 $experiments
-  sh $wd/scripts/http-benchmarks/monitored_experiment.sh 500 10 $experiments
+  sh $wd/scripts/http-benchmarks/control_experiment.sh 600 12 $experiments
+  sh $wd/scripts/http-benchmarks/monitored_experiment.sh 600 12 $experiments
 
   python3 $wd/scripts/http-benchmarks/http-plots.py $wd $experiments True
 
@@ -33,8 +33,8 @@ while [ "$increments" -ne 0 ] ; do
   sh $wd/scripts/http-benchmarks/control_experiment.sh $requests $rampup $experiments
   sh $wd/scripts/http-benchmarks/monitored_experiment.sh $requests $rampup $experiments
 
-  requests=$((requests+100))
-  rampup=$((rampup+2))
+  requests=$((requests+200))
+  rampup=$((rampup+4))
   increments=$((increments-1))
 done
 

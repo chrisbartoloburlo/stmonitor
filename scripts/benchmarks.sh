@@ -27,8 +27,8 @@ fi
 
 for n in $(seq 2 $#); do
   if [ "$2" = "smtp-python" ]; then
-    echo "Running SMTP benchmarks with $1 iterations per experiment"
-    sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh $1
+    echo "Running SMTP python benchmarks with $1 iterations per experiment"
+    sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh $1 smtp-python
   elif [ "$2" = "pingpong" ]; then
     jmeter -v > /dev/null 2>&1
     if [ "$?" = "1" ]; then
@@ -45,8 +45,11 @@ for n in $(seq 2 $#); do
       echo "Running HTTP benchmarks with $1 iterations per experiment"
       sh $wd/scripts/http-benchmarks/http_experiments.sh $1
     fi
+  elif [ "$2" = "smtp-postfix" ]; then
+    echo "Running SMTP postfix benchmarks with $1 iterations per experiment"
+    sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh $1 smtp-postfix
   else
-    echo "*** Unknown benchmark: $2 *** Available benchmarks: smtp-python pingpong"
+    echo "*** Unknown benchmark: $2 *** Available benchmarks: smtp-python pingpong http smtp-postfix"
   fi
   shift
 done

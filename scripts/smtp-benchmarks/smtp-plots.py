@@ -124,6 +124,12 @@ if __name__ == '__main__':
     path = sys.argv[1]+'/scripts/smtp-benchmarks'
     runs = int(sys.argv[2])
     kickthetires = bool(sys.argv[3])
+    type = sys.argv[4]
+
+    if(type == "smtp-python"):
+        path=path+'/smtp-python'
+    else:
+        path=path+'/smtp-postfix'
 
     control_times = []
     control_total_times = []
@@ -161,7 +167,7 @@ if __name__ == '__main__':
     if(kickthetires):
         x = [100,500,1000]
     else:
-        x = range(100, 2001, 100)
+        x = range(200, 2001, 200)
 
 
     for iterations in x:
