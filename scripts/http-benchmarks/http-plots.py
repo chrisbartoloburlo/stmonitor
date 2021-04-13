@@ -166,6 +166,7 @@ if __name__ == '__main__':
 
     path = sys.argv[1]+'/scripts/http-benchmarks'
     runs = int(sys.argv[2])
+    kickthetires = bool(sys.argv[3])
 
     control_resp_times = []
     control_errs = []
@@ -178,6 +179,11 @@ if __name__ == '__main__':
     monitored_cpus = []
     monitored_mems = []
     monitored_exec_times = []
+
+    if(kickthetires):
+        x = [100,500]
+    else:
+        x = range(100, 2001, 100)
 
     for iterations in range(100, 2001, 100):
         control_collective_avg_time, control_collective_avg_err, control_collective_avg_cpu, control_collective_avg_mem, control_collective_avg_total_time = individual_experiment(path+"/results/control", runs, iterations)
@@ -194,8 +200,6 @@ if __name__ == '__main__':
         monitored_cpus.append(monitored_collective_avg_cpu)
         monitored_mems.append(monitored_collective_avg_mem)
         monitored_exec_times.append(monitored_avg_total_time)
-
-    x = range(100, 2001, 100)
 
     plots_path = path+"/plots/"
 

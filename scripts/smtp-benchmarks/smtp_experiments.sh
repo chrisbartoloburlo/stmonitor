@@ -50,4 +50,4 @@ done
 
 screen -S smtpserver -X quit > /dev/null 2>&1
 
-python3 $wd/scripts/smtp-benchmarks/smtp-plots.py $wd $experiments
+python3 $wd/scripts/smtp-benchmarks/smtp-plots.py $wd $experiments False

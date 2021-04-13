@@ -42,4 +42,4 @@ while [ "$increments" -ne 0 ] ; do
   increments=$((increments-1))
 done
 
-python3 $wd/scripts/pingpong-benchmarks/pingpong-plots.py $wd $experiments
+python3 $wd/scripts/pingpong-benchmarks/pingpong-plots.py $wd $experiments False
