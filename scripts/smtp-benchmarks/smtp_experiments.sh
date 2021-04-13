@@ -47,7 +47,7 @@ while [ "$increments" -ne 0 ] ; do
 
   sh $wd/scripts/smtp-benchmarks/control_experiment.sh $iterations $experiments $type
   sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh $iterations $experiments $type
-  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh $iterations $experiments
+  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh $iterations $experiments $type
 
   iterations=$((iterations+200))
   increments=$((increments-1))

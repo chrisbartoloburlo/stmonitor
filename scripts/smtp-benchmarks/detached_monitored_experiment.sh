@@ -22,7 +22,7 @@ while [ "$experiments" -ne 0 ] ; do
   java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.smtp.Client $wd/scripts/smtp-benchmarks/$type/results/detached_monitored/ ${iterations} ${run} 1026
 
   screen -S stmonbench -p 0 -X stuff "^C" > /dev/null 2>&1
-  echo "Finished SMTP $type Detached Monitored Experiment ${run}"
+  echo "Finished SMTP $type Detached Monitored Experiment $run"
 
   run=$((run+1))
   experiments=$((experiments-1))
