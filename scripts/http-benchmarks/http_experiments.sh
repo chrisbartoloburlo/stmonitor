@@ -21,7 +21,7 @@ if [ "$limited" = "true" ]; then
   sh $wd/scripts/http-benchmarks/control_experiment.sh 600 12 $experiments
   sh $wd/scripts/http-benchmarks/monitored_experiment.sh 600 12 $experiments
 
-  python3 $wd/scripts/http-benchmarks/http-plots.py $wd $experiments True
+  python3 $wd/scripts/http-benchmarks/http-plots.py $wd $experiments 1
 
   echo "Limited number of experiments for the HTTP benchmark done"
 
@@ -38,4 +38,4 @@ while [ "$increments" -ne 0 ] ; do
   increments=$((increments-1))
 done
 
-python3 $wd/scripts/http-benchmarks/http-plots.py $wd $experiments False
+python3 $wd/scripts/http-benchmarks/http-plots.py $wd $experiments 0

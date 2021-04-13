@@ -166,7 +166,7 @@ if __name__ == '__main__':
 
     path = sys.argv[1]+'/scripts/http-benchmarks'
     runs = int(sys.argv[2])
-    kickthetires = bool(sys.argv[3])
+    kickthetires = int(sys.argv[3])
 
     control_resp_times = []
     control_errs = []
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     monitored_mems = []
     monitored_exec_times = []
 
-    if(kickthetires):
+    if(kickthetires==1):
         x = [100,500]
     else:
         x = range(200, 2001, 200)

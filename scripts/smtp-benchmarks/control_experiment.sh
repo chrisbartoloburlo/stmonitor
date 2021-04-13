@@ -7,7 +7,7 @@ run=1
 wd=`pwd`
 
 while [ "$experiments" -ne 0 ] ; do
-  echo "Running SMTP Control Experiment $run with $iterations emails"
+  echo "Running SMTP $type Control Experiment $run with $iterations emails"
 
   if [ "$type" = "smtp-python" ]; then
     port=1025
@@ -19,7 +19,7 @@ while [ "$experiments" -ne 0 ] ; do
 
   sleep 1
 
-  echo "SMTP Control Experiment $run finished"
+  echo "Finished SMTP $type Control Experiment $run"
 
   run=$((run+1))
   experiments=$((experiments-1))

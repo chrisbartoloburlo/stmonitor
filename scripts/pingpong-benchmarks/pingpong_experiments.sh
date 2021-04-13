@@ -24,7 +24,7 @@ if [ "$limited" = "true" ]; then
   sh $wd/scripts/pingpong-benchmarks/monitored_experiment.sh 600 12 $experiments
   sh $wd/scripts/pingpong-benchmarks/detached_monitored_experiment.sh 600 12 $experiments
 
-  python3 $wd/scripts/pingpong-benchmarks/pingpong-plots.py $wd $experiments True
+  python3 $wd/scripts/pingpong-benchmarks/pingpong-plots.py $wd $experiments 1
 
   echo "Limited number of experiments for the Ping Pong benchmark done"
 
@@ -42,4 +42,4 @@ while [ "$increments" -ne 0 ] ; do
   increments=$((increments-1))
 done
 
-python3 $wd/scripts/pingpong-benchmarks/pingpong-plots.py $wd $experiments False
+python3 $wd/scripts/pingpong-benchmarks/pingpong-plots.py $wd $experiments 0

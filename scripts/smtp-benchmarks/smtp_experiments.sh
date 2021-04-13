@@ -36,7 +36,7 @@ if [ "$limited" = "true" ]; then
 
   screen -S smtpserver -X quit > /dev/null 2>&1
 
-  python3 $wd/scripts/smtp-benchmarks/smtp-plots.py $wd $experiments True
+  python3 $wd/scripts/smtp-benchmarks/smtp-plots.py $wd $experiments 1 $type
 
   echo "Limited number of experiments for the $type benchmark done"
 
@@ -46,8 +46,8 @@ fi
 while [ "$increments" -ne 0 ] ; do
 
   sh $wd/scripts/smtp-benchmarks/control_experiment.sh $iterations $experiments $type
-#  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh $iterations $experiments
-#  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh $iterations $experiments
+  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh $iterations $experiments $type
+  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh $iterations $experiments
 
   iterations=$((iterations+200))
   increments=$((increments-1))
@@ -57,4 +57,4 @@ if [ "$type" = "smtp-python" ]; then
   screen -S smtpserver -X quit > /dev/null 2>&1
 fi
 
-python3 $wd/scripts/smtp-benchmarks/smtp-plots.py $wd $experiments False $type
+python3 $wd/scripts/smtp-benchmarks/smtp-plots.py $wd $experiments 0 $type

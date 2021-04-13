@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
     path = sys.argv[1]+'/scripts/smtp-benchmarks'
     runs = int(sys.argv[2])
-    kickthetires = bool(sys.argv[3])
+    kickthetires = int(sys.argv[3])
     type = sys.argv[4]
 
     if(type == "smtp-python"):
@@ -164,11 +164,10 @@ if __name__ == '__main__':
     detached_mon_cpus_variance = []
     detached_mon_mems_variance = []
 
-    if(kickthetires):
+    if(kickthetires==1):
         x = [100,500,1000]
     else:
         x = range(200, 2001, 200)
-
 
     for iterations in x:
         control_collective_avg_time, control_collective_avg_total_time, control_collective_avg_resp_time, control_collective_avg_cpu, control_collective_avg_mem, control_total_time_variance, control_resp_time_variance, control_cpu_variance, control_mem_variance = individual_experiment(
