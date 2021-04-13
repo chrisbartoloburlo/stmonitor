@@ -169,6 +169,7 @@ if __name__ == '__main__':
 
     path = sys.argv[1]+'/scripts/pingpong-benchmarks'
     runs = int(sys.argv[2])
+    kickthetires = bool(sys.argv[3])
 
     control_resp_times = []
     control_errs = []
@@ -188,7 +189,12 @@ if __name__ == '__main__':
     detached_mon_mems = []
     detached_mon_exec_times = []
 
-    for iterations in range(100, 2001, 100):
+    if(kickthetires):
+        x = [100,500]
+    else:
+        x = range(100, 2001, 100)
+
+    for iterations in x:
         control_collective_avg_time, control_collective_avg_err, control_collective_avg_cpu, control_collective_avg_mem, control_collective_avg_total_time = individual_experiment(path+'/results/control', runs, iterations)
         monitored_collective_avg_time, monitored_collective_avg_err, monitored_collective_avg_cpu, monitored_collective_avg_mem, monitored_avg_total_time = individual_experiment(path+'/results/monitored', runs, iterations)
         detached_mon_collective_avg_time, detached_mon_collective_avg_err, detached_mon_collective_avg_cpu, detached_mon_collective_avg_mem, detached_mon_collective_avg_total_time = individual_experiment(path+'/results/detached_monitored', runs, iterations)
@@ -210,8 +216,6 @@ if __name__ == '__main__':
         detached_mon_cpus.append(detached_mon_collective_avg_cpu)
         detached_mon_mems.append(detached_mon_collective_avg_mem)
         detached_mon_exec_times.append(detached_mon_collective_avg_total_time)
-
-    x = range(100, 2001, 100)
 
     plots_path = path+"/plots/"
 

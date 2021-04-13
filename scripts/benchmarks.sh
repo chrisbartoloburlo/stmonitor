@@ -18,7 +18,7 @@ if [ "$1" = "kickthetires" ]; then
   else
     echo "Running a limited set of the experiments for the SMTP, Ping Pong and HTTP benchmarks for the Kick-the-Tires phase"
     sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh 2 true
-    # sh $wd/scripts/pingpong-benchmarks/pingpong_experiments.sh $1 true
+    sh $wd/scripts/pingpong-benchmarks/pingpong_experiments.sh 2 true
     # sh $wd/scripts/http-benchmarks/http_experiments.sh $1 true
     echo "The experiments completed successfully if the respective directories contain the generated plots"
     exit

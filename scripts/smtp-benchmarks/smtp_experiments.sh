@@ -16,6 +16,7 @@ rm -r $wd/scripts/smtp-benchmarks/results/detached_monitored/* > /dev/null 2>&1
 
 if [ "$limited" ]; then
   echo "Running a limited number of experiments for the SMTP benchmark"
+
   sh $wd/scripts/smtp-benchmarks/control_experiment.sh 100 $experiments
   sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 100 $experiments
   sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 100 $experiments
@@ -30,7 +31,9 @@ if [ "$limited" ]; then
 
   screen -S smtpserver -X quit > /dev/null 2>&1
 
-  python3 $wd/scripts/smtp-benchmarks/smtp-plots.py $wd $experiments
+  python3 $wd/scripts/smtp-benchmarks/smtp-plots.py $wd $experiments True
+
+  echo "Limited number of experiments for the SMTP benchmark done"
 
   exit
 fi
