@@ -1,5 +1,6 @@
 #!/bin/bash
 experiments=$1
+limited=$2
 increments=20
 
 requests=100
