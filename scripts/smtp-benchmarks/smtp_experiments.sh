@@ -3,7 +3,7 @@
 type=$3
 
 if [ "$type" = "smtp-python" ]; then
-  screen -S smtpserver -dm python3 -m smtpd -c DebuggingServer -n localhost:1025
+  screen -S smtpserver -dm python3 -m smtpd -c DebuggingServer -n 127.0.0.1:1025
 fi
 
 experiments=$1
@@ -20,7 +20,7 @@ rm -r $wd/scripts/smtp-benchmarks/$type/results/monitored/* > /dev/null 2>&1
 rm -r $wd/scripts/smtp-benchmarks/$type/results/detached_monitored/* > /dev/null 2>&1
 
 if [ "$limited" = "true" ]; then
-  echo "Running a limited number of experiments for the SMTP Python benchmark"
+  echo "Running a limited number of experiments for the SMTP $type benchmark"
 
   sh $wd/scripts/smtp-benchmarks/control_experiment.sh 200 $experiments $type
   sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 200 $experiments $type
