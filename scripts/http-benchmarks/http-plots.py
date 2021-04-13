@@ -185,7 +185,7 @@ if __name__ == '__main__':
     else:
         x = range(100, 2001, 100)
 
-    for iterations in range(100, 2001, 100):
+    for iterations in x:
         control_collective_avg_time, control_collective_avg_err, control_collective_avg_cpu, control_collective_avg_mem, control_collective_avg_total_time = individual_experiment(path+"/results/control", runs, iterations)
         monitored_collective_avg_time, monitored_collective_avg_err, monitored_collective_avg_cpu, monitored_collective_avg_mem, monitored_avg_total_time = individual_experiment(path+"/results/monitored", runs, iterations)
 
