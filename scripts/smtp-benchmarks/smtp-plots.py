@@ -165,7 +165,7 @@ if __name__ == '__main__':
     detached_mon_mems_variance = []
 
     if(kickthetires==1):
-        x = [100,500,1000]
+        x = [200,600,1000]
     else:
         x = range(200, 2001, 200)
 

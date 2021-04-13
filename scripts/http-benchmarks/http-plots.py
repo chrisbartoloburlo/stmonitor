@@ -181,7 +181,7 @@ if __name__ == '__main__':
     monitored_exec_times = []
 
     if(kickthetires==1):
-        x = [100,500]
+        x = [200,600]
     else:
         x = range(200, 2001, 200)
 

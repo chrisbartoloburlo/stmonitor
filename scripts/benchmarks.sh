@@ -16,7 +16,7 @@ if [ "$1" = "kickthetires" ]; then
   if [ "$?" = "1" ]; then
     echo "Jmeter not found, cannot run benchmarks: terminating"
   else
-    echo "Running a limited set of the experiments for the SMTP, Ping Pong and HTTP benchmarks for the Kick-the-Tires phase"
+    echo "Running a limited set of the experiments for the SMTP python, Ping Pong and HTTP benchmarks for the Kick-the-Tires phase"
     sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh 2 true smtp-python
     sh $wd/scripts/pingpong-benchmarks/pingpong_experiments.sh 2 true
     sh $wd/scripts/http-benchmarks/http_experiments.sh 2 true

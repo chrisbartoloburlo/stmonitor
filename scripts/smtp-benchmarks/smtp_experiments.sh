@@ -23,16 +23,16 @@ if [ "$limited" = "true" ]; then
   echo "Running a limited number of experiments for the SMTP Python benchmark"
 
   sh $wd/scripts/smtp-benchmarks/control_experiment.sh 200 $experiments $type
-  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 200 $experiments
-  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 200 $experiments
+  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 200 $experiments $type
+  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 200 $experiments $type
 
   sh $wd/scripts/smtp-benchmarks/control_experiment.sh 600 $experiments $type
-  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 600 $experiments
-  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 600 $experiments
+  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 600 $experiments $type
+  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 600 $experiments $type
 
   sh $wd/scripts/smtp-benchmarks/control_experiment.sh 1000 $experiments $type
-  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 1000 $experiments
-  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 1000 $experiments
+  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 1000 $experiments $type
+  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 1000 $experiments $type
 
   screen -S smtpserver -X quit > /dev/null 2>&1
 
