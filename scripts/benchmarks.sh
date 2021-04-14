@@ -2,6 +2,7 @@
 # Usage: sh benchmarks.sh <number of experiments> <list of benchmarks>
 
 wd=`pwd`
+iterations=$1
 
 python3 -c "import matplotlib.pyplot"
 if [ "$?" = "1" ]; then
@@ -11,7 +12,7 @@ fi
 
 sbt examples/assembly
 
-if [ "$1" = "kickthetires" ]; then
+if [ "$iterations" = "kickthetires" ]; then
   jmeter -v > /dev/null 2>&1
   if [ "$?" = "1" ]; then
     echo "Jmeter not found, cannot run benchmarks: terminating"
@@ -28,27 +29,27 @@ fi
 
 for n in $(seq 2 $#); do
   if [ "$2" = "smtp-python" ]; then
-    echo "Running SMTP python benchmarks with $1 iterations per experiment"
-    sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh $1 false smtp-python
+    echo "Running SMTP python benchmarks with $iterations iterations per experiment"
+    sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh $iterations false smtp-python
   elif [ "$2" = "pingpong" ]; then
     jmeter -v > /dev/null 2>&1
     if [ "$?" = "1" ]; then
       echo "Jmeter not found, skipping ping pong benchmarks"
     else
-      echo "Running Ping Pong benchmarks with $1 iterations per experiment"
-      sh $wd/scripts/pingpong-benchmarks/pingpong_experiments.sh $1 false
+      echo "Running Ping Pong benchmarks with $iterations iterations per experiment"
+      sh $wd/scripts/pingpong-benchmarks/pingpong_experiments.sh $iterations false
     fi
   elif [ "$2" = "http" ]; then
     jmeter -v > /dev/null 2>&1
     if [ "$?" = "1" ]; then
       echo "Jmeter not found, skipping HTTP benchmarks"
     else
-      echo "Running HTTP benchmarks with $1 iterations per experiment"
-      sh $wd/scripts/http-benchmarks/http_experiments.sh $1 false
+      echo "Running HTTP benchmarks with $iterations iterations per experiment"
+      sh $wd/scripts/http-benchmarks/http_experiments.sh $iterations false
     fi
   elif [ "$2" = "smtp-postfix" ]; then
-    echo "Running SMTP postfix benchmarks with $1 iterations per experiment"
-    sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh $1 false smtp-postfix
+    echo "Running SMTP postfix benchmarks with $iterations iterations per experiment"
+    sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh $iterations false smtp-postfix
   else
     echo "*** Unknown benchmark: $2 *** Available benchmarks: smtp-python pingpong http smtp-postfix"
   fi
