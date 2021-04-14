@@ -6,6 +6,8 @@ import monitor.model._
 class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
 //  private val protocol = new PrintWriter(new File(path+"/CPSPc.scala"))
   private val protocol = new StringBuilder()
+  private var importIn = false
+  private var importOut = false
 
   def getProtocol(): StringBuilder ={
     protocol
@@ -13,7 +15,7 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def init(preamble: String): Unit = {
     if (preamble!="") protocol.append(preamble+"\n")
-    protocol.append("import lchannels.{In, Out}\n")
+    protocol.append("import lchannels.$\n")
 //    CODE FOR GENERATING UNIQUE PROTOCOL CLASSES
 //    var nonUniqueScopes = new ListBuffer[String]
 //    for(scope <- sessionTypeInterpreter.getScopes){
@@ -102,16 +104,20 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
         } else {
           protocol.append("(val cont: In["+s.statementID+"])")
         }
+        importIn = true
       case s @ SendChoiceStatement(_, _) =>
         protocol.append("(val cont: In["+s.label+"])")
+        importIn = true
       case s @ ReceiveStatement(_, _, _, _, _) =>
         if(isUnique){
           protocol.append("(val cont: Out["+s.label+"])")
         } else {
           protocol.append("(val cont: Out["+s.statementID+"])")
         }
+        importOut = true
       case s @ ReceiveChoiceStatement(_, _) =>
         protocol.append("(val cont: Out["+s.label+"])")
+        importOut = true
       case s @ RecursiveVar(_, _) =>
         handleSendNextCase(sessionTypeInterpreter.getRecursiveVarScope(s).recVariables(s.name), isUnique)
       case s @ RecursiveStatement(_, _) =>
@@ -129,16 +135,20 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
         } else {
           protocol.append("(val cont: Out["+s.statementID+"])")
         }
+        importOut = true
       case s @ SendChoiceStatement(_, _) =>
         protocol.append("(val cont: Out["+s.label+"])")
+        importOut = true
       case s @ ReceiveStatement(_, _, _, _, _) =>
         if(isUnique){
           protocol.append("(val cont: In["+s.label+"])")
         } else {
           protocol.append("(val cont: In["+s.statementID+"])")
         }
+        importIn = true
       case s @ ReceiveChoiceStatement(_, _) =>
         protocol.append("(val cont: In["+s.label+"])")
+        importIn = true
       case s @ RecursiveVar(_, _) =>
         handleReceiveNextCase(sessionTypeInterpreter.getRecursiveVarScope(s).recVariables(s.name), isUnique)
       case s @ RecursiveStatement(_, _) =>
@@ -149,6 +159,9 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
   }
 
   def end(): Unit ={
-//    protocol.append("case class MonStart()\n")
+    if (importIn && importOut) protocol.replace(protocol.indexOf("$"), protocol.indexOf("$")+1, "{In, Out}")
+    else if (importIn) protocol.replace(protocol.indexOf("$"), protocol.indexOf("$")+1, "In")
+    else if (importOut) protocol.replace(protocol.indexOf("$"), protocol.indexOf("$")+1, "Out")
+    else protocol.replace(protocol.indexOf("$"), protocol.indexOf("$")+1, "_")
   }
 }

@@ -1,6 +1,5 @@
 package monitor.interpreter
 
-import com.typesafe.scalalogging.Logger
 import monitor.model._
 import monitor.model.Scope
 import monitor.synth.{SynthMon, SynthProtocol}
@@ -21,8 +20,6 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
 
   var synthMon = new SynthMon(this, path)
   var synthProtocol = new SynthProtocol(this, path)
-
-  val logger: Logger = Logger("STInterpreter")
 
   def getRecursiveVarScope(recursiveVar: RecursiveVar): Scope = {
     checkRecVariable(scopes(curScope), recursiveVar)
@@ -47,16 +44,6 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
    *         the monitor and cpsp classes is found.
    */
   def run(): (StringBuilder, StringBuilder) = {
-//    sessionType.statement match {
-//      case recursiveStatement: RecursiveStatement =>
-//        var tmpStatement: Statement = recursiveStatement.body
-//        while(tmpStatement.isInstanceOf[RecursiveStatement]){
-//          tmpStatement = recursiveStatement.body
-//        }
-//        synthMon.startInit()
-//      case _ =>
-//        synthMon.startInit()
-//    }
     synthMon.startInit(preamble)
 
     initialWalk(sessionType.statement)
@@ -131,7 +118,6 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
   def walk(statement: Statement): Unit = {
     statement match {
       case statement @ ReceiveStatement(label, id, types, condition, _) =>
-        logger.info("Receive "+label+"("+types+")")
         curScope = id
         checkCondition(label, types, condition)
         synthMon.handleReceive(statement, statement.continuation, scopes(curScope).isUnique) // Change isUnique accordingly
@@ -139,7 +125,6 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
         walk(statement.continuation)
 
       case statement @ SendStatement(label, id, types, condition, _) =>
-        logger.info("Send "+label+"("+types+")")
         curScope = id
         checkCondition(label, types, condition)
 
@@ -148,7 +133,6 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
         walk(statement.continuation)
 
       case statement @ ReceiveChoiceStatement(label, choices) =>
-        logger.info("Receive Choice Statement "+label+"{"+choices+"}")
         curScope = label
         val tmpScope = curScope
         synthMon.handleReceiveChoice(statement)
@@ -164,7 +148,6 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
         }
 
       case statement @ SendChoiceStatement(label, choices) =>
-        logger.info("Send Choice Statement "+label+"{"+choices+"}")
         curScope = label
         val tmpScope = curScope
         synthMon.handleSendChoice(statement)
@@ -180,11 +163,9 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
         }
 
       case statement @ RecursiveStatement(label, body) =>
-        logger.info("Recursive statement with variable "+label+" and body: " +body)
         walk(statement.body)
 
       case statement @ RecursiveVar(name, continuation) =>
-        logger.info("Recursive variable "+name)
         checkRecVariable(scopes(curScope), statement)
         walk(statement.continuation)
 

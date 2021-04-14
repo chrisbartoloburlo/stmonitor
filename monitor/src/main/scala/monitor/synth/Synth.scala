@@ -27,7 +27,8 @@ class Synth {
     val parser = new STParser
     parser.parseAll(parser.sessionTypeVar, inputSource) match {
       case parser.Success(r, n) =>
-        logger.info("Input parsed successfully")
+        val stFile = sessionTypePath.substring(sessionTypePath.lastIndexOf('/')+1)
+        logger.info(f"Input type $stFile parsed successfully")
         val preambleFile = Try(Source.fromFile(preamblePath).mkString)
         val interpreter = new STInterpreter(r, directoryPath, preambleFile.getOrElse(""))
         try {
@@ -42,6 +43,7 @@ class Synth {
             protocolFile.write(protocol.toString)
             protocolFile.close()
           }
+          logger.info(f"Successful synthesis for input type $stFile at $directoryPath")
         } catch {
           case e: Exception =>
             println("Error: " + e.getMessage)
