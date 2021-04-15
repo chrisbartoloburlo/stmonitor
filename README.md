@@ -44,7 +44,11 @@ In the case that the type contains bespoke functions as assertions (such as [`ga
 
 ## Examples
 
-### The auth example
+The following commands assume a Unix-like operating system and should all be executed from the project root directory `stmonitor/`. 
+
+_Note_: [`Python 3.x`]() might be required to launch some of the following examples.
+
+### 1. Authentication protocol
 
 These instructions are for recreating and executing the running example of the accompanying paper: the authentication protocol. We assume a Unix-like operating system, and all commands must be executed from the `stmonitor/` directory. 
 
@@ -139,5 +143,36 @@ For the sake of this example, we consider two different setups:
    ```
    The client should send and receive messages via the port _1330_ which is handled by the monitor. In turn, the monitor analyses and forwards the messages to the server and client. Alternatively, one can also interact with the monitored server using `telnet 127.0.0.1 1335` and follow a text based protocol. 
 
+### 2. Lottery game protocol
+
+### 3. Fragment of the Simple Mail Transfer Protocol
+
+### 4. Ping Pong protocol over HTTP
+
+### 5. Fragment of the HTTP protocol
+
+
 
 ## Benchmarks
+
+The benchmarks can _only_ be executed on a Linux-based machine since they rely on [`/usr/bin/time`](https://man7.org/linux/man-pages/man1/time.1.html) for the collection of data on CPU usage and memory consumption. The following dependencies are also required:
+* [`screen`](https://man7.org/linux/man-pages/man1/screen.1.html)
+* [`Python 3`]() and [`matplotlib`]()
+* [`Jmeter`](https://jmeter.apache.org)
+
+To execute a _minimal_ version of the benchmarks and ensure that everything works execute: 
+```shell
+sh scripts/benchmarks.sh kickthetires
+```
+
+To execute the _full_ benchmarks execute:
+```shell
+sh scripts/benchmarks.sh $iterations $experiments
+```
+where: 
+* `$iterations` is the number of repetitions to be executed per experiment (we recommend 5), and 
+* `$experiments` is a space-separated list of the experiments to be conducted. The choices are: 
+  * `smtp-python` consisting of a client that sends a number of emails to an untrusted SMTP python sever [`smtpd`](https://docs.python.org/3/library/smtpd.html) from its standard library following a fragment of SMTP formalised as the type [`smtp.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/smtp/smtp.st);
+  * `smtp-postfix` consisting of a similar setup to the previous experiment but uses [Postfix](http://www.postfix.org) as an SMTP server;
+  * `pingpong` consisting of a server that interacts over HTTP and receives requests from JMeter which follows the type [`pingpong.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/pingpong/pingpong.st); and
+  * `http` consisting of a web server and a client following a fragment of the HTTP protocol formalised as the type [`http.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/http/http.st).
