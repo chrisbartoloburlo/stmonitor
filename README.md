@@ -1,22 +1,59 @@
 # Session Types Monitor
-**Hybrid verification methodology for communication protocols in Scala built around the library [lchannels](https://github.com/alcestes/lchannels).** *(As seen in [FORTE 2020](https://link.springer.com/chapter/10.1007/978-3-030-50086-3_13) with [this](http://staff.um.edu.mt/afra1/papers/forte2020.pdf) paper.)*
 
-A tool that, given a session type _S_, can synthesise the Scala code of a type-checked monitor that verifies at runtime whether an interaction abides by _S_, and signatures usable to implement a process that interacts according to _S_. The generated monitors are embedded with runtime data checks as specified in the session types. A presentation outlining our approach can be found [here](https://youtu.be/FL_teSjllSE).
+**A runtime verification tool for communication protocols.** 
 
-These instructions are for recreating and executing the example found in the paper, namely, the login example. We assume a Unix-like operating system with Java 8 as default JRE/JDK which can be downloaded from [here](https://www.oracle.com/java/technologies/javase-jdk8-downloads.html).
+Given a session type _S_, the tool synthesises the Scala code of a type-checked monitor using the library [lchannels](https://github.com/alcestes/lchannels) that verifies at runtime whether the interaction abides by _S_. 
 
-### Compile the sources
-This project uses the **`sbt`** build tool which can be downloaded from [here](https://www.scala-sbt.org/0.13/docs/Setup.html) (sbt v. 0.13.x). Once installed, open a terminal in `stmonitor/`* and execute the command `sbt compile`.
 
-\* _All commands from this point forward must be executed from this location._
+## Documentation and publications
+
+* Christian Bartolo Burlò, Adrian Francalanza and Alcese Scalas. *[Towards a Hybrid Verification Methodology for Communication Protocols (Short Paper)](https://link.springer.com/chapter/10.1007/978-3-030-50086-3_13) at [FORTE 2020](https://link.springer.com/book/10.1007/978-3-030-50086-3).* A presentation outlining our approach can be found [here](https://youtu.be/FL_teSjllSE).
+
+## Compiling the sources
+
+1. You will need:
+   * Java 11, available [here](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html), and
+   * **`sbt` 1.5.0** build tool available [here](https://www.scala-sbt.org/download.html).
+2. Open a terminal in the `stmonitor/` directory. 
+3. Execute the command 
+   ```
+   sbt compile
+   ```
+
+The compilation will _automatically_ generate the files required for all examples. 
+
+>The remainder of this readme consists of instructions on how to:
+>* [_manually generate a monitor from a session type_]()
+>* [_launch existing examples_]()
+>* [_run the benchmarks_]()
+
+## Synthesising a Monitor (and CPSP classes)
+
+## Examples
 
 ### The auth example
 
-#### 1. Synthesising the monitor and CPSP classes.
+These instructions are for recreating and executing the running example of the accompanying paper: the authentication protocol. We assume a Unix-like operating system, and all commands must be executed from the `stmonitor/` directory. 
 
-Consider the Auth example, in which the server must follow the type found in `auth.st`:
+The session type `S_auth` below found in [`auth.st`]() formalises an extended version of the authentication protocol from the client side:
 ```
-S_auth=rec Y.(!Auth(uname: String, pwd: String)[util.validateUname(uname)].&{
+S_auth=rec Y.(!Auth(uname: String, pwd: String).&{
+	?Succ(origTok: String).rec X.(+{
+		!Get(resource: String, reqTok: String).&{
+			?Res(content: String).X,
+			?Timeout().Y
+		},
+		!Rvk(rvkTok: String).end}),
+	?Fail(code: Int).end
+})
+```
+After authenticating with the server, the client is granted exclusive access to a resource via a token `origTok`. The token might expire after a while and the server would send a `Timeout` message, allowing the client to request another token. Otherwise, the client can revoke the token prematurely by sending `Rvk` and the session terminates. 
+
+The monitor [Monitor.scala]() was generated from this type upon compilation. To launch a client-server setup with this monitor, skip to [these]() instructions; here we explain how to manually generate a monitor from a given session type.   
+
+As we discuss in Section 5.1, the tool also offers the ability to enrich the session types with assertions that are predicates over the named payload variables. The type `SA_auth` extends `S_auth` with assertions to check the validity of the data being transmitted. 
+```
+SA_auth=rec Y.(!Auth(uname: String, pwd: String)[util.validateUname(uname)].&{
 	?Succ(origTok: String)[util.validateTok(origTok, uname)].rec X.(+{
 		!Get(resource: String, reqTok: String).&{
 			?Res(content: String)[origTok==reqTok].X,
@@ -26,8 +63,13 @@ S_auth=rec Y.(!Auth(uname: String, pwd: String)[util.validateUname(uname)].&{
 	?Fail(code: Int).end
 })
 ```
+In this type, the username communicated by the client that becomes bound to `uname` would be validated using the function `validateUname()`. Similarly, the monitor will validate the token `origTok` issued upon successful authentication using `validateTok()`. The monitor would also check that when the server sends a resource in `Res`, the token included in the `Get` message (`reqTok`) was equivalent to the one issued earlier in the `Succ` message (`origTok`). 
 
-The functions `validateUname()` and `validateTok()` are present in the `util.scala` file. 
+The synthesis automatically type-checks the assertions using the Scala compiler, and ensures that they have a `Boolean` type. In any of these cases, the monitor would flag a violation if the expression evaluates to `false` at runtime. 
+
+We encourage the reader to copy `SA_auth` and paste it in [`auth.st`](), and proceed with the following instructions to generate a monitor performing these checks. 
+
+For your convenience, the functions `validateUname()` and `validateTok()` can be found in [`util.scala`](). For the sake of the example, they will always return `true`; one can change their return value to `false` and see that the monitor indeed flags a violation. 
 
 To generate the monitor and the CPSP classes, run `Generate.scala` using the following command in a terminal inside the project root directory:
 ```shell
@@ -83,3 +125,6 @@ For the sake of this example, we consider two different setups:
    python3 auth-client.py
    ```
    The client should send and receive messages via the port _1330_ which is handled by the monitor. In turn, the monitor analyses and forwards the messages to the server and client. Alternatively, one can also interact with the monitored server using `telnet 127.0.0.1 1335` and follow a text based protocol. 
+
+
+## Benchmarks
