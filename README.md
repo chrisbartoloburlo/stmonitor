@@ -29,6 +29,19 @@ The compilation will _automatically_ generate the files required for all example
 
 ## Synthesising a Monitor (and CPSP classes)
 
+To generate the monitor and the CPSP classes, run `Generate.scala` using the following command in a terminal inside the project root directory:
+```shell
+sbt "project monitor" "runMain monitor.Generate $DIR $ST $PREAMBLE"
+```
+Replace: 
+1. `$DIR` with the absolute path to the directory in which the source code of the monitor and classes shall be generated in, 
+2. `$ST` with the absolute path to the file containing the session type, and
+3. `$PREAMBLE` _(optional argument)_ with the absolute path to a text file containing a preamble that will be added to the top of the generated files (typically consisting of the package declaration and specific imports required such as [this file](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/http/preamble.txt)).
+
+Once completed, the files `Monitor.scala` and `CPSPc.scala` should be present in the provided directory in `$DIR`. 
+
+In the case that the type contains bespoke functions as assertions (such as [`game.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/game/game.st)), ensure that they are present in a file named `util.scala` (like [this]()) located in the _same directory_ `$DIR` provided in the synthesis. 
+
 ## Examples
 
 ### The auth example
