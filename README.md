@@ -76,7 +76,7 @@ Proceed to the next section for instructions on how to launch a synthesised moni
 
 The following commands assume a Unix-like operating system and should all be executed from the project root directory `stmonitor/`. 
 
-_Note_: [`Python 3.x`]() might be required to launch some of the following examples.
+_Note_: [`Python 3`](https://www.python.org/downloads/) might be required to launch some components of the following examples.
 
 ### 1. Authentication protocol
 
@@ -94,9 +94,9 @@ S_auth=rec Y.(!Auth(uname: String, pwd: String)[util.validateUname(uname)].&{
 ```
 After authenticating with the server, the client is granted exclusive access to a resource via a token `origTok`. The token might expire after a while and the server would send a `Timeout` message, allowing the client to request another token. Otherwise, the client can revoke the token prematurely by sending `Rvk` and the session terminates. 
 
-In this type, the username communicated by the client would be validated using the function `validateUname()`. Similarly, the monitor will validate the token `origTok` issued upon successful authentication using `validateTok()`. The monitor would also check that when the server sends a resource in `Res`, the token included in the `Get` message (`reqTok`) was equivalent to the one issued earlier in the `Succ` message (`origTok`). 
+In this type, the username communicated by the client would be validated using the function `validateUname()`. Similarly, the monitor will validate the token `origTok` issued upon successful authentication using `validateTok()`. The monitor would also check that when the server sends a resource in `Res`, the token included in the `Get` message (`reqTok`) was equivalent to the one issued earlier in the `Succ` message (`origTok`). The token included in the revoke message `rvkTok` would also be checked to ensure it is the same as `origTok`. 
 
-The functions `validateUname()` and `validateTok()` can be found in [`util.scala`](). For the sake of the example, they will always return `true`; one can change their return value to `false` and see that the monitor indeed flags a violation. The monitor `Monitor.scala` and `CPSPc` found in the auth/ directory were generated automatically from this type upon compilation. 
+The functions `validateUname()` and `validateTok()` can be found in [`util.scala`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/auth/util.scala). For the sake of the example, they will always return `true`; one can change their return value to `false` and see that the monitor indeed flags a violation. The monitor `Monitor.scala` and `CPSPc` found in the `auth/` directory were generated automatically from this type upon compilation. 
 
 We provide the implementation of two different client-server setups in which this monitor can be launched:
 
@@ -166,54 +166,6 @@ We provide the implementation of a client in Scala respecting the dual of `S_gam
    sbt "project examples" "runMain examples.game.MonitoredClient"
    ```
    The monitored client automatically connects to the server on the port 1330, and asks for the user to input a guess which is sent to the server. The client recurses until the server replies with `Correct` or the user quits (in which case the client will send `Quit`). One can test that the monitor flags a violation and terminates the session if a number smaller than 1 or greater than 100 is sent as a guess. 
-
-### 3. Fragment of the Simple Mail Transfer Protocol
-
-[`smtp.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/smtp/smtp.st)
-```
-S_smtp = !M220(msg: String).&{
-	?Helo(hostname: String).!M250(msg: String).rec X.(&{
-		?MailFrom(addr: String).!M250(msg: String).rec Y.(&{
-			?RcptTo(addr: String).!M250(msg: String).Y,
-			?Data().!M354(msg: String).?Content(txt: String).!M250(msg: String).X,
-			?Quit().!M221(msg: String)}),
-		?Quit().!M221(msg: String)}),
-	?Quit().!M221(msg: String) }
-```
-
-### 4. Ping Pong protocol over HTTP
-
-[`pingpong.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/pingpong/pingpong.st)
-```
-S_ponger=rec X.(+{!Ping().?Pong().X, !Quit().end})
-```
-
-### 5. Fragment of the HTTP protocol
-
-[`http.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/http/http.st)
-```
-S_http=!Request(msg: RequestLine).rec X.(+{
-	!AcceptEncodings(msg: String).X,
-	!Accept(msg: String).X,
-	!DoNotTrack(msg: Boolean).X,
-	!UpgradeIR(msg: Boolean).X,
-	!Connection(msg: String).X,
-	!UserAgent(msg: String).X,
-	!AcceptLanguage(msg: String).X,
-	!Host(msg: String).X,
-	!RequestBody(msg: Body).?HttpVersion(msg: Version).&{
-		?Code404(msg: String).rec Y.(&{
-			?ETag(msg: String).Y,
-			...
-		}),
-		?Code200(msg: String).rec Z.(&{
-			?ETag2(msg: String).Z,
-			...
-		})
-	}
-})
-```
-
 
 ## Benchmarks
 
