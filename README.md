@@ -40,7 +40,7 @@ Replace:
 
 Once completed, the files `Monitor.scala` and `CPSPc.scala` should be present in the provided directory in `$DIR`. 
 
-In the case that the type contains bespoke functions as assertions, ensure that they are present in a file named `util.scala` located in the _same directory_ `$DIR` provided in the synthesis. 
+In the case that the type contains bespoke functions as assertions, ensure that they are present in a file named `util.scala` located in the _same directory_ `$DIR` provided in the synthesis. The synthesis automatically type-checks the assertions using the Scala compiler, and ensures that they have a `Boolean` type. In any of these cases, the monitor would flag a violation if the expression evaluates to `false` at runtime. 
 
 The following is a step-by-step example to generate the source code from a session type.
 
@@ -64,11 +64,15 @@ The following is a step-by-step example to generate the source code from a sessi
 > ```
 > S_calc=rec X.(&{
 >     ?Add(num1: Int, num2: Int).!Res(ans: Int)[util.checkAdd(num1, num2, ans)],
->     ?Inc(num: Int).!Res(ans: Int)[ans==num+1]
+>     ?Sub(num1: Int, num2: Int).!Res(ans: Int)[ans==num2-num1]
 > })
 > ```
 
+Proceed to the next section for instructions on how to launch a synthesised monitor between two interacting parties. 
+
 ## Examples
+
+**Before attempting to launch any examples, ensure that the project [compiled](https://github.com/chrisbartoloburlo/stmonitor#compiling-the-sources) successfully.**
 
 The following commands assume a Unix-like operating system and should all be executed from the project root directory `stmonitor/`. 
 
@@ -76,25 +80,7 @@ _Note_: [`Python 3.x`]() might be required to launch some of the following examp
 
 ### 1. Authentication protocol
 
-These instructions are for recreating and executing the running example of the accompanying paper: the authentication protocol. We assume a Unix-like operating system, and all commands must be executed from the `stmonitor/` directory. 
-
-The session type `S_auth` below found in [`auth.st`]() formalises an extended version of the authentication protocol from the client side:
-```
-S_auth=rec Y.(!Auth(uname: String, pwd: String).&{
-	?Succ(origTok: String).rec X.(+{
-		!Get(resource: String, reqTok: String).&{
-			?Res(content: String).X,
-			?Timeout().Y
-		},
-		!Rvk(rvkTok: String).end}),
-	?Fail(code: Int).end
-})
-```
-After authenticating with the server, the client is granted exclusive access to a resource via a token `origTok`. The token might expire after a while and the server would send a `Timeout` message, allowing the client to request another token. Otherwise, the client can revoke the token prematurely by sending `Rvk` and the session terminates. 
-
-The monitor [Monitor.scala]() was generated from this type upon compilation. To launch a client-server setup with this monitor, skip to [these]() instructions; here we explain how to manually generate a monitor from a given session type.   
-
-As we discuss in Section 5.1, the tool also offers the ability to enrich the session types with assertions that are predicates over the named payload variables. The type `SA_auth` extends `S_auth` with assertions to check the validity of the data being transmitted. 
+These instructions are for executing the an extended version of the running example in the accompanying paper: the authentication protocol. It is formalised as the session type `S_auth` below in [`auth.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/auth/auth.st) 
 ```
 SA_auth=rec Y.(!Auth(uname: String, pwd: String)[util.validateUname(uname)].&{
 	?Succ(origTok: String)[util.validateTok(origTok, uname)].rec X.(+{
@@ -106,38 +92,20 @@ SA_auth=rec Y.(!Auth(uname: String, pwd: String)[util.validateUname(uname)].&{
 	?Fail(code: Int).end
 })
 ```
-In this type, the username communicated by the client that becomes bound to `uname` would be validated using the function `validateUname()`. Similarly, the monitor will validate the token `origTok` issued upon successful authentication using `validateTok()`. The monitor would also check that when the server sends a resource in `Res`, the token included in the `Get` message (`reqTok`) was equivalent to the one issued earlier in the `Succ` message (`origTok`). 
+After authenticating with the server, the client is granted exclusive access to a resource via a token `origTok`. The token might expire after a while and the server would send a `Timeout` message, allowing the client to request another token. Otherwise, the client can revoke the token prematurely by sending `Rvk` and the session terminates. 
 
-The synthesis automatically type-checks the assertions using the Scala compiler, and ensures that they have a `Boolean` type. In any of these cases, the monitor would flag a violation if the expression evaluates to `false` at runtime. 
+In this type, the username communicated by the client would be validated using the function `validateUname()`. Similarly, the monitor will validate the token `origTok` issued upon successful authentication using `validateTok()`. The monitor would also check that when the server sends a resource in `Res`, the token included in the `Get` message (`reqTok`) was equivalent to the one issued earlier in the `Succ` message (`origTok`). 
 
-We encourage the reader to copy `SA_auth` and paste it in [`auth.st`](), and proceed with the following instructions to generate a monitor performing these checks. 
+The functions `validateUname()` and `validateTok()` can be found in [`util.scala`](). For the sake of the example, they will always return `true`; one can change their return value to `false` and see that the monitor indeed flags a violation. 
 
-For your convenience, the functions `validateUname()` and `validateTok()` can be found in [`util.scala`](). For the sake of the example, they will always return `true`; one can change their return value to `false` and see that the monitor indeed flags a violation. 
+The monitor `Monitor.scala` and `CPSPc` found in the [`auth/`]() directory were generated automatically from this type upon compilation. 
 
-To generate the monitor and the CPSP classes, run `Generate.scala` using the following command in a terminal inside the project root directory:
-```shell
-sbt "project monitor" "runMain monitor.Generate $DIR $ST"
-```
-Replace `$DIR` with the directory in which the monitor and classes will be generated in: `[root]/stmonitor/examples/src/main/scala/examples/auth`
+We provide the implementation of two different client-server setups in which this monitor can be launched:
 
-Replace `$ST` with the absolute path to the file containing the session type: `[root]/stmonitor/examples/src/main/scala/examples/auth/auth.st`
+#### **SETUP 1** 
 
-_(replace `[root]` to represent the absolute path to the directory containing the project)_
+The synthesised monitor verifying the interaction between an _unsafe_ client implemented in Python and a _safe_ server implemented in Scala. The monitor and server are executed on the _same_ JVM as _separate_ threads and interact via `lchannels`.
 
-Once completed, the files `Mon.scala` and `CPSPc.scala` should be present in the provided directory. 
-
-For a demo proceed to the next step.
-
-#### 2. Setting up.
-1. Add package declarations in the generated files `Mon.scala` and `CPSPc.scala`: `package examples.auth`
-
-2. Uncomment all lines within the files [ConnectionManager.Scala](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/auth/ConnectionManager.scala), [MonitoredServer.scala](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/auth/MonitoredServer.scala) and [MonWrapper.scala](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/auth/MonWrapper.scala).
-
-#### 3. Initialising a monitored setup.
-
-For the sake of this example, we consider two different setups:
-
-**SETUP 1** _Monitor and Scala server on the **same** JVM as **separate** threads._
 1. Start the server together with the monitor using the following command:
     ```shell
     sbt "project examples" "runMain examples.auth.MonitoredServer"
@@ -148,8 +116,11 @@ For the sake of this example, we consider two different setups:
    ```
    python3 auth-client.py 
    ```
+   Alternatively, one can also interact with the monitored server using `telnet 127.0.0.1 1335` and follow a text based protocol. 
 
-**SETUP 2** _Monitor and Python server separately._
+#### **SETUP 2**  
+
+The synthesised monitor verifying the interaction between a client and a server that are both _unsafe_ and implemented in Python. The monitor executes on its own JVM.
 
 1. Navigate to the scripts directory `stmonitor/scripts/` and execute the following command to start a Python server using the following command:
     ```shell
@@ -167,7 +138,7 @@ For the sake of this example, we consider two different setups:
    ```shell
    python3 auth-client.py
    ```
-   The client should send and receive messages via the port _1330_ which is handled by the monitor. In turn, the monitor analyses and forwards the messages to the server and client. Alternatively, one can also interact with the monitored server using `telnet 127.0.0.1 1335` and follow a text based protocol. 
+   The client should send and receive messages via the port _1330_ which is handled by the monitor. In turn, the monitor analyses and forwards the messages to the server and client. 
 
 ### 2. Lottery game protocol
 
