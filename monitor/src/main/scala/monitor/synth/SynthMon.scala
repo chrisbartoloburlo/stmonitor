@@ -324,9 +324,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       val (varScope, (global, _)) = sessionTypeInterpreter.getVarInfo(name, curStatementScope)
       if(global) {
         if(checkCondition){
-          mon.append("\t\t\t\t\t\tpayloads."+varScope+"."+name+" = msg."+name+"\n")
+          mon.append("\t\t\t\tpayloads."+varScope+"."+name+" = msg."+name+"\n")
         } else {
-          mon.append("\t\t\t\t\tpayloads."+varScope+"."+name+" = msg."+name+"\n")
+          mon.append("\t\t\tpayloads."+varScope+"."+name+" = msg."+name+"\n")
         }
       }
     }
