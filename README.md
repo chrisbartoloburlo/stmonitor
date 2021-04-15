@@ -40,7 +40,33 @@ Replace:
 
 Once completed, the files `Monitor.scala` and `CPSPc.scala` should be present in the provided directory in `$DIR`. 
 
-In the case that the type contains bespoke functions as assertions (such as [`game.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/game/game.st)), ensure that they are present in a file named `util.scala` (like [this]()) located in the _same directory_ `$DIR` provided in the synthesis. 
+In the case that the type contains bespoke functions as assertions, ensure that they are present in a file named `util.scala` located in the _same directory_ `$DIR` provided in the synthesis. 
+
+The following is a step-by-step example to generate the source code from a session type.
+
+> _Example_: 
+> The type `S_calc` below, taken from [`calc.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/calc/calc.st), can be found in the directory [`calc/`](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/examples/calc) together with [`util.scala`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/calc/util.scala) implementing the function `util.checkAdd()` and [`preamble.txt`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/calc/preamble.txt).
+> ```
+> S_calc=rec X.(&{?Add(num1: Int, num2: Int).!Res(ans: Int)[util.checkAdd(num1, num2, ans)]})
+> ```
+> To generate the monitor and CPSP classes from this type, execute the following command from the root directory, replacing `[root]` accordingly:
+> ```shell
+> sbt "project monitor" "runMain monitor.Generate [root]/stmonitor/examples/src/main/scala/examples/calc [root]/stmonitor/examples/src/main/scala/examples/calc/calc.st [root]/stmonitor/examples/src/main/scala/examples/calc/preamble.txt"
+> ```
+> If successful, you should see the following in the terminal:
+> ```shell
+> $ INFO Synth - Input type calc.st parsed successfully
+> $ INFO Synth - Successful synthesis for input type calc.st at [root]/stmonitor/examples/src/main/scala/examples/calc
+> ```
+> The files should be present in the provided directory [`calc/`](https://github.com/chrisbartoloburlo/stmonitor/tree/master/examples/src/main/scala/examples/calc).
+>
+> We encourage the reader to extend the type such as below, execute the synthesis once again and analyse the synthesised code.
+> ```
+> S_calc=rec X.(&{
+>     ?Add(num1: Int, num2: Int).!Res(ans: Int)[util.checkAdd(num1, num2, ans)],
+>     ?Inc(num: Int).!Res(ans: Int)[ans==num+1]
+> })
+> ```
 
 ## Examples
 
