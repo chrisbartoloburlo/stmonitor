@@ -110,13 +110,13 @@ The synthesised monitor verifying the interaction between an _unsafe_ client imp
     ```shell
     sbt "project examples" "runMain examples.auth.MonitoredServer"
     ```
-   _The server listens on the TCP/IP socket 127.0.0.1:1330._
+   _The monitored server listens on the TCP/IP socket 127.0.0.1:1330._
 
 2. In a separate terminal navigate to the scripts directory `stmonitor/scripts/` and execute the following command to start a client which connects to the server and sends multiple requests:
    ```
    python3 auth-client.py 
    ```
-   Alternatively, one can also interact with the monitored server using `telnet 127.0.0.1 1335` and follow a text based protocol. 
+   Alternatively, one can also interact with the monitored server using `telnet 127.0.0.1 1330` and follow a text based protocol. 
 
 #### **SETUP 2**  
 
@@ -142,12 +142,63 @@ The synthesised monitor verifying the interaction between a client and a server 
 
 ### 2. Lottery game protocol
 
+[`game.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/game/game.st)
+```
+S_game=rec X.(
+	&{?Guess(num: Int)[num > 0 && num < 10].+{
+		!Correct(ans: Int)[ans==num],
+		!Incorrect().X
+	},
+	?Quit()
+})
+```
+
 ### 3. Fragment of the Simple Mail Transfer Protocol
+
+[`smtp.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/smtp/smtp.st)
+```
+S_smtp = !M220(msg: String).&{
+	?Helo(hostname: String).!M250(msg: String).rec X.(&{
+		?MailFrom(addr: String).!M250(msg: String).rec Y.(&{
+			?RcptTo(addr: String).!M250(msg: String).Y,
+			?Data().!M354(msg: String).?Content(txt: String).!M250(msg: String).X,
+			?Quit().!M221(msg: String)}),
+		?Quit().!M221(msg: String)}),
+	?Quit().!M221(msg: String) }
+```
 
 ### 4. Ping Pong protocol over HTTP
 
+[`pingpong.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/pingpong/pingpong.st)
+```
+S_ponger=rec X.(+{!Ping().?Pong().X, !Quit().end})
+```
+
 ### 5. Fragment of the HTTP protocol
 
+[`http.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/master/examples/src/main/scala/examples/http/http.st)
+```
+S_http=!Request(msg: RequestLine).rec X.(+{
+	!AcceptEncodings(msg: String).X,
+	!Accept(msg: String).X,
+	!DoNotTrack(msg: Boolean).X,
+	!UpgradeIR(msg: Boolean).X,
+	!Connection(msg: String).X,
+	!UserAgent(msg: String).X,
+	!AcceptLanguage(msg: String).X,
+	!Host(msg: String).X,
+	!RequestBody(msg: Body).?HttpVersion(msg: Version).&{
+		?Code404(msg: String).rec Y.(&{
+			?ETag(msg: String).Y,
+			...
+		}),
+		?Code200(msg: String).rec Z.(&{
+			?ETag2(msg: String).Z,
+			...
+		})
+	}
+})
+```
 
 
 ## Benchmarks
