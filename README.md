@@ -23,9 +23,9 @@ Given a session type _S_, the tool synthesises the Scala code of a type-checked 
 The compilation will _automatically_ generate the files required for all examples. 
 
 >The remainder of this readme consists of instructions on how to:
->* [_manually generate a monitor from a session type_]()
->* [_launch existing examples_]()
->* [_run the benchmarks_]()
+>* [_manually generate a monitor from a session type_](https://github.com/chrisbartoloburlo/stmonitor#synthesising-a-monitor-and-cpsp-classes)
+>* [_launch existing examples_](https://github.com/chrisbartoloburlo/stmonitor#examples)
+>* [_run the benchmarks_](https://github.com/chrisbartoloburlo/stmonitor#benchmarks)
 
 ## Synthesising a Monitor (and CPSP classes)
 
