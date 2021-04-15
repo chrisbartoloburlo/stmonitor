@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 SERVER_HOST = '127.0.0.1'
-SERVER_PORT = 1337
+SERVER_PORT = 1330
 
-import re, socket
+import re, socket, random
 
 MSG_GUESS_RE = re.compile('''^GUESS +(.+)''')
 MSG_QUIT_RE  = re.compile('''^QUIT''')
@@ -19,6 +19,8 @@ def serve(srv):
         sf.close(); s.close()
 
 def handle_connection(sf):
+    correct_ans = random.randint(1,100)
+    print(f'[S] Generated number: {correct_ans}')
     while 1:
         print('[S] Waiting for request')
         req = sf.readline().strip()
@@ -26,7 +28,7 @@ def handle_connection(sf):
         
         m = MSG_GUESS_RE.match(req)
         if (m is not None):
-            if(int(m.group(1)) == 3):
+            if(int(m.group(1)) == correct_ans):
                 ans = 'CORRECT {0}'.format(3)
                 print('[S] Answering: "{0}"'.format(ans))
                 sf.write(ans); sf.write("\n"); sf.flush()

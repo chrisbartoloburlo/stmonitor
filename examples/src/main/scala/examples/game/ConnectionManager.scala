@@ -11,8 +11,8 @@ class ConnectionManager(){
   private val incorrectR = """INCORRECT""".r
 
   def setup(): Unit ={
-    println("Connecting to 127.0.0.1:1337")
-    val conn = new Socket("127.0.0.1", 1337)
+    println("Connecting to 127.0.0.1:1330")
+    val conn = new Socket("127.0.0.1", 1330)
     outB = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream))
     inB = new BufferedReader(new InputStreamReader(conn.getInputStream))
   }
