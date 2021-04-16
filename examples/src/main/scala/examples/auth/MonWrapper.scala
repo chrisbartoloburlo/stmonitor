@@ -2,7 +2,7 @@ package examples.auth
 
 import lchannels.{SocketManager, SocketOut}
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
-import java.net.Socket
+import java.net.{Socket, ServerSocket}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -34,18 +34,23 @@ object MonWrapper extends App {
     }
   }
 
-  val serverPort = args(1).toInt //1335
-  println("[Mon] Connecting to 127.0.0.1 " + serverPort)
-
-  val serverConn = new Socket("127.0.0.1", serverPort)
-  val monSktm = new MonSocketManager(serverConn)
-
   val clientPort = args(0).toInt //1330
-  val clientConnectionManager = new ClientConnectionManager(clientPort)
-  val sChoice = SocketOut[Auth](monSktm)
-  def report(msg: String): Unit = {
-    println(msg)
+
+  val serverPort = args(1).toInt //1335
+
+  println("[Mon] Listening on 127.0.0.1:" + clientPort)
+  val server = new ServerSocket(clientPort)
+  while (true) {
+    val client = server.accept()
+    val clientConnectionManager = new ClientConnectionManager(client)
+    println("[Mon] New client; connecting to server on 127.0.0.1:" + serverPort)
+    val serverConn = new Socket("127.0.0.1", serverPort)
+    val monSktm = new MonSocketManager(serverConn)
+    val sChoice = SocketOut[Auth](monSktm)
+    def report(msg: String): Unit = {
+      println(msg)
+    }
+    val t = new Thread(new Monitor(clientConnectionManager, sChoice, 300, report)(global, timeout))
+    t.start()
   }
-  val Monitor = new Monitor(clientConnectionManager, sChoice, 300, report)(global, timeout)
-  Monitor.run()
 }

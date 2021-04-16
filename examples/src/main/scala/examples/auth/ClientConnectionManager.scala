@@ -3,21 +3,16 @@ package examples.auth
 import monitor.util.ConnectionManager
 
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
-import java.net.ServerSocket
 
-class ClientConnectionManager(port: Int) extends ConnectionManager {
+class ClientConnectionManager(client: java.net.Socket) extends ConnectionManager {
   var outB: BufferedWriter = _
   var inB: BufferedReader = _
-
-  val server = new ServerSocket(port)
 
   private val authR = """AUTH (.+) (.+)""".r
   private val getR = """GET (.+) (.+)""".r
   private val rvkR = """RVK (.+)""".r
 
   def setup(): Unit = {
-    println(f"[CM] Waiting for requests on 127.0.0.1 $port")
-    val client = server.accept()
     outB = new BufferedWriter(new OutputStreamWriter(client.getOutputStream))
     inB = new BufferedReader(new InputStreamReader(client.getInputStream))
   }

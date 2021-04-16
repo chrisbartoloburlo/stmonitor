@@ -13,10 +13,14 @@ object MonitoredServer extends App {
     println(msg)
   }
 
-  val CM = new ClientConnectionManager(1330)
+  val server = new java.net.ServerSocket(1330)
+
   while(true) {
+  val client = server.accept()
+    val cm = new ClientConnectionManager(client)
+
     val (in, out) = LocalChannel.factory[Auth]()
-    val Monitor = new Monitor(CM, out, 300, report)(global, timeout)
+    val Monitor = new Monitor(cm, out, 300, report)(global, timeout)
 
     val ServerThread = new Thread {
       override def run(): Unit = {
