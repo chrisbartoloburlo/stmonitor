@@ -6,7 +6,7 @@ experiments=$3
 wd=`pwd`
 
 while [ "$experiments" -ne 0 ] ; do
-  echo Running Ping Pong Detached Monitored Experiment ${run} with ${requests} requests and ${rampup} seconds rampup time.
+  echo "Running Ping Pong Detached Monitored Experiment ${run} with ${requests} requests and ${rampup} seconds rampup time..."
 
   screen -dm -S serverbench bash -c "java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.pingpong.ServerWrapper 8081"
 
@@ -26,7 +26,7 @@ while [ "$experiments" -ne 0 ] ; do
 
   screen -S stmonbench -p 0 -X stuff "^C"
   screen -S serverbench -p 0 -X stuff "^C"
-  echo End of Ping Pong Detached Monitored Experiment ${run} with ${requests} requests.
+  echo "Finished Ping Pong Detached Monitored Experiment ${run} with ${requests} requests.\n"
   sleep 2
 
   run=$((run+1))

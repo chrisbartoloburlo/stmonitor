@@ -6,7 +6,7 @@ experiments=$3
 wd=`pwd`
 
 while [ "$experiments" -ne 0 ] ; do
-  echo Running Ping Pong Monitored Experiment ${run} with ${requests} requests and ${rampup} seconds rampup time.
+  echo "Running Ping Pong Monitored Experiment ${run} with ${requests} requests and ${rampup} seconds rampup time..."
 
   screen -dm -S stmonbench bash -c "/usr/bin/time --format=\"%P,%M,%K\" java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.pingpong.MonWrapper 8080 2>> $wd/scripts/pingpong-benchmarks/results/monitored/${requests}_cpu_mem.txt"
 
@@ -21,7 +21,7 @@ while [ "$experiments" -ne 0 ] ; do
   echo ${run},${executionTime} >> $wd/scripts/pingpong-benchmarks/results/monitored/${requests}_exec_times.txt
 
   screen -S stmonbench -p 0 -X stuff "^C"
-  echo End of Ping Pong Monitored Experiment ${run} with ${requests} requests.
+  echo "Finished Ping Pong Monitored Experiment ${run} with ${requests} requests.\n"
   sleep 1
 
   run=$((run+1))

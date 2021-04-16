@@ -8,14 +8,12 @@ rampup=4
 
 wd=`pwd`
 
-echo "Removing contents of results directory"
+echo "Removing contents of pingpong-benchmarks/results..."
 rm -r $wd/scripts/pingpong-benchmarks/results/control/* > /dev/null 2>&1
 rm -r $wd/scripts/pingpong-benchmarks/results/monitored/* > /dev/null 2>&1
 rm -r $wd/scripts/pingpong-benchmarks/results/detached_monitored/* > /dev/null 2>&1
 
 if [ "$limited" = "true" ]; then
-  echo "Running a limited number of experiments for the Ping Pong benchmark"
-
   sh $wd/scripts/pingpong-benchmarks/control_experiment.sh 200 4 $experiments
   sh $wd/scripts/pingpong-benchmarks/monitored_experiment.sh 200 4 $experiments
   sh $wd/scripts/pingpong-benchmarks/detached_monitored_experiment.sh 200 4 $experiments
@@ -25,9 +23,6 @@ if [ "$limited" = "true" ]; then
   sh $wd/scripts/pingpong-benchmarks/detached_monitored_experiment.sh 600 12 $experiments
 
   python3 $wd/scripts/pingpong-benchmarks/pingpong-plots.py $wd $experiments 1
-
-  echo "Limited number of experiments for the Ping Pong benchmark done"
-
   exit
 fi
 
