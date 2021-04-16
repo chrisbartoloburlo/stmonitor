@@ -47,7 +47,7 @@ object MonWrapper extends App {
   }
 
   val serverPort = args(0).toInt //25
-  val serverConnectionManager = new ConnectionManager(serverPort)
+  val serverConnectionManager = new ServerConnectionManager(serverPort)
 
   val clientPort = args(1).toInt //1025
   val server = new ServerSocket(clientPort)

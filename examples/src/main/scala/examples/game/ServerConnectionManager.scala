@@ -1,10 +1,12 @@
 package examples.game
 
+import monitor.util.ConnectionManager
+
 import java.io
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 import java.net.Socket
 
-class ConnectionManager(){
+class ServerConnectionManager() extends ConnectionManager {
   var outB: BufferedWriter = _
   var inB: BufferedReader = _
   private val correctR = """CORRECT (.+)""".r
