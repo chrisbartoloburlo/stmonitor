@@ -29,7 +29,7 @@ def handle_connection(sf):
         m = MSG_GUESS_RE.match(req)
         if (m is not None):
             if(int(m.group(1)) == correct_ans):
-                ans = 'CORRECT {0}'.format(3)
+                ans = 'CORRECT {0}'.format(correct_ans)
                 print('[S] Answering: "{0}"'.format(ans))
                 sf.write(ans); sf.write("\n"); sf.flush()
                 break
