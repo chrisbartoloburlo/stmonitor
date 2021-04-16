@@ -4,7 +4,6 @@ import monitor.interpreter.STInterpreter
 import monitor.model._
 
 class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
-//  private val protocol = new PrintWriter(new File(path+"/CPSPc.scala"))
   private val protocol = new StringBuilder()
   private var importIn = false
   private var importOut = false
@@ -16,21 +15,6 @@ class SynthProtocol(sessionTypeInterpreter: STInterpreter, path: String) {
   def init(preamble: String): Unit = {
     if (preamble!="") protocol.append(preamble+"\n")
     protocol.append("import lchannels.$\n")
-//    CODE FOR GENERATING UNIQUE PROTOCOL CLASSES
-//    var nonUniqueScopes = new ListBuffer[String]
-//    for(scope <- sessionTypeInterpreter.getScopes){
-//      if (!scope._2.isUnique && !nonUniqueScopes.contains(scope._2.name)) {
-//        protocol.append("case class "+ scope._2.name + "(")
-//        for(variable <- scope._2.variables){
-//          protocol.append(variable._1+": "+variable._2._2)
-//          if(!(variable == scope._2.variables.last)){
-//            protocol.append(", ")
-//          }
-//        }
-//        nonUniqueScopes += scope._2.name
-//        protocol.append(")\n")
-//      }
-//    }
   }
 
   def handleSendChoice(label: String): Unit ={

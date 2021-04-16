@@ -12,8 +12,7 @@ class Synth {
   /**
    * Synthesises the monitor and the protocol files.
    *
-   * @param directoryPath The path containing the util.scala file which also represents the directory where the monitor
-   *             and protocol files are to be generated in.
+   * @param directoryPath The path containing the util.scala file which also represents the directory where the monitor and protocol files are to be generated in.
    * @param sessionTypePath The path of the file containing the session type.
    * @param preamblePath The path to the file containing the preamble of the monitor code.
    * @param synthMonFile A flag to indicate whether to synthesise the monitor file or not.

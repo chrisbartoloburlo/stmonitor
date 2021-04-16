@@ -7,7 +7,7 @@ import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 class STParser extends StandardTokenParsers {
   lexical.reserved += ("rec", "end")
-//  , "String", "Int", "Boolean"
+//  "String", "Int", "Boolean"
 
   lexical.delimiters += ("?", "!", "&", "+", "(", ")", "{", "}", ",", ":", "=", ".", "[", "]")
 

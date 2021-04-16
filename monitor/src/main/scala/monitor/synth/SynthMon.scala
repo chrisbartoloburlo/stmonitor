@@ -12,6 +12,11 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   private var first = true
 
+  /**
+   * Generates the code for declaring a monitor including the imports required for the monitor to compile.
+   *
+   * @param preamble The contents of the preamble file.
+   */
   def startInit(preamble: String): Unit = {
     if (preamble!="") mon.append(preamble+"\n")
     mon.append("import lchannels.{In, Out}\nimport monitor.util.ConnectionManager\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.util.control.TailCalls.{TailRec, done, tailcall}\nclass Monitor(external: ConnectionManager, internal: ")
@@ -42,6 +47,13 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("\t\texternal.setup()\n")
   }
 
+  /**
+   * Generates the code for the external choice type consisting of a single branch: ?Label(payload)[assertion].S
+   *
+   * @param statement The current statement.
+   * @param nextStatement The next statement in the session type.
+   * @param isUnique A boolean indicating whether the label of the current statement is unique.
+   */
   def handleSend(statement: SendStatement, nextStatement: Statement, isUnique: Boolean): Unit = {
     var reference = statement.label
     if(!isUnique){
@@ -68,19 +80,25 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     if(statement.condition != null){
       handleCondition(statement.condition, statement.statementID)
       mon.append("\t\t\t\t\texternal.send(msg)\n")
-      handleSendNextCase(statement, isUnique, nextStatement)
+      handleSendNextCase(statement, nextStatement)
       mon.append("\t\t\t\t} else {\n")
       mon.append("\t\t\t\treport(\"[MONITOR] VIOLATION in Assertion: "+statement.condition+"\"); done() }\n")
     } else {
       mon.append("\t\t\t\texternal.send(msg)\n")
-      handleSendNextCase(statement, isUnique, nextStatement)
+      handleSendNextCase(statement, nextStatement)
     }
     mon.append("\t\t\tcase msg @ _ => report(f\"[MONITOR] VIOLATION unknown message: $msg\"); done()\n")
     mon.append("\t\t}\n\t}\n")
   }
 
+  /**
+   * Generates the code for the monitor to call the method representing the next statement in the session type after an external choice type.
+   *
+   * @param currentStatement The current statement.
+   * @param nextStatement The next statement in the session type.
+   */
   @scala.annotation.tailrec
-  private def handleSendNextCase(currentStatement: SendStatement, isUnique: Boolean, nextStatement: Statement): Unit ={
+  private def handleSendNextCase(currentStatement: SendStatement, nextStatement: Statement): Unit ={
     nextStatement match {
       case sendStatement: SendStatement =>
         storeValue(currentStatement.types, currentStatement.condition==null, currentStatement.statementID)
@@ -115,10 +133,10 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         }
 
       case recursiveVar: RecursiveVar =>
-        handleSendNextCase(currentStatement, isUnique, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name))
+        handleSendNextCase(currentStatement, sessionTypeInterpreter.getRecursiveVarScope(recursiveVar).recVariables(recursiveVar.name))
 
       case recursiveStatement: RecursiveStatement =>
-        handleSendNextCase(currentStatement, isUnique, recursiveStatement.body)
+        handleSendNextCase(currentStatement, recursiveStatement.body)
 
       case _ =>
         if(currentStatement.condition==null) {
@@ -129,6 +147,13 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     }
   }
 
+  /**
+   * Generates the code for the internal choice type consisting of a single branch: !Label(payload)[assertion].S
+   *
+   * @param statement The current statement.
+   * @param nextStatement The next statement in the session type.
+   * @param isUnique A boolean indicating whether the label of the current statement is unique.
+   */
   def handleReceive(statement: ReceiveStatement, nextStatement: Statement, isUnique: Boolean): Unit = {
     var reference = statement.label
     if(!isUnique){
@@ -137,7 +162,6 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     if(first) {
       mon.replace(mon.indexOf("$"), mon.indexOf("$")+1, "Out["+reference+"]")
       mon.append("\t\treceive" + statement.statementID + "(internal, external, 0).result\n    external.close()\n  }\n")
-//      reference = statement.statementID
       first = false
     }
 
@@ -158,6 +182,13 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("\t\t}\n\t}\n")
   }
 
+  /**
+   * Generates the code for the monitor to call the method representing the next statement in the session type after an internal choice type.
+   *
+   * @param currentStatement The current statement.
+   * @param isUnique A boolean indicating whether the label of the current statement is unique.
+   * @param nextStatement The next statement in the session type.
+   */
   @scala.annotation.tailrec
   private def handleReceiveNextCase(currentStatement: ReceiveStatement, isUnique: Boolean, nextStatement: Statement): Unit ={
     nextStatement match {
@@ -212,6 +243,12 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     }
   }
 
+  /**
+   * Generates the code for forwarding a message over an lchannels channel.
+   *
+   * @param statement The current statement.
+   * @param isUnique A boolean indicating whether the label of the current statement is unique.
+   */
   private def handleReceiveCases(statement: ReceiveStatement, isUnique: Boolean): Unit = {
     var reference = statement.statementID
     if(isUnique){
@@ -232,6 +269,11 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append(")_\n")
   }
 
+  /**
+   * Generates the code for the external choice type: &{?Label(payload)[assertion].S, ...}
+   *
+   * @param statement The current statement.
+   */
   def handleSendChoice(statement: SendChoiceStatement): Unit ={
     if(first) {
       mon.replace(mon.indexOf("$"), mon.indexOf("$")+1, "In["+statement.label+"]")
@@ -253,18 +295,23 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       if(choice.asInstanceOf[SendStatement].condition != null){
         handleCondition(choice.asInstanceOf[SendStatement].condition, choice.asInstanceOf[SendStatement].statementID)
         mon.append("\t\t\t\t\texternal.send(msg)\n")
-        handleSendNextCase(choice.asInstanceOf[SendStatement], true, choice.asInstanceOf[SendStatement].continuation)
+        handleSendNextCase(choice.asInstanceOf[SendStatement], choice.asInstanceOf[SendStatement].continuation)
         mon.append("\t\t\t\t} else {\n")
         mon.append("\t\t\t\treport(\"[MONITOR] VIOLATION in Assertion: "+choice.asInstanceOf[SendStatement].condition+"\"); done() }\n")
       } else {
         mon.append("\t\t\t\texternal.send(msg)\n")
-        handleSendNextCase(choice.asInstanceOf[SendStatement], true, choice.asInstanceOf[SendStatement].continuation)
+        handleSendNextCase(choice.asInstanceOf[SendStatement], choice.asInstanceOf[SendStatement].continuation)
       }
     }
     mon.append("\t\t\tcase msg @ _ => report(f\"[MONITOR] VIOLATION unknown message: $msg\"); done()\n")
     mon.append("\t\t}\n\t}\n")
   }
 
+  /**
+   * Generates the code for the internal choice type: +{!Label(payload)[assertion].S, ...}
+   *
+   * @param statement The current statment.
+   */
   def handleReceiveChoice(statement: ReceiveChoiceStatement): Unit = {
     if(first) {
       mon.replace(mon.indexOf("$"), mon.indexOf("$")+1, "Out["+statement.label+"]")
