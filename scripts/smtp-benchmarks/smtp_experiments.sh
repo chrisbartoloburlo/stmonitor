@@ -14,7 +14,7 @@ iterations=200
 
 wd=`pwd`
 
-echo "Removing contents of $type/results..."
+echo "Removing contents of $type/results...\n"
 rm -r $wd/scripts/smtp-benchmarks/$type/results/control/* > /dev/null 2>&1
 rm -r $wd/scripts/smtp-benchmarks/$type/results/monitored/* > /dev/null 2>&1
 rm -r $wd/scripts/smtp-benchmarks/$type/results/detached_monitored/* > /dev/null 2>&1

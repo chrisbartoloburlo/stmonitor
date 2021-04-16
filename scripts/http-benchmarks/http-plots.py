@@ -203,6 +203,7 @@ if __name__ == '__main__':
 
     plots_path = path+"/plots/"
 
+    print(f"*** HTTP benchmark overheads:")
     print("cpu percentage increase control -> monitored", percentage_inc(average(control_cpus), average(monitored_cpus)))
     plot(x, control_cpus, monitored_cpus,
          "control", "monitored", "CPU Utilisation (%)", "Requests sent", "CPU Utilisation", plots_path+"cpu_consumption")

@@ -8,7 +8,7 @@ rampup=4
 
 wd=`pwd`
 
-echo "Removing contents of pingpong-benchmarks/results..."
+echo "Removing contents of pingpong-benchmarks/results...\n"
 rm -r $wd/scripts/pingpong-benchmarks/results/control/* > /dev/null 2>&1
 rm -r $wd/scripts/pingpong-benchmarks/results/monitored/* > /dev/null 2>&1
 rm -r $wd/scripts/pingpong-benchmarks/results/detached_monitored/* > /dev/null 2>&1

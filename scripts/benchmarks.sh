@@ -5,7 +5,7 @@ iterations=$1
 wd=`pwd`
 
 screen -v > /dev/null 2>&1
-if [ "$?" = "0" ]; then
+if [ "$?" = "1" ]; then
   echo "screen not found, cannot run benchmarks: terminating"
   exit
 fi
@@ -16,7 +16,7 @@ if [ "$?" = "1" ]; then
   exit
 fi
 
-echo "Creating a fat JAR of examples/..."
+echo "Creating a fat JAR of stmonitor/examples/..."
 sbt examples/assembly
 echo "Fat JAR created.\n"
 
@@ -42,7 +42,7 @@ if [ "$iterations" = "kickthetires" ]; then
     sh $wd/scripts/http-benchmarks/http_experiments.sh 2 true
     echo "HTTP benchmarks finished.\n"
 
-    echo "The experiments completed successfully if the respective directories contain the generated plots.\n"
+    echo "The experiments completed successfully if the respective directories contain the generated plots:"
     echo "SMTP Python benchmark plots can be found in the directory $wd/scripts/smtp-benchmarks/smtp-python/plots"
     echo "SMTP Postfix benchmark plots can be found in the directory $wd/scripts/smtp-benchmarks/smtp-postfix/plots"
     echo "Ping Pong benchmark plots can be found in the directory $wd/scripts/pingpong-benchmarks/plots"

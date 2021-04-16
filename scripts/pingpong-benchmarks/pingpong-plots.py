@@ -219,15 +219,19 @@ if __name__ == '__main__':
 
     plots_path = path+"/plots/"
 
+    print(f"*** Ping pong benchmark overheads:")
     plot(x, control_cpus, monitored_cpus, detached_mon_cpus,
          "unsafe", "monitored", "detached_mon", "CPU Utilisation (%)", "Requests sent", "CPU Utilisation", plots_path +"cpu_consumption", "cpu_consumption")
     print("cpu percentage increase control -> monitored", percentage_inc(average(control_cpus), average(monitored_cpus)))
+    print("cpu percentage increase control -> detached_mon", percentage_inc(average(control_cpus), average(detached_mon_cpus)))
 
     plot(x, control_mems, monitored_mems, detached_mon_mems,
          "unsafe", "monitored", "detached_mon", "Memory Consumption (MB)", "Requests sent", "Memory Consumption", plots_path +"mem_consumption", "mem_consumption")
     print("memory percentage increase control -> monitored", percentage_inc(average(control_mems), average(monitored_mems)))
+    print("memory percentage increase control -> detached_mon", percentage_inc(average(control_mems), average(detached_mon_mems)))
 
     plot(x, control_resp_times, monitored_resp_times, detached_mon_resp_times,
          "unsafe", "monitored", "detached_mon", "Response Time (ms)", "Requests sent", "Response Times", plots_path +"resp_time", "resp_time")
     print("resp times percentage increase control -> monitored", percentage_inc(average(control_resp_times), average(monitored_resp_times)))
+    print("resp times percentage increase control -> detached_mon", percentage_inc(average(control_resp_times), average(detached_mon_resp_times)))
 

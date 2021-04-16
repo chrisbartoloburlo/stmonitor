@@ -226,30 +226,27 @@ if __name__ == '__main__':
     #      control_total_times_variance, monitored_total_times_variance, detached_mon_total_times_variance,
     #      "unsafe", "monitored", "detached_mon", "Time (s)", "Emails sent", "Execution Times", path + "smtp_total_times", "total_times")
 
-
+    print(f"*** SMTP ${type} benchmark overheads:")
     print("cpu percentage increase control -> monitored",
           percentage_inc(average(control_cpus), average(monitored_cpus)))
     print("cpu percentage increase control -> detached_mon",
           percentage_inc(average(control_cpus), average(detached_mon_cpus)))
-    print("cpu percentage increase detached_mon -> monitored",
-          percentage_inc(average(detached_mon_cpus), average(monitored_cpus)))
 
     plot(x, control_cpus, monitored_cpus, detached_mon_cpus,
          control_cpus_variance, monitored_cpus_variance, detached_mon_cpus_variance,
          "unsafe", "monitored", "detached_mon", "CPU Utilisation (%)", "Emails sent", "CPU Utilisation",
          plots_path + "smtp_cpu_consumption", "cpu_consumption")
 
+    print("memory percentage increase control -> monitored",
+          percentage_inc(average(control_mems), average(monitored_mems)))
+    print("memory percentage increase control -> detached_mon",
+          percentage_inc(average(control_mems), average(detached_mon_mems)))
+
     plot(x, control_mems, monitored_mems, detached_mon_mems,
          control_mems_variance, monitored_mems_variance, detached_mon_mems_variance,
          "unsafe", "monitored", "detached_mon", "Memory Consumption (MB)", "Emails sent", "Memory Consumption",
          plots_path + "smtp_mem_consumption", "memory_consumption")
 
-    print("memory percentage increase control -> monitored",
-          percentage_inc(average(control_mems), average(monitored_mems)))
-    print("memory percentage increase control -> detached_mon",
-          percentage_inc(average(control_mems), average(detached_mon_mems)))
-    print("memory percentage increase detached_mon -> monitored",
-          percentage_inc(average(detached_mon_mems), average(monitored_mems)))
 
     plot(x, control_resp_times, monitored_resp_times, detached_mon_resp_times,
          control_resp_times_variance, monitored_resp_times_variance, detached_mon_resp_times_variance,
@@ -260,5 +257,3 @@ if __name__ == '__main__':
           percentage_inc(average(control_resp_times), average(monitored_resp_times)))
     print("resp times percentage increase control -> detached_mon",
           percentage_inc(average(control_resp_times), average(detached_mon_resp_times)))
-    print("resp times percentage increase detached_mon -> monitored",
-          percentage_inc(average(detached_mon_resp_times), average(monitored_resp_times)))

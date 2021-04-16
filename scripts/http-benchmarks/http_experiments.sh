@@ -8,7 +8,7 @@ rampup=4
 
 wd=`pwd`
 
-echo "Removing contents of http-benchmarks/results..."
+echo "Removing contents of http-benchmarks/results...\n"
 rm -r $wd/scripts/http-benchmarks/results/control/* > /dev/null 2>&1
 rm -r $wd/scripts/http-benchmarks/results/monitored/* > /dev/null 2>&1
 
