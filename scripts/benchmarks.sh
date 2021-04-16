@@ -2,14 +2,6 @@
 # Usage: sh benchmarks.sh <number of repetitions per experiment> <list of benchmarks>
 
 iterations=$1
-re='^[0-9]+$'
-if ! [[ $iterations =~ $re ]] ; then
-   echo "ERROR: $iterations is not a number" >&2
-   echo "USAGE: sh scripts/benchmarks.sh \$REPETITIONS \$EXPERIMENTS"
-   echo "See README.md for info"
-   exit
-fi
-
 wd=`pwd`
 
 screen -v > /dev/null 2>&1
@@ -57,6 +49,14 @@ if [ "$iterations" = "kickthetires" ]; then
     echo "HTTP benchmark plots can be found in the directory $wd/scripts/http-benchmarks/plots"
     exit
   fi
+fi
+
+re='^[0-9]+$'
+if ! [[ $iterations =~ $re ]] ; then
+   echo "ERROR: $iterations is not a number" >&2
+   echo "USAGE: sh scripts/benchmarks.sh \$REPETITIONS \$EXPERIMENTS"
+   echo "See README.md for info"
+   exit
 fi
 
 experiments=""
