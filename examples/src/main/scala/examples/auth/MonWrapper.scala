@@ -41,7 +41,7 @@ object MonWrapper extends App {
   val monSktm = new MonSocketManager(serverConn)
 
   val clientPort = args(0).toInt //1330
-  val clientConnectionManager = new ConnectionManager(clientPort)
+  val clientConnectionManager = new ClientConnectionManager(clientPort)
   val sChoice = SocketOut[Auth](monSktm)
   def report(msg: String): Unit = {
     println(msg)

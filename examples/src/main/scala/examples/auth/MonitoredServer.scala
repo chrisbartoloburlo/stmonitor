@@ -13,7 +13,7 @@ object MonitoredServer extends App {
     println(msg)
   }
 
-  val CM = new ConnectionManager(1330)
+  val CM = new ClientConnectionManager(1330)
   while(true) {
     val (in, out) = LocalChannel.factory[Auth]()
     val Monitor = new Monitor(CM, out, 300, report)(global, timeout)

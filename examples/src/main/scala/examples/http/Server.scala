@@ -65,7 +65,7 @@ object ServerWithMonitor {
     while (true) {
       val client = ssocket.accept()
 
-      val cm = new ConnectionManager(client, true, println(_))
+      val cm = new ClientConnectionManager(client, true, println(_))
       val (in, out) = LocalChannel.factory[Request]()
       pool.execute(new Worker(in, root))
       pool.execute(new Monitor(cm, out, 300, report)(global, timeout))

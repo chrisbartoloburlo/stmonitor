@@ -1,9 +1,11 @@
 package examples.auth
 
+import monitor.util.ConnectionManager
+
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 import java.net.ServerSocket
 
-class ConnectionManager(port: Int){
+class ClientConnectionManager(port: Int) extends ConnectionManager {
   var outB: BufferedWriter = _
   var inB: BufferedReader = _
 

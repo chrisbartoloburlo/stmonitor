@@ -1,10 +1,9 @@
 package examples.http
 
-import java.net.Socket
-import java.io.{
-  BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter
-}
+import monitor.util.ConnectionManager
 
+import java.net.Socket
+import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 import java.time.format.DateTimeFormatter.{RFC_1123_DATE_TIME => RFCDate}
 
 /** Socket manager for the HTTP protocol.
@@ -13,7 +12,7 @@ import java.time.format.DateTimeFormatter.{RFC_1123_DATE_TIME => RFCDate}
  *  @param relaxHeaders if true, skip unmanaged HTTP headers (otherwise, error)
  *  @param logger logging function, used to report e.g. skipped headers and other info
  */
-class ConnectionManager(socket: Socket, relaxHeaders: Boolean, logger: (String) => Unit) {
+class ClientConnectionManager(socket: Socket, relaxHeaders: Boolean, logger: (String) => Unit) extends ConnectionManager {
   case class ConnectionClosed(msg: String) extends java.io.IOException(msg)
   case class ProtocolError(msg: String) extends java.io.IOException(msg)
 

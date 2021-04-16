@@ -46,7 +46,7 @@ object MonitoredClient extends App {
   def report(msg: String): Unit = {
     println(msg)
   }
-  val mon = new Monitor(new ConnectionManager(), in, 300, report)(global, timeout)
+  val mon = new Monitor(new ServerConnectionManager(), in, 300, report)(global, timeout)
 
   val monThread = new Thread {
     override def run(): Unit = {

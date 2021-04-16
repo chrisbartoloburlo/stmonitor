@@ -1,9 +1,11 @@
 package examples.smtp
 
+import monitor.util.ConnectionManager
+
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 import java.net.{InetAddress, Socket}
 
-class ConnectionManager(port: Int){
+class ServerConnectionManager(port: Int) extends ConnectionManager {
   var outB: BufferedWriter = _
   var inB: BufferedReader = _
 
