@@ -4,12 +4,6 @@
 iterations=$1
 wd=`pwd`
 
-screen -v > /dev/null 2>&1
-if [ "$?" = "1" ]; then
-  echo "screen not found, cannot run benchmarks: terminating"
-  exit
-fi
-
 python3 -c "import matplotlib.pyplot"
 if [ "$?" = "1" ]; then
   echo "Python module matplotlib not found, cannot run benchmarks: terminating"
@@ -49,14 +43,6 @@ if [ "$iterations" = "kickthetires" ]; then
     echo "HTTP benchmark plots can be found in the directory $wd/scripts/http-benchmarks/plots"
     exit
   fi
-fi
-
-re='^[0-9]+$'
-if ! [[ $iterations =~ $re ]] ; then
-   echo "ERROR: $iterations is not a number" >&2
-   echo "USAGE: sh scripts/benchmarks.sh \$REPETITIONS \$EXPERIMENTS"
-   echo "See README.md for info"
-   exit
 fi
 
 experiments=""
