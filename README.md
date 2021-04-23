@@ -4,9 +4,11 @@ Given a session type _S_, this tool synthesises the Scala code of a type-checked
 
 The approach and its underlying theory are described in the following papers:
 
-* Christian Bartolo Burlò, Adrian Francalanza and Alcese Scalas. *[Towards a Hybrid Verification Methodology for Communication Protocols (Short Paper)](https://doi.org/10.1007/978-3-030-50086-3_13)*. FORTE 2020. ([Pesentation video](https://youtu.be/FL_teSjllSE))
+* Christian Bartolo Burlò, Adrian Francalanza and Alceste Scalas. *[Towards a Hybrid Verification Methodology for Communication Protocols (Short Paper)](https://doi.org/10.1007/978-3-030-50086-3_13)*. FORTE 2020. ([Pesentation video](https://youtu.be/FL_teSjllSE))
 
-* Christian Bartolo Burlò, Adrian Francalanza and Alcese Scalas. *On the Monitorability of Session Types, in Theory and Practice*. ECOOP 2021 (to appear),
+* Christian Bartolo Burlò, Adrian Francalanza and Alceste Scalas. *Towards Probabilistic Session-Type Monitoring*. COORDINATION 2021 (to appear).
+
+* Christian Bartolo Burlò, Adrian Francalanza and Alceste Scalas. *On the Monitorability of Session Types, in Theory and Practice*. ECOOP 2021 (to appear).
 
 ## Compiling the sources
 
