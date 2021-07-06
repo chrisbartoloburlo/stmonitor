@@ -1,1 +1,0 @@
-S_ponger=rec X.(+{!Ping().?Pong().X, !Quit().end})
