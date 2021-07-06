@@ -4,6 +4,8 @@ extra_css:
   - stylesheets/extra.css
 theme:
   features:
+    - navigation.top
+    - navigation.expand
     - navigation.indexes
     - navigation.tracking
     - navigation.instant

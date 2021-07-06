@@ -12,4 +12,4 @@ The approach and its underlying theory are described in the following papers:
 
 * Christian Bartolo Burlò, Adrian Francalanza and Alceste Scalas. *On the Monitorability of Session Types, in Theory and Practice*. ECOOP 2021 (to appear).
 
-      <img src="/images/artifacts_available_v1_1.png" width="80" height="80"> <img src="/images/artifacts_evaluated_functional_v1_1.png" width="80" height="80"> <img src="/images/artifacts_evaluated_reusable_v1_1.png" width="80" height="80">
+      <img src="https://raw.githubusercontent.com/chrisbartoloburlo/stmonitor/master/docs/images/artifacts_available_v1_1.png" width="80" height="80"> <img src="https://raw.githubusercontent.com/chrisbartoloburlo/stmonitor/master/docs/images/artifacts_evaluated_functional_v1_1.png" width="80" height="80"> <img src="https://raw.githubusercontent.com/chrisbartoloburlo/stmonitor/master/docs/images/artifacts_evaluated_reusable_v1_1.png" width="80" height="80">
