@@ -1,5 +1,5 @@
 site_name: STMonitor
-site_url: https://stmonitor.com/
+site_url: null
 extra_css:
   - stylesheets/extra.css
 theme:
