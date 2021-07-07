@@ -1,6 +1,5 @@
 package monitor.interpreter
 
-import com.typesafe.scalalogging.Logger
 import monitor.model._
 import monitor.model.Scope
 import monitor.synth.{SynthMon, SynthProtocol}
@@ -9,7 +8,7 @@ import scala.collection.mutable
 import scala.reflect.runtime._
 import scala.tools.reflect.ToolBox
 
-class STInterpreter(sessionType: SessionType, path: String) {
+class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
   private val toolbox = currentMirror.mkToolBox()
 
   private var scopes = new mutable.HashMap[String, Scope]()
@@ -20,8 +19,6 @@ class STInterpreter(sessionType: SessionType, path: String) {
 
   var synthMon = new SynthMon(this, path)
   var synthProtocol = new SynthProtocol(this, path)
-
-  val logger: Logger = Logger("STInterpreter")
 
   def getRecursiveVarScope(recursiveVar: RecursiveVar): Scope = {
     checkRecVariable(scopes(curScope), recursiveVar)
@@ -46,22 +43,23 @@ class STInterpreter(sessionType: SessionType, path: String) {
    *         the monitor and cpsp classes is found.
    */
   def run(): (StringBuilder, StringBuilder) = {
-    sessionType.statement match {
-      case recursiveStatement: RecursiveStatement =>
-        var tmpStatement: Statement = recursiveStatement.body
-        while(tmpStatement.isInstanceOf[RecursiveStatement]){
-          tmpStatement = recursiveStatement.body
-        }
-        synthMon.startInit(tmpStatement)
-      case _ =>
-        synthMon.startInit(sessionType.statement)
-    }
+//    sessionType.statement match {
+//      case recursiveStatement: RecursiveStatement =>
+//        var tmpStatement: Statement = recursiveStatement.body
+//        while(tmpStatement.isInstanceOf[RecursiveStatement]){
+//          tmpStatement = recursiveStatement.body
+//        }
+//        synthMon.startInit(preamble)
+//      case _ =>
+//        synthMon.startInit(preamble)
+//    }
 
+    synthMon.startInit(preamble)
     initialWalk(sessionType.statement)
     curScope = "global"
     synthMon.endInit()
 
-    synthProtocol.init()
+    synthProtocol.init(preamble)
     walk(sessionType.statement)
 
     curScope = "global"
@@ -69,7 +67,6 @@ class STInterpreter(sessionType: SessionType, path: String) {
     synthMon.addCalculateInterval()
     synthMon.end()
     synthProtocol.end()
-    logger.info("Synthesis terminated successfully")
     (synthMon.getMon(), synthProtocol.getProtocol())
   }
 
@@ -82,21 +79,21 @@ class STInterpreter(sessionType: SessionType, path: String) {
     root match {
       case ReceiveStatement(label, statementID, types, probability, continuation) =>
         createAndUpdateScope(label, statementID)
-        synthMon.handleLabels(statementID, probability, false)
+        synthMon.handleLabels(statementID, probability, choice = false)
         initialWalk(continuation)
 
       case SendStatement(label, statementID, types, probability, continuation) =>
         createAndUpdateScope(label, statementID)
-        synthMon.handleLabels(statementID, probability, false)
+        synthMon.handleLabels(statementID, probability, choice = false)
         initialWalk(continuation)
 
       case ReceiveChoiceStatement(label, choices) =>
         createAndUpdateScope(label, label)
         val tmpScope = curScope
-        synthMon.handleLabels(label, 0, true)
+        synthMon.handleLabels(label, 0, choice = true)
         for(choice <- choices) {
           createAndUpdateScope(choice.asInstanceOf[ReceiveStatement].label, choice.asInstanceOf[ReceiveStatement].statementID)
-          synthMon.handleLabels(choice.asInstanceOf[ReceiveStatement].statementID, choice.asInstanceOf[ReceiveStatement].probability, false)
+          synthMon.handleLabels(choice.asInstanceOf[ReceiveStatement].statementID, choice.asInstanceOf[ReceiveStatement].probability, choice = false)
           initialWalk(choice.asInstanceOf[ReceiveStatement].continuation)
           curScope = tmpScope
         }
@@ -104,10 +101,10 @@ class STInterpreter(sessionType: SessionType, path: String) {
       case SendChoiceStatement(label, choices) =>
         createAndUpdateScope(label, label)
         val tmpScope = curScope
-        synthMon.handleLabels(label, 0, true)
+        synthMon.handleLabels(label, 0, choice = true)
         for(choice <- choices) {
           createAndUpdateScope(choice.asInstanceOf[SendStatement].label, choice.asInstanceOf[SendStatement].statementID)
-          synthMon.handleLabels(choice.asInstanceOf[SendStatement].statementID, choice.asInstanceOf[SendStatement].probability, false)
+          synthMon.handleLabels(choice.asInstanceOf[SendStatement].statementID, choice.asInstanceOf[SendStatement].probability, choice = false)
           initialWalk(choice.asInstanceOf[SendStatement].continuation)
           curScope = tmpScope
         }
@@ -132,7 +129,6 @@ class STInterpreter(sessionType: SessionType, path: String) {
   def walk(statement: Statement): Unit = {
     statement match {
       case statement @ ReceiveStatement(label, id, types, probability, _) =>
-        logger.info("Receive "+label+"("+types+")")
         curScope = id
         if(probability!=1){
           throw new Exception("Probability in " + label + " is not 1")
@@ -142,7 +138,6 @@ class STInterpreter(sessionType: SessionType, path: String) {
         walk(statement.continuation)
 
       case statement @ SendStatement(label, id, types, probability, _) =>
-        logger.info("Send "+label+"("+types+")")
         curScope = id
         if(probability!=1){
           throw new Exception("Probability in " + label + " is not 1")
@@ -152,7 +147,6 @@ class STInterpreter(sessionType: SessionType, path: String) {
         walk(statement.continuation)
 
       case statement @ ReceiveChoiceStatement(label, choices) =>
-        logger.info("Receive Choice Statement "+label+"{"+choices+"}")
         curScope = label
         val tmpScope = curScope
         synthMon.handleReceiveChoice(statement)
@@ -172,7 +166,6 @@ class STInterpreter(sessionType: SessionType, path: String) {
         }
 
       case statement @ SendChoiceStatement(label, choices) =>
-        logger.info("Send Choice Statement "+label+"{"+choices+"}")
         curScope = label
         val tmpScope = curScope
         synthMon.handleSendChoice(statement)
@@ -192,11 +185,9 @@ class STInterpreter(sessionType: SessionType, path: String) {
         }
 
       case statement @ RecursiveStatement(label, body) =>
-        logger.info("Recursive statement with variable "+label+" and body: " +body)
         walk(statement.body)
 
       case statement @ RecursiveVar(name, continuation) =>
-        logger.info("Recursive variable "+name)
         checkRecVariable(scopes(curScope), statement)
         walk(statement.continuation)
 

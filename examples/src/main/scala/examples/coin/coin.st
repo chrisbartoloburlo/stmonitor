@@ -1,1 +1,1 @@
-S_coin=rec X.(&{?Heads()[0.5].X, ?Tails()[0.5].X})
+S_coin=rec X.(+{!Heads()[0.5].X, !Tails()[0.5].X})

@@ -11,10 +11,18 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   }
 
   private var first = true
+  private var importIn = false
+  private var importOut = false
 
-  def startInit(statement: Statement): Unit = {
-    mon.append("import lchannels.{In, Out}\nimport monitor.util.ConnectionManager\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.util.control.TailCalls.{TailRec, done, tailcall}\n")
-    mon.append("class Mon(external: ConnectionManager, internal: $, max: Int, zvalue: Double)")
+  /**
+   * Generates the code for declaring a monitor including the imports required for the monitor to compile.
+   *
+   * @param preamble The contents of the preamble file.
+   */
+  def startInit(preamble: String): Unit = {
+    if (preamble!="") mon.append(preamble+"\n")
+    mon.append("import lchannels.$lchannelsimport\nimport monitor.util.ConnectionManager\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.util.control.TailCalls.{TailRec, done, tailcall}\n")
+    mon.append("class Mon(external: ConnectionManager, internal: $channel, max: Int, zvalue: Double)")
     mon.append("(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {\n")
     mon.append("\tobject labels {\n")
   }
@@ -47,8 +55,8 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       reference = statement.statementID
     }
     if(first){
-      mon.replace(mon.indexOf("$"), mon.indexOf("$")+1, "In["+reference+"]")
-      mon.append("\t\tsend"+statement.statementID+"(internal, external, 0).result\n    external.close()\n  }\n")
+      mon.replace(mon.indexOf("$channel"), mon.indexOf("$channel")+8, "In["+reference+"]")
+      mon.append("\t\tsend"+statement.statementID+"(internal, external, 0).result\n\t\texternal.close()\n  }\n")
       first = false
     }
 
@@ -58,6 +66,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       case _: Throwable =>
         mon.append("\tdef send"+statement.statementID+"(internal: In["+reference+"], external: ConnectionManager, count: Int): TailRec[Unit] = {\n")
     }
+    importIn = true
 
     mon.append("\t\tinternal ? {\n")
     mon.append("\t\t\tcase msg @ "+reference+"(")
@@ -101,13 +110,14 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       reference = statement.statementID
     }
     if(first) {
-      mon.replace(mon.indexOf("$"), mon.indexOf("$")+1, "Out["+reference+"]")
+      mon.replace(mon.indexOf("$channel"), mon.indexOf("$channel")+8, "Out["+reference+"]")
       mon.append("\t\treceive" + statement.statementID + "(internal, external, 0).result\n    external.close()\n  }\n")
 //      reference = statement.statementID
       first = false
     }
 
     mon.append("  def receive" + statement.statementID + "(internal: Out[" + reference + "], external: ConnectionManager, count: Int): TailRec[Unit] = {\n")
+    importOut=true
     mon.append("\t\texternal.receive() match {\n")
     mon.append("\t\t\tcase msg @ " + reference + "(")
     addParameters(statement.types)
@@ -165,7 +175,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def handleSendChoice(statement: SendChoiceStatement): Unit ={
     if(first) {
-      mon.replace(mon.indexOf("$"), mon.indexOf("$")+1, "In["+statement.label+"]")
+      mon.replace(mon.indexOf("$channel"), mon.indexOf("$channel")+8, "In["+statement.label+"]")
       mon.append("\t\tsend" + statement.label + "(internal, external, 0).result\n    external.close()\n  }\n")
       first = false
     }
@@ -174,6 +184,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("\t\tlabels."+statement.label+".counter+=1\n")
     mon.append("\t\tinternal ? {\n")
 
+    importIn = true
     for (choice <- statement.choices){
       var reference = choice.asInstanceOf[SendStatement].label
       if(!sessionTypeInterpreter.getScope(choice).isUnique){
@@ -193,7 +204,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def handleReceiveChoice(statement: ReceiveChoiceStatement): Unit = {
     if(first) {
-      mon.replace(mon.indexOf("$"), mon.indexOf("$")+1, "Out["+statement.label+"]")
+      mon.replace(mon.indexOf("$channel"), mon.indexOf("$channel")+8, "Out["+statement.label+"]")
       mon.append("\t\treceive" + statement.label + "(internal, external, 0).result\n    external.close()\n  }\n")
       first = false
     }
@@ -202,6 +213,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("\t\tlabels."+statement.label+".counter+=1\n")
     mon.append("\t\texternal.receive() match {\n")
 
+    importOut = true
     for (choice <- statement.choices){
       var reference = choice.asInstanceOf[ReceiveStatement].label
       if(!sessionTypeInterpreter.getScope(choice).isUnique){
@@ -288,6 +300,10 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   }
 
   def end(): Unit = {
+    if (importIn && importOut) mon.replace(mon.indexOf("$lchannelsimport"), mon.indexOf("$lchannelsimport")+16, "{In, Out}")
+    else if (importIn) mon.replace(mon.indexOf("$lchannelsimport"), mon.indexOf("$lchannelsimport")+16, "In")
+    else if (importOut) mon.replace(mon.indexOf("$lchannelsimport"), mon.indexOf("$lchannelsimport")+16, "Out")
+    else mon.replace(mon.indexOf("$lchannelsimport"), mon.indexOf("$lchannelsimport")+16, "_")
     mon.append("}")
   }
 }

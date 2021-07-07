@@ -6,36 +6,40 @@ import monitor.parser.STParser
 
 import java.io.{File, PrintWriter}
 import scala.io.Source
+import scala.util.Try
 
 class Synth {
   /**
    * Synthesises the monitor and the protocol files.
    *
-   * @param path The path containing the util.scala file which also represents the directory where the monitor
+   * @param directoryPath The path containing the util.scala file which also represents the directory where the monitor
    *             and protocol files are to be generated in.
-   * @param filePath The path of the file containing the session type.
+   * @param sessionTypePath The path of the file containing the session type.
+   * @param preamblePath The path to the file containing the preamble of the monitor code.
    * @param synthMonFile A flag to indicate whether to synthesise the monitor file or not.
    * @param synthProtocolFile A flag to indicate whether to synthesise the protocol file or not.
    */
-  def apply(path: String, filePath: String, synthMonFile: Boolean, synthProtocolFile: Boolean): Unit ={
+  def apply(directoryPath: String, sessionTypePath: String, preamblePath: String, synthMonFile: Boolean, synthProtocolFile: Boolean): Unit ={
     val logger = Logger("Synth")
-    val inputFile = Source.fromFile(filePath)
+    val inputFile = Source.fromFile(sessionTypePath)
     val inputSource = inputFile.mkString
 
     val parser = new STParser
     parser.parseAll(parser.sessionTypeVar, inputSource) match {
       case parser.Success(r, n) =>
-        logger.info("Input parsed successfully")
-        val interpreter = new STInterpreter(r, path)
+        val stFile = sessionTypePath.substring(sessionTypePath.lastIndexOf('/')+1)
+        logger.info(f"Input type $stFile parsed successfully")
+        val preambleFile = Try(Source.fromFile(preamblePath).mkString)
+        val interpreter = new STInterpreter(r, directoryPath, preambleFile.getOrElse(""))
         try {
           val (mon, protocol) = interpreter.run()
           if(synthMonFile){
-            lazy val monFile = new PrintWriter(new File(path+"/Mon.scala"))
+            lazy val monFile = new PrintWriter(new File(directoryPath+"/Monitor.scala"))
             monFile.write(mon.toString)
             monFile.close()
           }
           if(synthProtocolFile){
-            lazy val protocolFile = new PrintWriter(new File(path+"/CPSPc.scala"))
+            lazy val protocolFile = new PrintWriter(new File(directoryPath+"/CPSPc.scala"))
             protocolFile.write(protocol.toString)
             protocolFile.close()
           }

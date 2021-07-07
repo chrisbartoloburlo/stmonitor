@@ -7,4 +7,5 @@ newbenchmarks/
 test/
 testcoin/
 testprobabilities/
+.bsp/
 #probabilities/

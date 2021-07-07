@@ -5,7 +5,7 @@ import monitor.util.ConnectionManager
 import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 import java.net.ServerSocket
 
-class CoinConnectionManager() extends ConnectionManager {
+class ClientConnectionManager() extends ConnectionManager {
   var outB: BufferedWriter = _
   var inB: BufferedReader = _
 

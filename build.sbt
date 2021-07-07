@@ -1,19 +1,19 @@
 // Kludge to avoid building an empty .jar for the root project
 Keys.`package` := {
-  (Keys.`package` in (lchannels, Compile)).value
-  (Keys.`package` in (monitor, Compile)).value
-  (Keys.`package` in (examples, Compile)).value
+  (lchannels / Compile / Keys.`package`).value
+  (monitor / Compile / Keys.`package`).value
+  (examples / Compile / Keys.`package`).value
 }
 
 lazy val commonSettings = Seq(
   version := "0.0.3",
-  scalaVersion := "2.12.7",
+  scalaVersion := "2.12.13",
   scalacOptions ++= Seq(
-    "-target:jvm-1.8", "-unchecked", "-feature", "-Ywarn-unused-import" // "-deprecation"
+    "-unchecked", "-feature", "-Ywarn-unused-import" // "-deprecation"
   ),
   // ScalaDoc setup
   autoAPIMappings := true,
-  scalacOptions in (Compile,doc) ++= Seq(
+  Compile / doc / scalacOptions ++= Seq(
     "-no-link-warnings" // Workaround for ScalaDoc @throws links issues
   )
 )
@@ -39,7 +39,7 @@ lazy val monitor = (project in file("monitor")).
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
       "ch.qos.logback" % "logback-classic" % "1.2.3",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.3"
     )
   )
 
@@ -49,6 +49,27 @@ lazy val examples = (project in file("examples")).
   settings(
     name := "examples",
 
+    generateMonitors := (Def.taskDyn {
+      val baseDir = sourceDirectory.value / "main" / "scala" / "examples"
+      Def.task {
+        generateMonitor(baseDir, "coin").value
+        generateMonitor(baseDir, "game").value
+      }
+    }).value,
+
+    (Compile / compile) := ((Compile / compile) dependsOn generateMonitors).value,
+
     libraryDependencies ++= Seq(
+      "com.athaydes.rawhttp" % "rawhttp-core" % "2.4.0",
+      "com.github.tototoshi" %% "scala-csv" % "1.3.6"
     )
   )
+
+val generateMonitors = taskKey[Unit]("Generate session monitors.")
+
+def generateMonitor(baseDir: File, name: String) = {
+  val exampleDir = baseDir / name
+  val stFile = exampleDir / (name ++ ".st")
+  val preamble = exampleDir / "preamble.txt"
+  (monitor / Compile / runMain).toTask(f" monitor.Generate ${exampleDir} ${stFile} ${preamble}")
+}

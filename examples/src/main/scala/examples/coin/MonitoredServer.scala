@@ -1,13 +1,13 @@
 package examples.coin
 
-import lchannels.{In, LocalChannel, Out}
+import lchannels.{In, LocalChannel}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.global
 import scala.concurrent.duration.Duration
 
 object Server {
-  def apply(Client: In[ExternalChoice1])(implicit ec: ExecutionContext, timeout: Duration) {
+  def apply(Client: In[InternalChoice1])(implicit ec: ExecutionContext, timeout: Duration) {
     var quit = false
     var cont = Client
     while (!quit) {
@@ -27,8 +27,8 @@ object MonitoredServer extends App {
   def run() = main(Array())
   val timeout = Duration.Inf
 
-  val (in, out) = LocalChannel.factory[ExternalChoice1]()
-  val mon = new Mon(new CoinConnectionManager(), out, 300, 1.9599)(global, timeout)
+  val (in, out) = LocalChannel.factory[InternalChoice1]()
+  val mon = new Mon(new ClientConnectionManager(), out, 300, 4.4172)(global, timeout)
 
   val monThread = new Thread {
     override def run(): Unit = {
