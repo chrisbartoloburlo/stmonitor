@@ -232,29 +232,31 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
 
   def handleReceiveChoiceInterval(statement: ReceiveChoiceStatement): Unit = {
     mon.append("\tdef check"+statement.label+"Intervals(): Unit = {\n")
-    for (choice <- statement.choices){
-      val choiceLabel = choice.asInstanceOf[ReceiveStatement].label
-      val choiceRefId = choice.asInstanceOf[ReceiveStatement].statementID
-      val pmin = "pmin_"+choiceLabel
-      val pmax = "pmax_"+choiceLabel
-      mon.append("\t\tval ("+pmin+","+pmax+") = calculateInterval(labels."+choiceRefId+".counter, labels."+statement.label+".counter, labels."+choiceRefId+".prob)\n")
-      if(choice.asInstanceOf[ReceiveStatement].probBoundary.lessThan && choice.asInstanceOf[ReceiveStatement].probBoundary.greaterThan) {
-        mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob || "+pmax+" <= labels."+choiceRefId+".prob) {\n")
-      } else if(choice.asInstanceOf[ReceiveStatement].probBoundary.lessThan){
-        mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob) {\n")
-      } else if (choice.asInstanceOf[ReceiveStatement].probBoundary.greaterThan) {
-        mon.append("\t\tif("+pmax+" <= labels."+choiceRefId+".prob) {\n")
+    for (choice <- statement.choices) {
+      if(choice.asInstanceOf[ReceiveStatement].probBoundary.lessThan || choice.asInstanceOf[ReceiveStatement].probBoundary.greaterThan) {
+        val choiceLabel = choice.asInstanceOf[ReceiveStatement].label
+        val choiceRefId = choice.asInstanceOf[ReceiveStatement].statementID
+        val pmin = "pmin_" + choiceLabel
+        val pmax = "pmax_" + choiceLabel
+        mon.append("\t\tval (" + pmin + "," + pmax + ") = calculateInterval(labels." + choiceRefId + ".counter, labels." + statement.label + ".counter, labels." + choiceRefId + ".prob)\n")
+        if (choice.asInstanceOf[ReceiveStatement].probBoundary.lessThan && choice.asInstanceOf[ReceiveStatement].probBoundary.greaterThan) {
+          mon.append("\t\tif(" + pmin + " >= labels." + choiceRefId + ".prob || " + pmax + " <= labels." + choiceRefId + ".prob) {\n")
+        } else if (choice.asInstanceOf[ReceiveStatement].probBoundary.lessThan && !choice.asInstanceOf[ReceiveStatement].probBoundary.greaterThan) {
+          mon.append("\t\tif(" + pmin + " >= labels." + choiceRefId + ".prob) {\n")
+        } else if (choice.asInstanceOf[ReceiveStatement].probBoundary.greaterThan && !choice.asInstanceOf[ReceiveStatement].probBoundary.lessThan) {
+          mon.append("\t\tif(" + pmax + " <= labels." + choiceRefId + ".prob) {\n")
+        }
+        mon.append("\t\t\tif(!labels." + choiceRefId + ".warn){\n")
+        mon.append("\t\t\t\tprintln(f\"[MON] **WARN** ?" + choiceLabel + "[${labels." + choiceRefId + ".prob}] outside interval [$" + pmin + ",$" + pmax + "]\")\n")
+        mon.append("\t\t\t\tlabels." + choiceRefId + ".warn = true\n")
+        mon.append("\t\t\t}\n")
+        mon.append("\t\t} else {\n")
+        mon.append("\t\t\tif(labels." + choiceRefId + ".warn){\n")
+        mon.append("\t\t\t\tprintln(f\"[MON] **INFO** ?" + choiceLabel + "[${labels." + choiceRefId + ".prob}] within interval [$" + pmin + ",$" + pmax + "]\")\n")
+        mon.append("\t\t\t\tlabels." + choiceRefId + ".warn = false\n")
+        mon.append("\t\t\t}\n")
+        mon.append("\t\t}\n")
       }
-      mon.append("\t\t\tif(!labels."+choiceRefId+".warn){\n")
-      mon.append("\t\t\t\tprintln(f\"[MON] **WARN** ?"+choiceLabel+"[${labels."+choiceRefId+".prob}] outside interval [$"+pmin+",$"+pmax+"]\")\n")
-      mon.append("\t\t\t\tlabels."+choiceRefId+".warn = true\n")
-      mon.append("\t\t\t}\n")
-      mon.append("\t\t} else {\n")
-      mon.append("\t\t\tif(labels."+choiceRefId+".warn){\n")
-      mon.append("\t\t\t\tprintln(f\"[MON] **INFO** ?"+choiceLabel+"[${labels."+choiceRefId+".prob}] within interval [$"+pmin+",$"+pmax+"]\")\n")
-      mon.append("\t\t\t\tlabels."+choiceRefId+".warn = false\n")
-      mon.append("\t\t\t}\n")
-      mon.append("\t\t}\n")
     }
     mon.append("\t}\n")
   }
@@ -262,28 +264,30 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   def handleSendChoiceInterval(statement: SendChoiceStatement): Unit = {
     mon.append("\tdef check"+statement.label+"Intervals(): Unit = {\n")
     for (choice <- statement.choices){
-      val choiceLabel = choice.asInstanceOf[SendStatement].label
-      val choiceRefId = choice.asInstanceOf[SendStatement].statementID
-      val pmin = "pmin_"+choiceLabel
-      val pmax = "pmax_"+choiceLabel
-      mon.append("\t\tval ("+pmin+","+pmax+") = calculateInterval(labels."+choiceRefId+".counter, labels."+statement.label+".counter, labels."+choiceRefId+".prob)\n")
-      if(choice.asInstanceOf[SendStatement].probBoundary.lessThan && choice.asInstanceOf[SendStatement].probBoundary.greaterThan) {
-        mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob || "+pmax+" <= labels."+choiceRefId+".prob) {\n")
-      } else if(choice.asInstanceOf[SendStatement].probBoundary.lessThan){
-        mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob) {\n")
-      } else if (choice.asInstanceOf[SendStatement].probBoundary.greaterThan) {
-        mon.append("\t\tif("+pmax+" <= labels."+choiceRefId+".prob) {\n")
+      if(choice.asInstanceOf[SendStatement].probBoundary.lessThan || choice.asInstanceOf[SendStatement].probBoundary.greaterThan) {
+        val choiceLabel = choice.asInstanceOf[SendStatement].label
+        val choiceRefId = choice.asInstanceOf[SendStatement].statementID
+        val pmin = "pmin_" + choiceLabel
+        val pmax = "pmax_" + choiceLabel
+        mon.append("\t\tval (" + pmin + "," + pmax + ") = calculateInterval(labels." + choiceRefId + ".counter, labels." + statement.label + ".counter, labels." + choiceRefId + ".prob)\n")
+        if (choice.asInstanceOf[SendStatement].probBoundary.lessThan && choice.asInstanceOf[SendStatement].probBoundary.greaterThan) {
+          mon.append("\t\tif(" + pmin + " >= labels." + choiceRefId + ".prob || " + pmax + " <= labels." + choiceRefId + ".prob) {\n")
+        } else if (choice.asInstanceOf[SendStatement].probBoundary.lessThan) {
+          mon.append("\t\tif(" + pmin + " >= labels." + choiceRefId + ".prob) {\n")
+        } else if (choice.asInstanceOf[SendStatement].probBoundary.greaterThan) {
+          mon.append("\t\tif(" + pmax + " <= labels." + choiceRefId + ".prob) {\n")
+        }
+        mon.append("\t\t\tif(!labels." + choiceRefId + ".warn){\n")
+        mon.append("\t\t\t\tprintln(f\"[MON] **WARN** !" + choiceLabel + "[${labels." + choiceRefId + ".prob}] outside interval [$" + pmin + ",$" + pmax + "]\")\n")
+        mon.append("\t\t\t\tlabels." + choiceRefId + ".warn = true\n")
+        mon.append("\t\t\t}\n")
+        mon.append("\t\t} else {\n")
+        mon.append("\t\t\tif(labels." + choiceRefId + ".warn){\n")
+        mon.append("\t\t\t\tprintln(f\"[MON] **INFO** !" + choiceLabel + "[${labels." + choiceRefId + ".prob}] within interval [$" + pmin + ",$" + pmax + "]\")\n")
+        mon.append("\t\t\t\tlabels." + choiceRefId + ".warn = false\n")
+        mon.append("\t\t\t}\n")
+        mon.append("\t\t}\n")
       }
-      mon.append("\t\t\tif(!labels."+choiceRefId+".warn){\n")
-      mon.append("\t\t\t\tprintln(f\"[MON] **WARN** !"+choiceLabel+"[${labels."+choiceRefId+".prob}] outside interval [$"+pmin+",$"+pmax+"]\")\n")
-      mon.append("\t\t\t\tlabels."+choiceRefId+".warn = true\n")
-      mon.append("\t\t\t}\n")
-      mon.append("\t\t} else {\n")
-      mon.append("\t\t\tif(labels."+choiceRefId+".warn){\n")
-      mon.append("\t\t\t\tprintln(f\"[MON] **INFO** !"+choiceLabel+"[${labels."+choiceRefId+".prob}] within interval [$"+pmin+",$"+pmax+"]\")\n")
-      mon.append("\t\t\t\tlabels."+choiceRefId+".warn = false\n")
-      mon.append("\t\t\t}\n")
-      mon.append("\t\t}\n")
     }
     mon.append("\t}\n")
   }

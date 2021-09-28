@@ -92,11 +92,13 @@ class STParser extends StandardTokenParsers {
   def probBoundary: Parser[Boundary] = stringLit ^^ {
     b =>
       val boundary = b.replace(" ", "")
-      if(boundary.charAt(0)=='*' && boundary.charAt(boundary.length-1)=='*')
-        throw new Exception("* must only be for either the lower or upper boundary")
-      if(boundary.charAt(0)=='*') {
+      if (boundary.charAt(0) == '*' && boundary.charAt(boundary.length - 1) == '*')
+        if (b.length == 1) {
+          Boundary(lessThan = false, 0, greaterThan = false)
+        } else { throw new Exception("* must only be for either the lower or upper boundary") }
+      else if(boundary.charAt(0)=='*' && boundary.charAt(boundary.length - 1) != '*') {
         Boundary(lessThan = false, boundary.substring(2).toDouble, greaterThan = true)
-      } else if(boundary.charAt(boundary.length-1)=='*') {
+      } else if(boundary.charAt(boundary.length-1)=='*' && boundary.charAt(0)!='*') {
         Boundary(lessThan = true, boundary.substring(0, boundary.length - 2).toDouble, greaterThan = false)
       } else {
         Boundary(lessThan = true, boundary.toDouble, greaterThan = true)

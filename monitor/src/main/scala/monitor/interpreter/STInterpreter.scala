@@ -130,8 +130,8 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
     statement match {
       case statement @ ReceiveStatement(label, id, types, probBoundary, _) =>
         curScope = id
-        if(probBoundary.probability!=1){
-          throw new Exception("Probability in " + label + " is not 1")
+        if(probBoundary.probability!=1 && probBoundary.probability!=0){
+          throw new Exception("Probability in " + label + " is not 1 nor ignored")
         }
         synthMon.handleReceive(statement, statement.continuation, scopes(curScope).isUnique) // Change isUnique accordingly
         synthProtocol.handleReceive(statement, scopes(curScope).isUnique, statement.continuation, getScope(statement.continuation).isUnique, null)
@@ -139,8 +139,8 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
 
       case statement @ SendStatement(label, id, types, probBoundary, _) =>
         curScope = id
-        if(probBoundary.probability!=1){
-          throw new Exception("Probability in " + label + " is not 1")
+        if(probBoundary.probability!=1 && probBoundary.probability!=0){
+          throw new Exception("Probability in " + label + " is not 1 nor ignored")
         }
         synthMon.handleSend(statement, statement.continuation, scopes(curScope).isUnique) // Change isUnique accordingly
         synthProtocol.handleSend(statement, scopes(curScope).isUnique, statement.continuation, getScope(statement.continuation).isUnique, null)
