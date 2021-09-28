@@ -28,11 +28,11 @@ class STParser extends StandardTokenParsers {
 
   def choice: Parser[Statement] = positioned( receiveChoice | sendChoice ) ^^ {a=>a}
 
-  def receive: Parser[SendStatement] = ("?" ~> ident) ~ ("(" ~> types <~ ")") ~ ("[" ~> stringLit <~ "]") ~ opt("." ~> sessionType) ^^ {
+  def receive: Parser[SendStatement] = ("?" ~> ident) ~ ("(" ~> types <~ ")") ~ ("[" ~> probBoundary <~ "]") ~ opt("." ~> sessionType) ^^ {
     case l ~ t ~ p ~ None =>
-      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, End())
+      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p, End())
     case l ~ t ~ p ~ cT =>
-      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, cT.get)
+      SendStatement(l, l+"_"+getAndIncrementIDCounter, t, p, cT.get)
   }
 
   def receiveChoice: Parser[SendChoiceStatement] = "&" ~ "{" ~> (repsep(sessionType, ",") <~ "}") ^^ {
@@ -47,11 +47,11 @@ class STParser extends StandardTokenParsers {
       SendChoiceStatement(f"ExternalChoice${receiveChoiceCounter+=1;receiveChoiceCounter.toString}", cN)
   }
 
-  def send: Parser[ReceiveStatement] = ("!" ~> ident) ~ ("(" ~> types <~ ")") ~ ("[" ~> stringLit <~ "]") ~ opt("." ~> sessionType) ^^ {
+  def send: Parser[ReceiveStatement] = ("!" ~> ident) ~ ("(" ~> types <~ ")") ~ ("[" ~> probBoundary <~ "]") ~ opt("." ~> sessionType) ^^ {
     case l ~ t ~ p ~ None =>
-      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, End())
+      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p, End())
     case l ~ t ~ p ~ cT =>
-      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p.toDouble, cT.get)
+      ReceiveStatement(l, l+"_"+getAndIncrementIDCounter, t, p, cT.get)
   }
 
   def sendChoice: Parser[ReceiveChoiceStatement] = "+" ~ "{" ~> (repsep(sessionType, ",") <~ "}") ^^ {
@@ -89,7 +89,48 @@ class STParser extends StandardTokenParsers {
 
   def end: Parser[End] = ("" | "end") ^^ (_ => End())
 
-//  def typ: Parser[String] = "String" | "Int" | "Bool" ^^ (t => t)
+  def probBoundary: Parser[Boundary] = stringLit ^^ {
+    b =>
+      val boundary = b.replace(" ", "")
+      if(boundary.charAt(0)=='*' && boundary.charAt(boundary.length-1)=='*')
+        throw new Exception("* must only be for either the lower or upper boundary")
+      if(boundary.charAt(0)=='*') {
+        Boundary(lessThan = false, boundary.substring(2).toDouble, greaterThan = true)
+      } else if(boundary.charAt(boundary.length-1)=='*') {
+        Boundary(lessThan = true, boundary.substring(0, boundary.length - 2).toDouble, greaterThan = false)
+      } else {
+        Boundary(lessThan = true, boundary.toDouble, greaterThan = true)
+      }
+  }
+
+//  def probBoundary: Parser[Boundary] = repsep(stringLit, ",") ^^ {
+//    boundary =>
+//      if(boundary.head=="*" && boundary.last=="*")
+//        throw new Exception("* must either be for the lower or the upper boundary only")
+//      if(boundary.head=="*" ) {
+//        Boundary(lessThan = false, boundary(1).toDouble, greaterThan = true)
+//      }
+//      if(boundary.last=="*") {
+//        Boundary(lessThan = true, boundary.head.toDouble, greaterThan = true)
+//      }
+//      Boundary(lessThan = true, boundary.head.toDouble, greaterThan = true)
+//  }
+
+//  def probBoundary: Parser[Boundary] = opt("*" ~ ",") ~ stringLit ~ opt("," ~ "*") ^^ {
+//    case None ~ p ~ None =>
+//      println("prob: "+p)
+//      Boundary(lessThan = true, p, greaterThan = true)
+//    case _ ~ p ~ None =>
+//      println("prob: "+p)
+//      Boundary(lessThan = false, p, greaterThan = true)
+//    case None ~ p ~ _ =>
+//      println("prob: "+p)
+//      Boundary(lessThan = true, p, greaterThan = false)
+//    case _ ~ _ ~ _ =>
+//      throw new Exception("* must either be for the lower or the upper boundary only")
+//  }
+
+  //  def typ: Parser[String] = "String" | "Int" | "Bool" ^^ (t => t)
 
   def parseAll[T](p: Parser[T], in: String): ParseResult[T] = {
     val assertionPattern = """\[(.*?)\]""".r

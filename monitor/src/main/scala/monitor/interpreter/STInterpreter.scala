@@ -77,14 +77,14 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
    */
   def initialWalk(root: Statement): Unit = {
     root match {
-      case ReceiveStatement(label, statementID, types, probability, continuation) =>
+      case ReceiveStatement(label, statementID, types, probBoundary, continuation) =>
         createAndUpdateScope(label, statementID)
-        synthMon.handleLabels(statementID, probability, choice = false)
+        synthMon.handleLabels(statementID, probBoundary.probability, choice = false)
         initialWalk(continuation)
 
-      case SendStatement(label, statementID, types, probability, continuation) =>
+      case SendStatement(label, statementID, types, probBoundary, continuation) =>
         createAndUpdateScope(label, statementID)
-        synthMon.handleLabels(statementID, probability, choice = false)
+        synthMon.handleLabels(statementID, probBoundary.probability, choice = false)
         initialWalk(continuation)
 
       case ReceiveChoiceStatement(label, choices) =>
@@ -93,7 +93,7 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
         synthMon.handleLabels(label, 0, choice = true)
         for(choice <- choices) {
           createAndUpdateScope(choice.asInstanceOf[ReceiveStatement].label, choice.asInstanceOf[ReceiveStatement].statementID)
-          synthMon.handleLabels(choice.asInstanceOf[ReceiveStatement].statementID, choice.asInstanceOf[ReceiveStatement].probability, choice = false)
+          synthMon.handleLabels(choice.asInstanceOf[ReceiveStatement].statementID, choice.asInstanceOf[ReceiveStatement].probBoundary.probability, choice = false)
           initialWalk(choice.asInstanceOf[ReceiveStatement].continuation)
           curScope = tmpScope
         }
@@ -104,7 +104,7 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
         synthMon.handleLabels(label, 0, choice = true)
         for(choice <- choices) {
           createAndUpdateScope(choice.asInstanceOf[SendStatement].label, choice.asInstanceOf[SendStatement].statementID)
-          synthMon.handleLabels(choice.asInstanceOf[SendStatement].statementID, choice.asInstanceOf[SendStatement].probability, choice = false)
+          synthMon.handleLabels(choice.asInstanceOf[SendStatement].statementID, choice.asInstanceOf[SendStatement].probBoundary.probability, choice = false)
           initialWalk(choice.asInstanceOf[SendStatement].continuation)
           curScope = tmpScope
         }
@@ -128,18 +128,18 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
    */
   def walk(statement: Statement): Unit = {
     statement match {
-      case statement @ ReceiveStatement(label, id, types, probability, _) =>
+      case statement @ ReceiveStatement(label, id, types, probBoundary, _) =>
         curScope = id
-        if(probability!=1){
+        if(probBoundary.probability!=1){
           throw new Exception("Probability in " + label + " is not 1")
         }
         synthMon.handleReceive(statement, statement.continuation, scopes(curScope).isUnique) // Change isUnique accordingly
         synthProtocol.handleReceive(statement, scopes(curScope).isUnique, statement.continuation, getScope(statement.continuation).isUnique, null)
         walk(statement.continuation)
 
-      case statement @ SendStatement(label, id, types, probability, _) =>
+      case statement @ SendStatement(label, id, types, probBoundary, _) =>
         curScope = id
-        if(probability!=1){
+        if(probBoundary.probability!=1){
           throw new Exception("Probability in " + label + " is not 1")
         }
         synthMon.handleSend(statement, statement.continuation, scopes(curScope).isUnique) // Change isUnique accordingly
@@ -155,7 +155,7 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
 
         for(choice <- choices) {
           curScope = choice.asInstanceOf[ReceiveStatement].statementID
-          totalProb+=choice.asInstanceOf[ReceiveStatement].probability
+          totalProb+=choice.asInstanceOf[ReceiveStatement].probBoundary.probability
           if(totalProb > 1){
             throw new Exception("Probabilities in " + label + " exceed 1")
           }
@@ -174,7 +174,7 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
 
         for(choice <- choices) {
           curScope = choice.asInstanceOf[SendStatement].statementID
-          totalProb+=choice.asInstanceOf[SendStatement].probability
+          totalProb+=choice.asInstanceOf[SendStatement].probBoundary.probability
           if(totalProb > 1){
             throw new Exception("Probabilities in " + label + " exceed 1")
           }

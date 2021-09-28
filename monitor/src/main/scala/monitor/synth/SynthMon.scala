@@ -22,7 +22,7 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   def startInit(preamble: String): Unit = {
     if (preamble!="") mon.append(preamble+"\n")
     mon.append("import lchannels.$lchannelsimport\nimport monitor.util.ConnectionManager\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.util.control.TailCalls.{TailRec, done, tailcall}\n")
-    mon.append("class Mon(external: ConnectionManager, internal: $channel, max: Int, zvalue: Double)")
+    mon.append("class Monitor(external: ConnectionManager, internal: $channel, max: Int, zvalue: Double)")
     mon.append("(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {\n")
     mon.append("\tobject labels {\n")
   }
@@ -238,7 +238,13 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       val pmin = "pmin_"+choiceLabel
       val pmax = "pmax_"+choiceLabel
       mon.append("\t\tval ("+pmin+","+pmax+") = calculateInterval(labels."+choiceRefId+".counter, labels."+statement.label+".counter, labels."+choiceRefId+".prob)\n")
-      mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob || "+pmax+" <= labels."+choiceRefId+".prob) {\n")
+      if(choice.asInstanceOf[ReceiveStatement].probBoundary.lessThan && choice.asInstanceOf[ReceiveStatement].probBoundary.greaterThan) {
+        mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob || "+pmax+" <= labels."+choiceRefId+".prob) {\n")
+      } else if(choice.asInstanceOf[ReceiveStatement].probBoundary.lessThan){
+        mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob) {\n")
+      } else if (choice.asInstanceOf[ReceiveStatement].probBoundary.greaterThan) {
+        mon.append("\t\tif("+pmax+" <= labels."+choiceRefId+".prob) {\n")
+      }
       mon.append("\t\t\tif(!labels."+choiceRefId+".warn){\n")
       mon.append("\t\t\t\tprintln(f\"[MON] **WARN** ?"+choiceLabel+"[${labels."+choiceRefId+".prob}] outside interval [$"+pmin+",$"+pmax+"]\")\n")
       mon.append("\t\t\t\tlabels."+choiceRefId+".warn = true\n")
@@ -261,7 +267,13 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
       val pmin = "pmin_"+choiceLabel
       val pmax = "pmax_"+choiceLabel
       mon.append("\t\tval ("+pmin+","+pmax+") = calculateInterval(labels."+choiceRefId+".counter, labels."+statement.label+".counter, labels."+choiceRefId+".prob)\n")
-      mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob || "+pmax+" <= labels."+choiceRefId+".prob) {\n")
+      if(choice.asInstanceOf[SendStatement].probBoundary.lessThan && choice.asInstanceOf[SendStatement].probBoundary.greaterThan) {
+        mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob || "+pmax+" <= labels."+choiceRefId+".prob) {\n")
+      } else if(choice.asInstanceOf[SendStatement].probBoundary.lessThan){
+        mon.append("\t\tif("+pmin+" >= labels."+choiceRefId+".prob) {\n")
+      } else if (choice.asInstanceOf[SendStatement].probBoundary.greaterThan) {
+        mon.append("\t\tif("+pmax+" <= labels."+choiceRefId+".prob) {\n")
+      }
       mon.append("\t\t\tif(!labels."+choiceRefId+".warn){\n")
       mon.append("\t\t\t\tprintln(f\"[MON] **WARN** !"+choiceLabel+"[${labels."+choiceRefId+".prob}] outside interval [$"+pmin+",$"+pmax+"]\")\n")
       mon.append("\t\t\t\tlabels."+choiceRefId+".warn = true\n")
