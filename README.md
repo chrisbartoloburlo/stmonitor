@@ -4,18 +4,21 @@ A tool ([Synth](https://github.com/chrisbartoloburlo/stmonitor/blob/master/monit
 
 These instructions are for recreating and executing the lottery game example. We assume a Unix-like operating system with Java 8 as default JRE/JDK which can be downloaded from [here](https://www.oracle.com/java/technologies/javase-jdk8-downloads.html).
 
-### Compile the sources
-This project uses the **`sbt`** build tool which can be downloaded from [here](https://www.scala-sbt.org/0.13/docs/Setup.html) (sbt v. 0.13.x). Once installed, open a terminal in `stmonitor/`* and execute the command `sbt compile`.
 
 \* _All commands from this point forward must be executed from this location._
 
-### The login example
+### Guessing game
 
-#### 1. Synthesising the monitor and CPSP classes.
+These instructions describe how to execute the example found in the [COORDINATION 2021 paper](https://link.springer.com/chapter/10.1007%2F978-3-030-78142-2_7): the guessing game 
+
+The type `S_game` below can be found in [`game.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/pstmonitor/examples/src/main/scala/examples/game/game.st). 
+The type describes the protocol from the server side 
 
 Consider the lottery game example, in which the server generates a number between 1 and 100 and should follow the type found in `S_game.st` in [`examples/demo/`](https://github.com/chrisbartoloburlo/stmonitor/tree/pstmonitor/examples/src/main/scala/examples/demo) :
 ```
-S_login = rec X.&{?Guess(num: Int)[0.75].+{!Correct()[0.01].X, !Incorrect()[0.99].X}, ?Help()[0.2].!Hint()[1], ?Quit()[0.05].end}
+S_game=rec X.(+{!Guess(num: Int)[0.75].&{?Correct()[0.01].X, ?Incorrect()[0.99].X},
+                !Help()[0.2].?Hint(info: String)[1].X,
+                !Quit()[0.05].end})
 ```
 
 To generate the monitor and the CPSP classes, run `Generate.scala` using the following command in a terminal inside the project root directory:

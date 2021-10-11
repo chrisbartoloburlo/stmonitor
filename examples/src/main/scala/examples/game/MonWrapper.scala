@@ -41,6 +41,6 @@ object MonWrapper extends App {
   val clientPort = args(0).toInt
   val zvalue = args(2).toFloat
   val clientConnectionManager = new ClientConnectionManager(clientPort)
-  val Mon = new Mon(clientConnectionManager, sChoice, 300, zvalue)(global, timeout)
+  val Mon = new Monitor(clientConnectionManager, sChoice, 300, zvalue)(global, timeout)
   Mon.run()
 }

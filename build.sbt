@@ -54,6 +54,7 @@ lazy val examples = (project in file("examples")).
       Def.task {
         generateMonitor(baseDir, "coin").value
         generateMonitor(baseDir, "game").value
+        generateMonitor(baseDir, "smtp").value
       }
     }).value,
 
