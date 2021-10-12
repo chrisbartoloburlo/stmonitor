@@ -9,3 +9,7 @@ testcoin/
 testprobabilities/
 .bsp/
 #probabilities/
+scripts/smtp-benchmarks/smtp-python/results/control/*
+scripts/smtp-benchmarks/smtp-python/results/monitored/*
+scripts/smtp-benchmarks/smtp-python/results/detached_monitored/*
+scripts/smtp-benchmarks/smtp-python/plots/*
