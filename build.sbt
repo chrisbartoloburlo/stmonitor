@@ -39,7 +39,8 @@ lazy val monitor = (project in file("monitor")).
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
       "ch.qos.logback" % "logback-classic" % "1.2.3",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.3"
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.3",
+      "com.github.tototoshi" %% "scala-csv" % "1.3.6"
     )
   )
 
@@ -62,7 +63,6 @@ lazy val examples = (project in file("examples")).
 
     libraryDependencies ++= Seq(
       "com.athaydes.rawhttp" % "rawhttp-core" % "2.4.0",
-      "com.github.tototoshi" %% "scala-csv" % "1.3.6"
     )
   )
 

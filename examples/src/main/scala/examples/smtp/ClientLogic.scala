@@ -1,11 +1,12 @@
 package examples.smtp
 
-import examples.util.{logger, timer}
+import examples.util.timer
 
 import java.util.Calendar
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import lchannels.In
+import monitor.util.logger
 
 object ClientLogic {
   def apply(server: In[M220], pathname: String, iterations: Int, run: Int)(implicit ec: ExecutionContext, timeout: Duration) {

@@ -59,6 +59,6 @@ object MonWrapper extends App {
   def report(msg: String): Unit = {
     println(msg)
   }
-  val Mon = new Monitor(serverConnectionManager, sChoice, 300, 0.6745)(global, timeout)
+  val Mon = new Monitor(serverConnectionManager, sChoice, 300, 0.6745, false)(global, timeout)
   Mon.run()
 }

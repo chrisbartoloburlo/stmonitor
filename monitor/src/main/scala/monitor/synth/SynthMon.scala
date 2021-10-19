@@ -21,8 +21,8 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
    */
   def startInit(preamble: String): Unit = {
     if (preamble!="") mon.append(preamble+"\n")
-    mon.append("import lchannels.$lchannelsimport\nimport monitor.util.ConnectionManager\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.util.control.TailCalls.{TailRec, done, tailcall}\n")
-    mon.append("class Monitor(external: ConnectionManager, internal: $channel, max: Int, zvalue: Double)")
+    mon.append("import lchannels.$lchannelsimport\nimport monitor.util.{ConnectionManager, logger}\nimport scala.concurrent.ExecutionContext\nimport scala.concurrent.duration.Duration\nimport scala.util.control.TailCalls.{TailRec, done, tailcall}\n")
+    mon.append("class Monitor(external: ConnectionManager, internal: $channel, max: Int, zvalue: Double, log: Boolean)")
     mon.append("(implicit ec: ExecutionContext, timeout: Duration) extends Runnable {\n")
     mon.append("\tobject labels {\n")
   }
@@ -39,6 +39,9 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     if(!choice){
       mon.append("\t\t\tval prob = "+probability+"\n")
       mon.append("\t\t\tvar warn = false\n")
+      mon.append("\t\t\tlazy val l: logger = new logger(f\"${System.getProperty(\"user.dir\")}/logs/"+label+"_log.csv\")\n")
+      mon.append("\t\t\tif(log){\n")
+      mon.append("\t\t\t\tl.log(\"pmin pmax pe\")\n\t\t\t}\n")
     }
     mon.append("\t\t}\n")
   }
@@ -238,21 +241,25 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         val choiceRefId = choice.asInstanceOf[ReceiveStatement].statementID
         val pmin = "pmin_" + choiceLabel
         val pmax = "pmax_" + choiceLabel
-        mon.append("\t\tval (" + pmin + "," + pmax + ") = calculateInterval(labels." + choiceRefId + ".counter, labels." + statement.label + ".counter, labels." + choiceRefId + ".prob)\n")
+        val pe = "pe_" + choiceLabel
+        mon.append("\t\tval (" + pmin + "," + pmax + "," + pe + ") = calculateInterval(labels." + choiceRefId + ".counter, labels." + statement.label + ".counter, labels." + choiceRefId + ".prob)\n")
+        mon.append("\t\tif(log){\n")
+        mon.append("\t\t\tlabels."+choiceRefId+".l.log(f\"$"+pmin+" $"+pmax+" $"+pe+"\")\n")
+        mon.append("\t\t}\n")
         if (choice.asInstanceOf[ReceiveStatement].probBoundary.lessThan && choice.asInstanceOf[ReceiveStatement].probBoundary.greaterThan) {
-          mon.append("\t\tif(" + pmin + " >= labels." + choiceRefId + ".prob || " + pmax + " <= labels." + choiceRefId + ".prob) {\n")
+          mon.append("\t\tif(" + pmin + " >= " + pe + " || " + pmax + " <= " + pe + ") {\n")
         } else if (choice.asInstanceOf[ReceiveStatement].probBoundary.lessThan && !choice.asInstanceOf[ReceiveStatement].probBoundary.greaterThan) {
-          mon.append("\t\tif(" + pmin + " >= labels." + choiceRefId + ".prob) {\n")
+          mon.append("\t\tif(" + pmin + " >= " + pe + ") {\n")
         } else if (choice.asInstanceOf[ReceiveStatement].probBoundary.greaterThan && !choice.asInstanceOf[ReceiveStatement].probBoundary.lessThan) {
-          mon.append("\t\tif(" + pmax + " <= labels." + choiceRefId + ".prob) {\n")
+          mon.append("\t\tif(" + pmax + " <= " + pe + ") {\n")
         }
         mon.append("\t\t\tif(!labels." + choiceRefId + ".warn){\n")
-        mon.append("\t\t\t\tprintln(f\"[MON] **WARN** ?" + choiceLabel + "[${labels." + choiceRefId + ".prob}] outside interval [$" + pmin + ",$" + pmax + "]\")\n")
+        mon.append("\t\t\t\tprintln(f\"[MON] **WARN** ?" + choiceLabel + "[${" + pe + "}] outside interval [$" + pmin + ",$" + pmax + "]\")\n")
         mon.append("\t\t\t\tlabels." + choiceRefId + ".warn = true\n")
         mon.append("\t\t\t}\n")
         mon.append("\t\t} else {\n")
         mon.append("\t\t\tif(labels." + choiceRefId + ".warn){\n")
-        mon.append("\t\t\t\tprintln(f\"[MON] **INFO** ?" + choiceLabel + "[${labels." + choiceRefId + ".prob}] within interval [$" + pmin + ",$" + pmax + "]\")\n")
+        mon.append("\t\t\t\tprintln(f\"[MON] **INFO** ?" + choiceLabel + "[${" + pe + "}] within interval [$" + pmin + ",$" + pmax + "]\")\n")
         mon.append("\t\t\t\tlabels." + choiceRefId + ".warn = false\n")
         mon.append("\t\t\t}\n")
         mon.append("\t\t}\n")
@@ -269,21 +276,25 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
         val choiceRefId = choice.asInstanceOf[SendStatement].statementID
         val pmin = "pmin_" + choiceLabel
         val pmax = "pmax_" + choiceLabel
-        mon.append("\t\tval (" + pmin + "," + pmax + ") = calculateInterval(labels." + choiceRefId + ".counter, labels." + statement.label + ".counter, labels." + choiceRefId + ".prob)\n")
+        val pe = "pe_" + choiceLabel
+        mon.append("\t\tval (" + pmin + "," + pmax + "," + pe + ") = calculateInterval(labels." + choiceRefId + ".counter, labels." + statement.label + ".counter, labels." + choiceRefId + ".prob)\n")
+        mon.append("\t\tif(log){\n")
+        mon.append("\t\t\tlabels."+choiceRefId+".l.log(f\"$"+pmin+" $"+pmax+" $"+pe+"\")\n")
+        mon.append("\t\t}\n")
         if (choice.asInstanceOf[SendStatement].probBoundary.lessThan && choice.asInstanceOf[SendStatement].probBoundary.greaterThan) {
-          mon.append("\t\tif(" + pmin + " >= labels." + choiceRefId + ".prob || " + pmax + " <= labels." + choiceRefId + ".prob) {\n")
+          mon.append("\t\tif(" + pmin + " >= " + pe + " || " + pmax + " <= " + pe + ") {\n")
         } else if (choice.asInstanceOf[SendStatement].probBoundary.lessThan) {
-          mon.append("\t\tif(" + pmin + " >= labels." + choiceRefId + ".prob) {\n")
+          mon.append("\t\tif(" + pmin + " >= " + pe + ") {\n")
         } else if (choice.asInstanceOf[SendStatement].probBoundary.greaterThan) {
-          mon.append("\t\tif(" + pmax + " <= labels." + choiceRefId + ".prob) {\n")
+          mon.append("\t\tif(" + pmax + " <= " + pe + ") {\n")
         }
         mon.append("\t\t\tif(!labels." + choiceRefId + ".warn){\n")
-        mon.append("\t\t\t\tprintln(f\"[MON] **WARN** !" + choiceLabel + "[${labels." + choiceRefId + ".prob}] outside interval [$" + pmin + ",$" + pmax + "]\")\n")
+        mon.append("\t\t\t\tprintln(f\"[MON] **WARN** !" + choiceLabel + "[${" + pe + "}] outside interval [$" + pmin + ",$" + pmax + "]\")\n")
         mon.append("\t\t\t\tlabels." + choiceRefId + ".warn = true\n")
         mon.append("\t\t\t}\n")
         mon.append("\t\t} else {\n")
         mon.append("\t\t\tif(labels." + choiceRefId + ".warn){\n")
-        mon.append("\t\t\t\tprintln(f\"[MON] **INFO** !" + choiceLabel + "[${labels." + choiceRefId + ".prob}] within interval [$" + pmin + ",$" + pmax + "]\")\n")
+        mon.append("\t\t\t\tprintln(f\"[MON] **INFO** !" + choiceLabel + "[${" + pe + "}] within interval [$" + pmin + ",$" + pmax + "]\")\n")
         mon.append("\t\t\t\tlabels." + choiceRefId + ".warn = false\n")
         mon.append("\t\t\t}\n")
         mon.append("\t\t}\n")
@@ -293,10 +304,10 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
   }
 
   def addCalculateInterval():Unit = {
-    mon.append("\tdef calculateInterval(count: Double, trials: Int, prob_a: Double): (Double, Double) = {\n")
+    mon.append("\tdef calculateInterval(count: Double, trials: Int, prob_a: Double): (Double, Double, Double) = {\n")
     mon.append("\t\tval prob_e = count/trials\n")
     mon.append("\t\tval err = zvalue*math.sqrt(prob_a*(1-prob_a)/trials)\n")
-    mon.append("\t\t(prob_e-err,prob_e+err)\n")
+    mon.append("\t\t(prob_a-err,prob_a+err,prob_e)\n")
     mon.append("\t}\n")
   }
 
