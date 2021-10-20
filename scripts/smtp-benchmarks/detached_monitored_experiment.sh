@@ -16,7 +16,7 @@ while [ "$experiments" -ne 0 ] ; do
     port=25
   fi
 
-  screen -S stmonbench -dm bash -c "/usr/bin/time --format=\"%P,%M,%K\" java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.smtp.MonWrapper $port 1026 2 $log>> $wd/scripts/smtp-benchmarks/$type/results/detached_monitored/${iterations}_cpu_mem_run.txt"
+  screen -S stmonbench -dm bash -c "/usr/bin/time --format=\"%P,%M,%K\" java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.smtp.MonWrapper $port 1026 $log 2>> $wd/scripts/smtp-benchmarks/$type/results/detached_monitored/${iterations}_cpu_mem_run.txt"
 
   sleep 1
 
