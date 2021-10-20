@@ -15,7 +15,7 @@ object MonitoredClient  {
     def report(msg: String): Unit = {
       println(msg)
     }
-    val mon = new Monitor(new ServerConnectionManager(args(3).toInt), out, 300, 0.6745, false)(global, timeout) //25
+    val mon = new Monitor(new ServerConnectionManager(args(3).toInt), out, 300, 0.6745, args(4).toBoolean)(global, timeout) //25
 
     val monThread = new Thread {
       override def run(): Unit = {

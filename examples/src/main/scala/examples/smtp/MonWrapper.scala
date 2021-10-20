@@ -55,10 +55,12 @@ object MonWrapper extends App {
   val client = server.accept()
   val clientSktm = new MonSMTPSocketManager(client)
 
+  val log = args(2).toBoolean
+
   val sChoice = SocketOut[M220](clientSktm)
   def report(msg: String): Unit = {
     println(msg)
   }
-  val Mon = new Monitor(serverConnectionManager, sChoice, 300, 0.6745, false)(global, timeout)
+  val Mon = new Monitor(serverConnectionManager, sChoice, 300, 0.6745, log)(global, timeout)
   Mon.run()
 }

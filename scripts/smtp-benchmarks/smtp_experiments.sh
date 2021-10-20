@@ -20,17 +20,17 @@ rm -r $wd/scripts/smtp-benchmarks/$type/results/monitored/* > /dev/null 2>&1
 rm -r $wd/scripts/smtp-benchmarks/$type/results/detached_monitored/* > /dev/null 2>&1
 
 if [ "$limited" = "true" ]; then
-  sh $wd/scripts/smtp-benchmarks/control_experiment.sh 200 $experiments $type
-  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 200 $experiments $type
-  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 200 $experiments $type
+  sh $wd/scripts/smtp-benchmarks/control_experiment.sh 200 $experiments $type false
+  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 200 $experiments $type false
+  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 200 $experiments $type false
 
-  sh $wd/scripts/smtp-benchmarks/control_experiment.sh 600 $experiments $type
-  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 600 $experiments $type
-  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 600 $experiments $type
+  sh $wd/scripts/smtp-benchmarks/control_experiment.sh 600 $experiments $type false
+  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 600 $experiments $type false
+  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 600 $experiments $type false
 
-  sh $wd/scripts/smtp-benchmarks/control_experiment.sh 1000 $experiments $type
-  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 1000 $experiments $type
-  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 1000 $experiments $type
+  sh $wd/scripts/smtp-benchmarks/control_experiment.sh 1000 $experiments $type false
+  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh 1000 $experiments $type false
+  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh 1000 $experiments $type false
 
   screen -S smtpserver -X quit > /dev/null 2>&1
 
@@ -40,9 +40,9 @@ fi
 
 while [ "$increments" -ne 0 ] ; do
 
-  sh $wd/scripts/smtp-benchmarks/control_experiment.sh $iterations $experiments $type
-  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh $iterations $experiments $type
-  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh $iterations $experiments $type
+  sh $wd/scripts/smtp-benchmarks/control_experiment.sh $iterations $experiments $type false
+  sh $wd/scripts/smtp-benchmarks/monitored_experiment.sh $iterations $experiments $type false
+  sh $wd/scripts/smtp-benchmarks/detached_monitored_experiment.sh $iterations $experiments $type false
 
   iterations=$((iterations+200))
   increments=$((increments-1))

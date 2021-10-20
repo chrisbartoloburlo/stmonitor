@@ -2,6 +2,7 @@
 iterations=$1
 experiments=$2
 type=$3
+log=$4
 
 run=1
 wd=`pwd`
@@ -19,7 +20,7 @@ while [ "$experiments" -ne 0 ] ; do
 
   sleep 1
 
-  java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.smtp.Client $wd/scripts/smtp-benchmarks/$type/results/detached_monitored/ ${iterations} ${run} 1026
+  java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.smtp.Client $wd/scripts/smtp-benchmarks/$type/results/detached_monitored/ ${iterations} ${run} 1026 ${log}
 
   screen -S stmonbench -p 0 -X stuff "^C" > /dev/null 2>&1
   echo "Finished SMTP $type Detached Monitored Experiment $run.\n"
