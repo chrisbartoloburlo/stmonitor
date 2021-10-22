@@ -1,28 +1,19 @@
 import csv
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 import statistics
 import sys
 
 
 def extract_exec_time_info(path):
-    with open(path, 'r') as csvfile:
-        rows = csv.reader(csvfile, delimiter=',')
-        start_time = next(rows)[0]
-        time = []
-        for row in rows:
-            time.append(int(row[2]))
-        return start_time, time
+    data = pd.read_csv(path)
+    return data.iloc[:, 2].astype(int)
 
 
 def extract_cpu_mem_info(path):
-    with open(path, 'r') as csvfile:
-        plots = csv.reader(csvfile, delimiter=',', skipinitialspace=True)
-        cpu = []
-        mem = []
-        for row in plots:
-            cpu.append(int(row[0].strip("%")))
-            mem.append(int(row[1]))
-        return cpu, mem
+    data = pd.read_csv(path)
+    return data.iloc[:, 0].str.rstrip('%').astype(int), data.iloc[:, 1].astype(int)
 
 
 def get_average(lst, runs):
@@ -44,7 +35,7 @@ def collective_res(path, runs, requests):
     collective_response_time = []
     requestsinloop = 4
     for i in range(1, runs + 1):
-        tmp_start_time, tmp_time = extract_exec_time_info(f'{path}/{requests}_exec_time_run{i}.csv')
+        tmp_time = extract_exec_time_info(f'{path}/{requests}_exec_time_run{i}.csv')
         collective_time.append(tmp_time)
         collective_total_time.append(sum(tmp_time))
         collective_response_time.append(average(tmp_time) / requestsinloop)
@@ -71,7 +62,7 @@ def individual_experiment(path, runs, requests):
     return collective_avg_time, collective_avg_total_time, collective_avg_response_time, collective_avg_cpu, collective_avg_mem, total_time_variance, response_time_variance, cpu_variance, mem_variance
 
 
-def plot(x, y1, y2, y3, y1err, y2err, y3err, y1_label, y2_label, y3_label, ylabel, xlabel, title, path, type):
+def plot(x, y1, y2, y3, y2_oh, y3_oh, y1err, y2err, y3err, y1_label, y2_label, y3_label, y2_oh_label, y3_oh_label, ylabel, xlabel, title, path, type):
     fig, ax1 = plt.subplots()
 
     plt.grid(linestyle=':', linewidth=0.8)
@@ -81,22 +72,11 @@ def plot(x, y1, y2, y3, y1err, y2err, y3err, y1_label, y2_label, y3_label, ylabe
     lns1 = ax1.plot(x, y1, label=f'{y1_label}', linestyle="solid", linewidth=1, marker="s", markersize=2,
                     markeredgewidth=1)
     if(type=="resp_time"):
-        lns1 += ax1.plot(x, y3, label=f'{y3_label}', linestyle="dashed", linewidth=1, marker="x", markersize=3, markeredgewidth=0.8)
+        lns1 += ax1.plot(x, y3, label=f'{y3_label}', linestyle="dashed", linewidth=1, color="C1", marker="x", markersize=3, markeredgewidth=0.8)
+        lns1 += ax1.plot(x, y3_oh, label=f'{y3_oh_label}', linestyle="dashed", linewidth=1, color="C1", marker="x", markersize=3, markeredgewidth=0.8)
     lns1 += ax1.plot(x, y2, label=f'{y2_label}', linestyle="dotted", linewidth=1, color="C2", marker=".", markersize=4, markeredgewidth=0.8)
-
-    # lns1 = ax1.errorbar(x, y1, label=f'{y1_label}', linestyle="solid", linewidth=1, marker="s", markersize=2, markeredgewidth=1, yerr=y1err, fmt='-')
-    # lns1 += ax1.errorbar(x, y2, label=f'{y2_label}', linestyle="dashed", linewidth=1, marker="x", markersize=3, markeredgewidth=0.8, yerr=y2err, fmt='-')
-    # lns1 += ax1.errorbar(x, y3, label=f'{y3_label}', linestyle="dotted", linewidth=1, marker=".", markersize=4, markeredgewidth=0.8, yerr=y3err, fmt='-')
-    # lns1 += ax1.errorbar(x, y4, label=f'{y4_label}', linestyle=(0, (3, 5, 1, 5)), linewidth=1, marker="d", markersize=2, markeredgewidth=1, yerr=y4err, fmt='-')
-
-    # ax1.legend()
-    # frame = ax1.legend(bbox_to_anchor=(0, -0.4), loc='lower left', ncol=4, borderpad=0.4).get_frame()
-    # frame.set_linewidth(0.5)
-
-    # legend_elements = [Line2D([0], [0], color="C1", ls="dashed", lw=1, label=f'{y4_label}', marker="x", markersize=3, markeredgewidth=0.8)]
-
-    # frame = ax1.legend(handles=legend_elements, bbox_to_anchor=(0, 1.23), loc='upper left', ncol=4, borderpad=0.4).get_frame()
-    # frame.set_linewidth(0.5)
+    lns1 += ax1.plot(x, y2_oh, label=f'{y2_oh_label}', linestyle="dotted", linewidth=1, color="C2", marker=".", markersize=4, markeredgewidth=0.8)
+    ax1.fill_between(x, y2, y2_oh, color='C2', alpha=0.3)
 
     ax1.set_xlabel(f'{xlabel}')
     ax1.set_ylabel(f'{ylabel}')
@@ -153,6 +133,17 @@ if __name__ == '__main__':
     monitored_cpus_variance = []
     monitored_mems_variance = []
 
+    monitored_logging_times = []
+    monitored_logging_total_times = []
+    monitored_logging_resp_times = []
+    monitored_logging_cpus = []
+    monitored_logging_mems = []
+
+    monitored_logging_total_times_variance = []
+    monitored_logging_resp_times_variance = []
+    monitored_logging_cpus_variance = []
+    monitored_logging_mems_variance = []
+
     detached_mon_times = []
     detached_mon_total_times = []
     detached_mon_resp_times = []
@@ -163,6 +154,17 @@ if __name__ == '__main__':
     detached_mon_resp_times_variance = []
     detached_mon_cpus_variance = []
     detached_mon_mems_variance = []
+
+    detached_mon_logging_times = []
+    detached_mon_logging_total_times = []
+    detached_mon_logging_resp_times = []
+    detached_mon_logging_cpus = []
+    detached_mon_logging_mems = []
+
+    detached_mon_logging_total_times_variance = []
+    detached_mon_logging_resp_times_variance = []
+    detached_mon_logging_cpus_variance = []
+    detached_mon_logging_mems_variance = []
 
     if(kickthetires==1):
         x = [200,600,1000]
@@ -176,6 +178,11 @@ if __name__ == '__main__':
             path+"/results/monitored", runs, iterations)
         detached_mon_collective_avg_time, detached_mon_collective_avg_total_time, detached_mon_collective_avg_resp_time, detached_mon_collective_avg_cpu, detached_mon_collective_avg_mem, detached_mon_total_time_variance, detached_mon_resp_time_variance, detached_mon_cpu_variance, detached_mon_mem_variance = individual_experiment(
             path+"/results/detached_monitored", runs, iterations)
+        
+        monitored_logging_collective_avg_time, monitored_logging_collective_avg_total_time, monitored_logging_collective_avg_resp_time, monitored_logging_collective_avg_cpu, monitored_logging_collective_avg_mem, monitored_logging_total_time_variance, monitored_logging_resp_time_variance, monitored_logging_cpu_variance, monitored_logging_mem_variance = individual_experiment(
+            path+"/results/monitored_logging", runs, iterations)
+        detached_mon_logging_collective_avg_time, detached_mon_logging_collective_avg_total_time, detached_mon_logging_collective_avg_resp_time, detached_mon_logging_collective_avg_cpu, detached_mon_logging_collective_avg_mem, detached_mon_logging_total_time_variance, detached_mon_logging_resp_time_variance, detached_mon_logging_cpu_variance, detached_mon_logging_mem_variance = individual_experiment(
+            path+"/results/detached_monitored_logging", runs, iterations)
 
         control_times.append(average(control_collective_avg_time))
         control_total_times.append(control_collective_avg_total_time)
@@ -199,6 +206,17 @@ if __name__ == '__main__':
         monitored_cpus_variance.append(monitored_cpu_variance)
         monitored_mems_variance.append(monitored_mem_variance)
 
+        monitored_logging_times.append(average(monitored_logging_collective_avg_time))
+        monitored_logging_total_times.append(monitored_logging_collective_avg_total_time)
+        monitored_logging_resp_times.append(monitored_logging_collective_avg_resp_time)
+        monitored_logging_cpus.append(monitored_logging_collective_avg_cpu)
+        monitored_logging_mems.append(monitored_logging_collective_avg_mem)
+
+        monitored_logging_total_times_variance.append(monitored_logging_total_time_variance)
+        monitored_logging_resp_times_variance.append(monitored_logging_resp_time_variance)
+        monitored_logging_cpus_variance.append(monitored_logging_cpu_variance)
+        monitored_logging_mems_variance.append(monitored_logging_mem_variance)
+
         detached_mon_times.append(average(detached_mon_collective_avg_time))
         detached_mon_total_times.append(detached_mon_collective_avg_total_time)
         detached_mon_resp_times.append(detached_mon_collective_avg_resp_time)
@@ -210,21 +228,18 @@ if __name__ == '__main__':
         detached_mon_cpus_variance.append(detached_mon_cpu_variance)
         detached_mon_mems_variance.append(detached_mon_mem_variance)
 
+        detached_mon_logging_times.append(average(detached_mon_logging_collective_avg_time))
+        detached_mon_logging_total_times.append(detached_mon_logging_collective_avg_total_time)
+        detached_mon_logging_resp_times.append(detached_mon_logging_collective_avg_resp_time)
+        detached_mon_logging_cpus.append(detached_mon_logging_collective_avg_cpu)
+        detached_mon_logging_mems.append(detached_mon_logging_collective_avg_mem)
 
-    # plot(x, control_times, monitored_times, lchannels_times, "control", "monitored", "lchannels", "Time/ns", "Experiments", "Average Execution Times", "")
+        detached_mon_logging_total_times_variance.append(detached_mon_logging_total_time_variance)
+        detached_mon_logging_resp_times_variance.append(detached_mon_logging_resp_time_variance)
+        detached_mon_logging_cpus_variance.append(detached_mon_logging_cpu_variance)
+        detached_mon_logging_mems_variance.append(detached_mon_logging_mem_variance)
 
     plots_path = path+"/plots/"
-
-    # print("exec times percentage increase unsafe -> monitored",
-    #       percentage_inc(average(control_total_times), average(monitored_total_times)))
-    # print("exec times percentage increase control -> detached_mon",
-    #       percentage_inc(average(control_total_times), average(detached_mon_total_times)))
-    # print("exec times percentage increase detached_mon -> monitored",
-    #       percentage_inc(average(detached_mon_total_times), average(monitored_total_times)))
-
-    # plot(x, control_total_times, monitored_total_times, detached_mon_total_times,
-    #      control_total_times_variance, monitored_total_times_variance, detached_mon_total_times_variance,
-    #      "unsafe", "monitored", "detached_mon", "Time (s)", "Emails sent", "Execution Times", path + "smtp_total_times", "total_times")
 
     print(f"*** SMTP ${type} benchmark overheads:")
     print("cpu percentage increase control -> monitored",
@@ -232,9 +247,15 @@ if __name__ == '__main__':
     print("cpu percentage increase control -> detached_mon",
           percentage_inc(average(control_cpus), average(detached_mon_cpus)))
 
-    plot(x, control_cpus, monitored_cpus, detached_mon_cpus,
-         control_cpus_variance, monitored_cpus_variance, detached_mon_cpus_variance,
-         "unsafe", "monitored", "detached_mon", "CPU Utilisation (%)", "Emails sent", "CPU Utilisation",
+    print("cpu percentage increase control -> monitored w/ logging",
+          percentage_inc(average(control_cpus), average(monitored_logging_cpus)))
+    print("cpu percentage increase control -> detached_mon w/ logging",
+          percentage_inc(average(control_cpus), average(detached_mon_logging_cpus)))
+
+
+    plot(x, control_cpus, monitored_cpus, detached_mon_cpus, monitored_logging_cpus, detached_mon_logging_cpus,
+         control_cpus_variance, monitored_cpus_variance, detached_mon_cpus_variance, 
+         "unsafe", "monitored", "detached_mon", "monitored(log)", "detached_mon(log)", "CPU Utilisation (%)", "Emails sent", "CPU Utilisation",
          plots_path + "smtp_cpu_consumption", "cpu_consumption")
 
     print("memory percentage increase control -> monitored",
@@ -242,18 +263,29 @@ if __name__ == '__main__':
     print("memory percentage increase control -> detached_mon",
           percentage_inc(average(control_mems), average(detached_mon_mems)))
 
-    plot(x, control_mems, monitored_mems, detached_mon_mems,
+    print("memory percentage increase control -> monitored w/ logging",
+          percentage_inc(average(control_mems), average(monitored_logging_mems)))
+    print("memory percentage increase control -> detached_mon w/ logging",
+          percentage_inc(average(control_mems), average(detached_mon_logging_mems)))
+
+    plot(x, control_mems, monitored_mems, detached_mon_mems, monitored_logging_mems, detached_mon_logging_mems,
          control_mems_variance, monitored_mems_variance, detached_mon_mems_variance,
-         "unsafe", "monitored", "detached_mon", "Memory Consumption (MB)", "Emails sent", "Memory Consumption",
+         "unsafe", "monitored", "detached_mon", "monitored(log)", "detached_mon(log)", "Memory Consumption (MB)", "Emails sent", "Memory Consumption",
          plots_path + "smtp_mem_consumption", "memory_consumption")
 
 
-    plot(x, control_resp_times, monitored_resp_times, detached_mon_resp_times,
+    plot(x, control_resp_times, monitored_resp_times, detached_mon_resp_times, monitored_logging_resp_times, detached_mon_logging_resp_times, 
          control_resp_times_variance, monitored_resp_times_variance, detached_mon_resp_times_variance,
-         "unsafe", "monitored", "detached_mon", "Response Time (ms)", "Emails sent", "Response Times",
+         "unsafe", "monitored", "detached_mon", "monitored(log)", "detached_mon(log)", "Response Time (ms)", "Emails sent", "Response Times",
          plots_path + "smtp_resp_time", "resp_time")
 
     print("resp times percentage increase control -> monitored",
           percentage_inc(average(control_resp_times), average(monitored_resp_times)))
     print("resp times percentage increase control -> detached_mon",
           percentage_inc(average(control_resp_times), average(detached_mon_resp_times)))
+
+    print("resp times percentage increase control -> monitored w/ logging",
+          percentage_inc(average(control_resp_times), average(monitored_logging_resp_times)))
+    print("resp times percentage increase control -> detached_mon w/ logging",
+          percentage_inc(average(control_resp_times), average(detached_mon_logging_resp_times)))
+

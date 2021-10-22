@@ -16,7 +16,14 @@ while [ "$experiments" -ne 0 ] ; do
     port=25
   fi
 
-  /usr/bin/time --format="%P,%M,%K" java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.smtp.MonitoredClient $wd/scripts/smtp-benchmarks/$type/results/monitored/ ${iterations} ${run} ${port} 2>> $wd/scripts/smtp-benchmarks/$type/results/monitored/${iterations}_cpu_mem_run.txt ${log}
+  if [ "$log" = "false" ]; then
+    /usr/bin/time --format="%P,%M,%K" java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.smtp.MonitoredClient $wd/scripts/smtp-benchmarks/$type/results/monitored/ ${iterations} ${run} ${port} 2>> $wd/scripts/smtp-benchmarks/$type/results/monitored/${iterations}_cpu_mem_run.txt ${log}
+  elif [ "$log" = "true" ]; then 
+    /usr/bin/time --format="%P,%M,%K" java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.smtp.MonitoredClient $wd/scripts/smtp-benchmarks/$type/results/monitored_logging/ ${iterations} ${run} ${port} 2>> $wd/scripts/smtp-benchmarks/$type/results/monitored_logging/${iterations}_cpu_mem_run.txt ${log}
+  else
+    echo "Error in logging flag"
+    exit
+  fi
 
   sleep 1
 
