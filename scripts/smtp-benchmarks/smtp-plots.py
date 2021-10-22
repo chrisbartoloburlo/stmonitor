@@ -74,6 +74,7 @@ def plot(x, y1, y2, y3, y2_oh, y3_oh, y1err, y2err, y3err, y1_label, y2_label, y
     if(type=="resp_time"):
         lns1 += ax1.plot(x, y3, label=f'{y3_label}', linestyle="dashed", linewidth=1, color="C1", marker="x", markersize=3, markeredgewidth=0.8)
         lns1 += ax1.plot(x, y3_oh, label=f'{y3_oh_label}', linestyle="dashed", linewidth=1, color="C1", marker="x", markersize=3, markeredgewidth=0.8)
+        ax1.fill_between(x, y3, y3_oh, color='C1', alpha=0.3)
     lns1 += ax1.plot(x, y2, label=f'{y2_label}', linestyle="dotted", linewidth=1, color="C2", marker=".", markersize=4, markeredgewidth=0.8)
     lns1 += ax1.plot(x, y2_oh, label=f'{y2_oh_label}', linestyle="dotted", linewidth=1, color="C2", marker=".", markersize=4, markeredgewidth=0.8)
     ax1.fill_between(x, y2, y2_oh, color='C2', alpha=0.3)
