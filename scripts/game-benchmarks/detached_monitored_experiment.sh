@@ -31,6 +31,7 @@ while [ "$experiments" -ne 0 ] ; do
   fi
 
   screen -S pstmonbench -p 0 -X stuff "^C" > /dev/null 2>&1
+  screen -S gameserver -p 0 -X stuff "^C" > /dev/null 2>&1
   echo "Finished GAME Detached Monitored Experiment $run.\n"
 
   run=$((run+1))

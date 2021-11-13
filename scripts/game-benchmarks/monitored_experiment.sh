@@ -11,10 +11,10 @@ while [ "$experiments" -ne 0 ] ; do
 
   if [ "$log" = "false" ]; then
     echo "Running GAME Monitored without logging Experiment $run with $iterations guesses..."
-    screen -dm -S pstmonbench bash -c "/usr/bin/time --format=\"%P,%M,%K\" java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.game.MonitoredServer $wd/scripts/game-benchmarks/results/monitored/ ${log} 2>> $wd/scripts/game-benchmarks/results/monitored/${iterations}_cpu_mem_run.txt"
+    screen -dm -S pstmonbench bash -c "/usr/bin/time --format=\"%P,%M,%K\" java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.game.MonitoredServer ${log} 2>> $wd/scripts/game-benchmarks/results/monitored/${iterations}_cpu_mem_run.txt"
   elif [ "$log" = "true" ]; then
     echo "Running GAME Monitored with logging Experiment $run with $iterations guesses..."
-    screen -dm -S pstmonbench bash -c "/usr/bin/time --format=\"%P,%M,%K\" java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.game.MonitoredServer $wd/scripts/game-benchmarks/results/monitored_logging/ ${log} 2>> $wd/scripts/game-benchmarks/results/monitored_logging/${iterations}_cpu_mem_run.txt"
+    screen -dm -S pstmonbench bash -c "/usr/bin/time --format=\"%P,%M,%K\" java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.game.MonitoredServer ${log} 2>> $wd/scripts/game-benchmarks/results/monitored_logging/${iterations}_cpu_mem_run.txt"
   else
     echo "Error in logging flag"
     exit
