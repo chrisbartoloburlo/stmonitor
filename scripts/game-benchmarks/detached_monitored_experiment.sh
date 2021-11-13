@@ -8,7 +8,11 @@ wd=`pwd`
 
 while [ "$experiments" -ne 0 ] ; do
 
+  port=1330
+
   screen -S gameserver -dm bash -c "java -cp ./examples/target/scala-2.12/examples-assembly-0.0.3.jar examples.game.Server"
+
+  sleep 1
 
   if [ "$log" = "false" ]; then
     echo "Running GAME Detached Monitored without logging Experiment $run with $iterations emails..."
@@ -20,7 +24,6 @@ while [ "$experiments" -ne 0 ] ; do
     echo "Error in logging flag"
     exit
   fi
-
 
   sleep 1
 
