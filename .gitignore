@@ -21,5 +21,11 @@ scripts/smtp-benchmarks/smtp-postfix/results/monitored_logging/*
 scripts/smtp-benchmarks/smtp-postfix/results/detached_monitored/*
 scripts/smtp-benchmarks/smtp-postfix/results/detached_monitored_logging/*
 scripts/smtp-benchmarks/smtp-postfix/plots/*
+scripts/game-benchmarks/plots/*
+scripts/game-benchmarks/smtp-python/results/control/*
+scripts/game-benchmarks/smtp-python/results/monitored/*
+scripts/game-benchmarks/smtp-python/results/monitored_logging/*
+scripts/game-benchmarks/smtp-python/results/detached_monitored/*
+scripts/game-benchmarks/smtp-python/results/detached_monitored_logging/*
 logs/*
 venv

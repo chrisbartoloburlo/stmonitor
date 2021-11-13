@@ -25,7 +25,7 @@ object ClientLogic {
             println(f"[MC] ⟳ Running ${iterations} iterations.")
             for( iter <- 1 to iterations) {
               timer.start()
-              val resp = m250cont !! MailFrom("chris@test.com")_ //↑ MAIL FROM: chris@test.com
+              val resp = m250cont !! MailFrom("chris@localhost")_ //↑ MAIL FROM: chris@test.com
               //              println("↑ MAIL FROM: chris@test.com")
               resp ? {
                 case m250_2@M250_9(_) => //↓ 250 ${m250_2.msg}

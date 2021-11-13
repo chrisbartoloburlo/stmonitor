@@ -63,23 +63,18 @@ for n in $(seq 2 $#); do
       echo "Ping Pong benchmarks finished.\n"
       experiments="$experiments pingpong"
     fi
-  elif [ "$2" = "http" ]; then
-    jmeter -v > /dev/null 2>&1
-    if [ "$?" = "1" ]; then
-      echo "Jmeter not found, skipping HTTP benchmarks"
-    else
-      echo "Running HTTP benchmarks with $iterations repetitions per experiment..."
-      sh $wd/scripts/http-benchmarks/http_experiments.sh $iterations false
-      echo "HTTP benchmarks finished.\n"
-      experiments="$experiments http"
-    fi
+  elif [ "$2" = "game" ]; then
+    echo "Running GAME benchmarks with $iterations repetitions per experiment..."
+    sh $wd/scripts/game-benchmarks/game_experiments.sh $iterations false
+    echo "GAME benchmarks finished.\n"
+    experiments="$experiments game"
   elif [ "$2" = "smtp-postfix" ]; then
     echo "Running SMTP postfix benchmarks with $iterations repetitions per experiment..."
     sh $wd/scripts/smtp-benchmarks/smtp_experiments.sh $iterations false smtp-postfix
     echo "SMTP postfix benchmarks finished.\n"
     experiments="$experiments smtp-postfix"
   else
-    echo "*** Unknown benchmark: $2 *** Available benchmarks: smtp-python pingpong http smtp-postfix\n"
+    echo "*** Unknown benchmark: $2 *** Available benchmarks: smtp-python pingpong game smtp-postfix\n"
   fi
   shift
 done

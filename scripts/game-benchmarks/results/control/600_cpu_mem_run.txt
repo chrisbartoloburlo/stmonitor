@@ -1,0 +1,2 @@
+/usr/bin/time: illegal option -- -
+usage: time [-al] [-h | -p] [-o file] utility [argument ...]
