@@ -42,7 +42,9 @@ object MonitoredServer extends App {
   val timeout = Duration.Inf
 
   val (in, out) = LocalChannel.factory[InternalChoice1]()
-  val mon = new Monitor(new ClientConnectionManager(1330), out, 300, 0.6745, args(0).toBoolean)(global, timeout)
+  val clientPort = args(0).toInt
+  val zvalue = args(1).toFloat
+  val mon = new Monitor(new ClientConnectionManager(clientPort), out, 300, zvalue, args(2).toBoolean)(global, timeout)
 
   val monThread = new Thread {
     override def run(): Unit = {

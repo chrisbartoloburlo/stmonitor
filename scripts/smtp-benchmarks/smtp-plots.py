@@ -63,29 +63,62 @@ def individual_experiment(path, runs, requests):
 
 
 def plot(x, y1, y2, y3, y2_oh, y3_oh, y1err, y2err, y3err, y1_label, y2_label, y3_label, y2_oh_label, y3_oh_label, ylabel, xlabel, title, path, type):
+    plt.rcParams.update({
+        "figure.figsize": (2.8, 2),
+        "pgf.texsystem": "pdflatex",
+        'font.family': 'serif',
+        'font.size': 8.5,
+        'text.usetex': True,
+        'pgf.rcfonts': False,
+        'legend.frameon': True,
+        'legend.framealpha': 1.0,
+        'legend.edgecolor': 'black',
+        'legend.fancybox': False,
+        'legend.shadow': False,
+        'axes.linewidth': 0.5,
+        # 'text.latex.preview': True
+    })
+
     fig, ax1 = plt.subplots()
 
     plt.grid(linestyle=':', linewidth=0.8)
     ax1.tick_params(axis="y", direction="in")
     ax1.tick_params(axis="x", direction="in")
 
-    lns1 = ax1.plot(x, y1, label=f'{y1_label}', linestyle="solid", linewidth=1, marker="s", markersize=2,
-                    markeredgewidth=1)
-    if(type=="resp_time"):
-        lns1 += ax1.plot(x, y3, label=f'{y3_label}', linestyle="dashed", linewidth=1, color="C1", marker="x", markersize=3, markeredgewidth=0.8)
-        lns1 += ax1.plot(x, y3_oh, label=f'{y3_oh_label}', linestyle="dashed", linewidth=1, color="C1", marker="x", markersize=3, markeredgewidth=0.8)
-        ax1.fill_between(x, y3, y3_oh, color='C1', alpha=0.3)
-    lns1 += ax1.plot(x, y2, label=f'{y2_label}', linestyle="dotted", linewidth=1, color="C2", marker=".", markersize=4, markeredgewidth=0.8)
-    lns1 += ax1.plot(x, y2_oh, label=f'{y2_oh_label}', linestyle="dotted", linewidth=1, color="C2", marker=".", markersize=4, markeredgewidth=0.8)
-    ax1.fill_between(x, y2, y2_oh, color='C2', alpha=0.3)
+    lns1 = ax1.plot(x, y1, label=f'{y1_label}', linestyle="solid", linewidth=1, marker="s", markersize=2, markeredgewidth=1)
 
+    lns1 += ax1.plot(x, y3, label=f'{y3_label}', linestyle="dashed", linewidth=1, color="C1", marker="x", markersize=3, markeredgewidth=0.8)
+    lns1 += ax1.plot(x, y3_oh, label=f'{y3_oh_label}', linestyle="dashed", linewidth=1, color="C1", marker="^", markersize=3, markeredgewidth=0.8)
+    ax1.fill_between(x, y3, y3_oh, color='C1', alpha=0.3)
+
+    lns1 += ax1.plot(x, y2, label=f'{y2_label}', linestyle="dotted", linewidth=1, color="C2", marker=".", markersize=4, markeredgewidth=0.8)
+    lns1 += ax1.plot(x, y2_oh, label=f'{y2_oh_label}', linestyle="dotted", linewidth=1, color="C2", marker="^", markersize=3, markeredgewidth=0.8)
+    ax1.fill_between(x, y2, y2_oh, color='C2', alpha=0.3)
+    
     ax1.set_xlabel(f'{xlabel}')
     ax1.set_ylabel(f'{ylabel}')
-    ax1.legend()
-    plt.title(f'{title}')
 
-    plt.savefig(f'{path}.pdf', dpi=300)
-    # plt.show()
+    if(True):
+        # ax1.legend()
+        # frame = ax1.legend(bbox_to_anchor=(0, 1.23), loc='upper left', ncol=5, borderpad=0.4).get_frame()
+        # frame.set_linewidth(0.5)
+
+        legend_elements = []
+        legend_elements += [plt.Line2D([0], [0], ls="solid", lw=1, label=f'{y1_label}', marker="s", markersize=2, markeredgewidth=1)]
+
+        legend_elements += [plt.Line2D([0], [0], color="C1", ls="dashed", lw=1, label=f'{y3_label}', marker="x", markersize=3, markeredgewidth=0.8)]
+        legend_elements += [plt.Line2D([0], [0], color="C1", ls="dashed", lw=1, label=f'{y3_oh_label}', marker="^", markersize=3, markeredgewidth=0.8)]
+
+        legend_elements += [plt.Line2D([0], [0], color="C2", ls="dotted", lw=1, label=f'{y2_label}', marker=".", markersize=4, markeredgewidth=0.8)]
+        legend_elements += [plt.Line2D([0], [0], color="C2", ls="dotted", lw=1, label=f'{y2_oh_label}', marker="^", markersize=3, markeredgewidth=0.8)]
+
+        frame = ax1.legend(handles=legend_elements, bbox_to_anchor=(0, 1.23), loc='upper left', ncol=5, borderpad=0.4).get_frame()
+        frame.set_linewidth(0.5)
+        plt.savefig(f'{path}.pdf', dpi=500, bbox_inches='tight',pad_inches=1)
+    else:
+        ax1.legend()
+        # plt.title(f'{title}')
+        plt.savefig(f'{path}.pdf', dpi=300)
 
 def convert_ns_s(lst):
     return [i / 1000000000 for i in lst]
@@ -111,6 +144,8 @@ if __name__ == '__main__':
         path=path+'/smtp-python'
     else:
         path=path+'/smtp-postfix'
+
+    print(f"*** SMTP {type} benchmark overheads:")
 
     control_times = []
     control_total_times = []
@@ -242,51 +277,50 @@ if __name__ == '__main__':
 
     plots_path = path+"/plots/"
 
-    print(f"*** SMTP ${type} benchmark overheads:")
-    print("cpu percentage increase control -> monitored",
+    print("cpu percentage increase control -> grey-box",
           percentage_inc(average(control_cpus), average(monitored_cpus)))
-    print("cpu percentage increase control -> detached_mon",
+    print("cpu percentage increase control -> black-box",
           percentage_inc(average(control_cpus), average(detached_mon_cpus)))
 
-    print("cpu percentage increase control -> monitored w/ logging",
+    print("cpu percentage increase control -> grey-box w/ logging",
           percentage_inc(average(control_cpus), average(monitored_logging_cpus)))
-    print("cpu percentage increase control -> detached_mon w/ logging",
+    print("cpu percentage increase control -> black-box w/ logging",
           percentage_inc(average(control_cpus), average(detached_mon_logging_cpus)))
 
 
     plot(x, control_cpus, monitored_cpus, detached_mon_cpus, monitored_logging_cpus, detached_mon_logging_cpus,
          control_cpus_variance, monitored_cpus_variance, detached_mon_cpus_variance, 
-         "unsafe", "monitored", "detached_mon", "monitored(log)", "detached_mon(log)", "CPU Utilisation (%)", "Emails sent", "CPU Utilisation",
+         "unsafe", "grey-box", "black-box", "grey-box(log)", "black-box(log)", "CPU Utilisation (%)", "Emails sent", "CPU Utilisation",
          plots_path + "smtp_cpu_consumption", "cpu_consumption")
 
-    print("memory percentage increase control -> monitored",
+    print("memory percentage increase control -> grey-box",
           percentage_inc(average(control_mems), average(monitored_mems)))
-    print("memory percentage increase control -> detached_mon",
+    print("memory percentage increase control -> black-box",
           percentage_inc(average(control_mems), average(detached_mon_mems)))
 
-    print("memory percentage increase control -> monitored w/ logging",
+    print("memory percentage increase control -> grey-box w/ logging",
           percentage_inc(average(control_mems), average(monitored_logging_mems)))
-    print("memory percentage increase control -> detached_mon w/ logging",
+    print("memory percentage increase control -> black-box w/ logging",
           percentage_inc(average(control_mems), average(detached_mon_logging_mems)))
 
     plot(x, control_mems, monitored_mems, detached_mon_mems, monitored_logging_mems, detached_mon_logging_mems,
          control_mems_variance, monitored_mems_variance, detached_mon_mems_variance,
-         "unsafe", "monitored", "detached_mon", "monitored(log)", "detached_mon(log)", "Memory Consumption (MB)", "Emails sent", "Memory Consumption",
+         "unsafe", "grey-box", "black-box", "grey-box(log)", "black-box(log)", "Memory Consumption (MB)", "Emails sent", "Memory Consumption",
          plots_path + "smtp_mem_consumption", "memory_consumption")
 
 
     plot(x, control_resp_times, monitored_resp_times, detached_mon_resp_times, monitored_logging_resp_times, detached_mon_logging_resp_times, 
          control_resp_times_variance, monitored_resp_times_variance, detached_mon_resp_times_variance,
-         "unsafe", "monitored", "detached_mon", "monitored(log)", "detached_mon(log)", "Response Time (ms)", "Emails sent", "Response Times",
+         "unsafe", "grey-box", "black-box", "grey-box(log)", "black-box(log)", "Response Time (ms)", "Emails sent", "Response Times",
          plots_path + "smtp_resp_time", "resp_time")
 
-    print("resp times percentage increase control -> monitored",
+    print("resp times percentage increase control -> grey-box",
           percentage_inc(average(control_resp_times), average(monitored_resp_times)))
-    print("resp times percentage increase control -> detached_mon",
+    print("resp times percentage increase control -> black-box",
           percentage_inc(average(control_resp_times), average(detached_mon_resp_times)))
 
-    print("resp times percentage increase control -> monitored w/ logging",
+    print("resp times percentage increase control -> grey-box w/ logging",
           percentage_inc(average(control_resp_times), average(monitored_logging_resp_times)))
-    print("resp times percentage increase control -> detached_mon w/ logging",
+    print("resp times percentage increase control -> black-box w/ logging",
           percentage_inc(average(control_resp_times), average(detached_mon_logging_resp_times)))
 
