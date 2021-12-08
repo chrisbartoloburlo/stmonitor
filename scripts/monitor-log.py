@@ -41,30 +41,29 @@ if __name__ == '__main__':
     plt.style.use('seaborn-deep')
 
     if(live==0):
-        plt.rcParams.update({
-            "figure.figsize": (2.8, 2),
-            "pgf.texsystem": "pdflatex",
-            'font.family': 'serif',
-            'font.size': 8.5,
-            'text.usetex': True,
-            'pgf.rcfonts': False,
-            'legend.frameon': True,
-            'legend.framealpha': 1.0,
-            'legend.edgecolor': 'black',
-            'legend.fancybox': False,
-            'legend.shadow': False,
-            'axes.linewidth': 0.5,
-            'axes.unicode_minus': False
-            # 'text.latex.preview': True
-        })
+        # plt.rcParams.update({
+        #     "figure.figsize": (2.8, 2),
+        #     "pgf.texsystem": "pdflatex",
+        #     'font.family': 'serif',
+        #     'font.size': 8.5,
+        #     'text.usetex': True,
+        #     'pgf.rcfonts': False,
+        #     'legend.frameon': True,
+        #     'legend.framealpha': 1.0,
+        #     'legend.edgecolor': 'black',
+        #     'legend.fancybox': False,
+        #     'legend.shadow': False,
+        #     'axes.linewidth': 0.5,
+        #     'axes.unicode_minus': False
+        # })
         min_boundaries, max_boundaries, prob = extract_info(path)
         plot(range(1, len(min_boundaries)+1, 1), min_boundaries, max_boundaries, prob, "Confidence Interval", "Confidence Interval", "Estimated Probability", "Probability", "Iterations", title, path+f'{title}')
 
-        # plt.legend()
+        plt.legend()
         # frame = plt.legend(bbox_to_anchor=(0, 1.23), loc='upper left', ncol=2, borderpad=0.4).get_frame()
         # frame.set_linewidth(0.5)
 
-        plt.savefig(f'{path}.pgf', dpi=1500, bbox_inches='tight', pad_inches=0)
+        plt.savefig('path+f{title}.pdf', dpi=1500, bbox_inches='tight', pad_inches=0)
         # plt.show()
     elif(live==1):
         ani = FuncAnimation(plt.gcf(), animate, interval=100, repeat=False)
