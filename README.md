@@ -135,9 +135,7 @@ S_coin=rec X.(+{!Heads()[0.5].X, !Tails()[0.5].X})
 ```
 This protocol takes place between a server and a client that recursively either sends `Heads` or `Tails`. The client must abide by the probabilities specified in the type and (in this case) send each choice equally. 
 
-We provide the implementation of a [server](https://github.com/chrisbartoloburlo/stmonitor/blob/pstmonitor/examples/src/main/scala/examples/coin/MonitoredServer.scala) in Scala and a [client](https://github.com/chrisbartoloburlo/stmonitor/blob/pstmonitor/scripts/coin-client.py) in Python that has two different modes for sending the choices. 
-
-#### Mode 1: Controlled
+We provide the implementation of a [server](https://github.com/chrisbartoloburlo/stmonitor/blob/pstmonitor/examples/src/main/scala/examples/coin/MonitoredServer.scala) in Scala and a [client](https://github.com/chrisbartoloburlo/stmonitor/blob/pstmonitor/scripts/coin-client.py) in Python that has two different modes for sending the choices: controlled or randomly (see step 2).  
 
 1. To start the monitored server, execute: 
     ```shell
@@ -149,15 +147,24 @@ We provide the implementation of a [server](https://github.com/chrisbartoloburlo
     ```shell
     python3 scripts/coin-client.py 1
     ```
-    where `1` specifies the modality (in this case controlled). In this mode, the client can be made to send `Heads` or `Tails` to the server by entering `h` or `t` respectively followed by a return. 
+    where `1` specifies the controlled mode. In this mode, the client can be made to send `Heads` or `Tails` to the server by entering `h` or `t` respectively followed by a return. 
+
+    The client can also be set to randomly send `Heads` or `Tails` by executing: 
+    ```shell
+    python3 scripts/coin-client.py 0 100
+    ```
+    where `0` specifies the random mode and 100 is the number of messages the client should send before quitting.
 
 3. After sending a couple of messages, you can start a provided script (in a separate terminal) which plots the observed probability between the confidence interval by executing:
     ```shell
     python3 scripts/monitor-log.py 1 stmonitor/logs/Heads_1_log.csv Heads
     ```
-    where `1` specifies that the script should execute in `live` mode (as the example is running), `stmonitor/logs/Heads_1_log.csv` is the path to the log and `Heads` is the title of the plot. A plot should appear that updates as the client interacts with the monitored server. 
-
-#### Mode 2: Randomly
-
+    where `1` specifies that the script should execute in live mode (as the components are running), `stmonitor/logs/Heads_1_log.csv` is the path to the log and `Heads` is the title of the plot. A plot should appear that updates as the client interacts with the monitored server. 
+    
+    Alternatively, the script can also be executed _after_ the components have finished running, by executing:
+    ```shell
+    python3 scripts/monitor-log.py 0 stmonitor/logs/Heads_1_log.csv Heads stmonitor/logs/
+    ```
+    where `0` specifies offline mode, `stmonitor/logs/Heads_1_log.csv` is the path to the log, `Heads` is the title of the plot and `stmonitor/logs/` is the location of where to save the generated plot. 
 
 <!-- The setup should now be running. If both the client and the server were started with the probabilities as specified within the type, the monitor should not issue any warnings. The server keeps executing until it is explicitly terminated. Therefore, one can try executing a different experiment by repeating steps 2 and 3. Apart from changing the specified `z-value` for the monitor, one can also try changing the probabilities of the client such that they violate those specified within the type, which would trigger the monitor to issue warnings. In a similar manner, the server can also be initialised in such a way the monitor issues warnings on its behaviour. -->

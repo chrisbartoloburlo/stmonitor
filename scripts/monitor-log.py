@@ -63,7 +63,8 @@ if __name__ == '__main__':
         # frame = plt.legend(bbox_to_anchor=(0, 1.23), loc='upper left', ncol=2, borderpad=0.4).get_frame()
         # frame.set_linewidth(0.5)
 
-        plt.savefig('path+f{title}.pdf', dpi=1500, bbox_inches='tight', pad_inches=0)
+        save_path = sys.argv[4]
+        plt.savefig(save_path+f'/{title}.pdf', dpi=1500, bbox_inches='tight', pad_inches=0.1)
         # plt.show()
     elif(live==1):
         ani = FuncAnimation(plt.gcf(), animate, interval=100, repeat=False)
