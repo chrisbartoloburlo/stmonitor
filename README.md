@@ -17,7 +17,7 @@ Given a _probabilistic session type S_, this tool synthesises the Scala code of 
 ## Instructions
   * how to [invoke the monitor synthesis tool](#synthesising-a-monitor)
   * how to [run the examples](#examples)
-  * how to [run the SMTP benchmark](#benchmarks)
+  * how to [run the SMTP benchmark](#smtp-benchmark)
 
 ### Synthesising a Monitor
 
@@ -155,7 +155,7 @@ We provide the implementation of a [server](https://github.com/chrisbartoloburlo
     ```
     where `0` specifies the random mode and 100 is the number of messages the client should send before quitting.
 
-3. After sending a couple of messages, you can start a provided script (in a separate terminal) which plots the observed probability between the confidence interval by executing:
+3. After sending a couple of messages, you can start a provided script (requiring [Matplotlib](https://matplotlib.org/)) which plots the observed probability between the confidence interval by executing:
     ```shell
     python3 scripts/monitor-log.py 1 stmonitor/logs/Heads_1_log.csv Heads
     ```
@@ -167,4 +167,21 @@ We provide the implementation of a [server](https://github.com/chrisbartoloburlo
     ```
     where `0` specifies offline mode, `stmonitor/logs/Heads_1_log.csv` is the path to the log, `Heads` is the title of the plot and `stmonitor/logs/` is the location of where to save the generated plot. 
 
-<!-- The setup should now be running. If both the client and the server were started with the probabilities as specified within the type, the monitor should not issue any warnings. The server keeps executing until it is explicitly terminated. Therefore, one can try executing a different experiment by repeating steps 2 and 3. Apart from changing the specified `z-value` for the monitor, one can also try changing the probabilities of the client such that they violate those specified within the type, which would trigger the monitor to issue warnings. In a similar manner, the server can also be initialised in such a way the monitor issues warnings on its behaviour. -->
+### SMTP Benchmark
+
+The source code for the SMTP benchmark can be found under the directory [`examples/smtp/`](https://github.com/chrisbartoloburlo/stmonitor/tree/pstmonitor/examples/src/main/scala/examples/smtp).
+
+The benchmarks can _only_ be executed on Linux, or other Unix-like systems providing a `/usr/bin/time` utility compatible with [GNU Time](https://www.gnu.org/software/time/) --- which we use for observing CPU usage and memory consumption.
+
+The following dependencies are also required:
+* [GNU screen](https://www.gnu.org/software/screen/)
+* Python 3 and [Matplotlib](https://matplotlib.org/)
+* SMTP server listening on port `127.0.0.1:25` such as [Postfix](http://www.postfix.org) (used in COORDINATION'21 SI paper)
+
+To run the benchmark and generate the plots, you can execute:
+```shell
+sh scripts/benchmarks.sh $REPETITIONS smtp
+```
+where `$REPETITIONS` is the number of repetitions of each experiment. The plots in the COORDINATION'21 SI paper have been generated with 20 repetitions; we recommend a minimum of 5 repetitions. 
+
+In the `smtp` benchmark, a trusted client sends a number of emails to an SMTP server. The monitor for this experiment is generated from a probabilistic fragment of the SMTP protocol, formalised as a session type found in [`smtp.st`](https://github.com/chrisbartoloburlo/stmonitor/blob/pstmonitor/examples/src/main/scala/examples/smtp/smtp.st). 
