@@ -16,6 +16,7 @@ Given a _probabilistic session type S_, this tool synthesises the Scala code of 
 
 ## Instructions
   * how to [invoke the monitor synthesis tool](#synthesising-a-monitor)
+  * how to [start a monitor](#start-a-monitor)
   * how to [run the examples](#examples)
   * how to [run the SMTP benchmark](#smtp-benchmark)
 
@@ -41,6 +42,15 @@ The type session type `$ST` must have the following syntax:
 <img src="https://github.com/chrisbartoloburlo/stmonitor/blob/pstmonitor/docs/st-ebnf.png">
 
 Where the the indexing set I for choice points (& and +) is finite and non-empty, choice labels _l<sub>i</sub>_ are pairwise distinct, and the types _T<sub>i</sub>_ range over basic data types for typing variables _x<sub>i</sub>_. We give a multinomial distribution interpretation to each choice point (& and +) in a PST: we require that the probabilities within a choice point sum to 1, where every _p<sub>i</sub>_ between 0 and 1 is the probability of selecting the branch labelled by _l<sub>i</sub>_. The probabilities prescribed at a choice point represent a behavioural obligation on the interacting party that has control over the selection at that choice point. As usual, we require that recursion is guarded, _i.e.,_ a recursion variable _X_ can only appear under an external or internal choice prefix.
+
+## Start a Monitor
+
+A synthesised monitor requires the following parameters in order to be started:
+* **external**: a connection manager for the component making the _external choices_ within the specified session type; 
+* **internal**: a connection manager for the component making the _internal choices_ within the specified session type; 
+* **max**: an integer denoting how often a monitor can tail recurse before clearing the stack; 
+* **zvalue**: a double denoting the desired confidence level; and 
+* **log**: a boolean flag indicating whether the monitor should log information on the current execution.
 
 ## Examples
 
