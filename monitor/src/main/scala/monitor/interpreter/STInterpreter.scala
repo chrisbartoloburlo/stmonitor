@@ -8,7 +8,7 @@ import scala.collection.mutable
 import scala.reflect.runtime._
 import scala.tools.reflect.ToolBox
 
-class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
+class STInterpreter(sessionType: SessionType, path: String, preamble: String, method: String) {
   private val toolbox = currentMirror.mkToolBox()
 
   private var scopes = new mutable.HashMap[String, Scope]()
@@ -64,7 +64,7 @@ class STInterpreter(sessionType: SessionType, path: String, preamble: String) {
 
     curScope = "global"
     probabilityWalk(sessionType.statement)
-    synthMon.addCalculateInterval()
+    synthMon.addCalculateInterval(method)
     synthMon.end()
     synthProtocol.end()
     (synthMon.getMon(), synthProtocol.getProtocol())

@@ -303,11 +303,17 @@ class SynthMon(sessionTypeInterpreter: STInterpreter, path: String) {
     mon.append("\t}\n")
   }
 
-  def addCalculateInterval():Unit = {
+  def addCalculateInterval(method: String):Unit = {
     mon.append("\tdef calculateInterval(count: Double, trials: Int, prob_a: Double): (Double, Double, Double) = {\n")
-    mon.append("\t\tval prob_e = count/trials\n")
-    mon.append("\t\tval err = zvalue*math.sqrt(prob_a*(1-prob_a)/trials)\n")
-    mon.append("\t\t(prob_a-err,prob_a+err,prob_e)\n")
+    if(method == "normal") {
+      mon.append("\t\tval prob_e = count/trials\n")
+      mon.append("\t\tval err = zvalue*math.sqrt(prob_a*(1-prob_a)/trials)\n")
+      mon.append("\t\t(prob_a-err,prob_a+err,prob_e)\n")
+    } else if (method == "wilson") {
+      mon.append("\t\tval prob_e = (count+(0.5*(zvalue*zvalue)))/(trials+(zvalue*zvalue))\n")
+      mon.append("\t\tval err = (zvalue/(trials+(zvalue*zvalue)))*math.sqrt(((count*(trials-count))/trials)+((zvalue*zvalue)/4))\n")
+      mon.append("\t\t(prob_e-err,prob_e+err,prob_a)\n")
+    }
     mon.append("\t}\n")
   }
 

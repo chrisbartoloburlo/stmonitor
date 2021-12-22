@@ -19,7 +19,7 @@ class Synth {
    * @param synthMonFile A flag to indicate whether to synthesise the monitor file or not.
    * @param synthProtocolFile A flag to indicate whether to synthesise the protocol file or not.
    */
-  def apply(directoryPath: String, sessionTypePath: String, preamblePath: String, synthMonFile: Boolean, synthProtocolFile: Boolean): Unit ={
+  def apply(directoryPath: String, sessionTypePath: String, preamblePath: String, method: String, synthMonFile: Boolean, synthProtocolFile: Boolean): Unit ={
     val logger = Logger("Synth")
     val inputFile = Source.fromFile(sessionTypePath)
     val inputSource = inputFile.mkString
@@ -30,7 +30,7 @@ class Synth {
         val stFile = sessionTypePath.substring(sessionTypePath.lastIndexOf('/')+1)
         logger.info(f"Input type $stFile parsed successfully")
         val preambleFile = Try(Source.fromFile(preamblePath).mkString)
-        val interpreter = new STInterpreter(r, directoryPath, preambleFile.getOrElse(""))
+        val interpreter = new STInterpreter(r, directoryPath, preambleFile.getOrElse(""), method)
         try {
           val (mon, protocol) = interpreter.run()
           if(synthMonFile){

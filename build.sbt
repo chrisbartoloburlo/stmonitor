@@ -72,5 +72,5 @@ def generateMonitor(baseDir: File, name: String) = {
   val exampleDir = baseDir / name
   val stFile = exampleDir / (name ++ ".st")
   val preamble = exampleDir / "preamble.txt"
-  (monitor / Compile / runMain).toTask(f" monitor.Generate ${exampleDir} ${stFile} ${preamble}")
+  (monitor / Compile / runMain).toTask(f" monitor.Generate ${exampleDir} ${stFile} ${preamble} wilson")
 }
